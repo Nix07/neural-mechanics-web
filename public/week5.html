@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 5: Circuits and Mechanistic Analysis - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 5: Circuits and Mechanistic Analysis</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      So far, we've learned to observe representations (visualization), manipulate them (steering), and test causal
+      importance (patching). Now we put it all together: <strong>reverse-engineering complete computational
+        circuits</strong>. A circuit is a minimal, faithful subgraph of the network that implements a specific
+      behavior. This week focuses on circuit discovery methodology using three fundamental case studies: induction
+      (pattern-copying), binding (attribute-entity associations), and concept induction (semantic-level patterns).
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Define what constitutes a "circuit" in a neural network and explain the circuit discovery paradigm</li>
+      <li>Implement path patching to trace information flow between specific components across layers</li>
+      <li>Explain Q-composition, K-composition, and V-composition in multi-head attention circuits</li>
+      <li>Analyze the induction circuit: identify previous-token head and induction head cooperation via K-composition
+      </li>
+      <li>Analyze the binding circuit: use Q-composition analysis to trace how attribute-entity associations are
+        maintained</li>
+      <li>Use ablation and path patching to identify minimal sufficient circuits for both induction and binding
+        behaviors</li>
+      <li>Test circuit faithfulness: verify discovered circuits actually explain the target behaviors</li>
+      <li>Distinguish between token-level induction circuits and concept-level induction mechanisms</li>
+      <li>Compare circuit architectures: how do induction and binding circuits differ in their composition patterns?
+      </li>
+      <li>Apply automated circuit discovery methods to find circuits systematically</li>
+      <li>Identify when circuits activate and when they fail (distribution shifts, edge cases)</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2209.11895" target="_blank">In-context Learning and Induction Heads</a>
+        </div>
+        <div class="reading-description">The foundational paper on induction circuits and two-head cooperation</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://finetuning.baulab.info/" target="_blank">Entity Tracking and Binding Vectors</a>
+        </div>
+        <div class="reading-description">Nikhil's work on binding circuits and Q-composition (project page)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2310.15213" target="_blank">Does Localization Inform Editing? Surprising
+            Differences in Causality-Based Localization vs. Knowledge Editing in Language Models</a>
+        </div>
+        <div class="reading-description">The Feucht paper on token vs concept induction and the dual-route model</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2304.05969" target="_blank">Towards Automated Circuit Discovery for
+            Mechanistic Interpretability</a>
+        </div>
+        <div class="reading-description">ACDC: Automated method for finding circuits using path patching</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework
+            for Transformer Circuits</a>
+        </div>
+        <div class="reading-description">Detailed mathematical treatment of composition and circuits</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2211.00593" target="_blank">Interpretability in the Wild: a Circuit for
+            Indirect Object Identification</a>
+        </div>
+        <div class="reading-description">IOI circuit as a more complex example (optional advanced reading)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2305.10142" target="_blank">Overthinking the Truth: Understanding how Language
+            Models Process False Demonstrations</a>
+        </div>
+        <div class="reading-description">How circuits can be overridden by in-context learning</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: Reverse-Engineering Neural Circuits</h2>
+
+    <h3>1. What is a Circuit?</h3>
+    <p>
+      A <strong>circuit</strong> is a computational subgraph of a neural network that implements a specific algorithm or
+      behavior. Think of it like reverse-engineering: given a complex machine (the full network), identify the minimal
+      set of components that perform a particular function.
+    </p>
+
+    <h4>Key Properties of a Good Circuit</h4>
+    <ul>
+      <li><strong>Minimal:</strong> Includes only components necessary for the behavior</li>
+      <li><strong>Sufficient:</strong> The circuit alone can perform the behavior</li>
+      <li><strong>Faithful:</strong> The circuit's operation actually explains how the full model works</li>
+      <li><strong>Interpretable:</strong> We can understand what computation each component performs</li>
+    </ul>
+
+    <h4>Circuit Discovery Workflow</h4>
+    <ol>
+      <li><strong>Identify behavior:</strong> What specific computation are we studying?</li>
+      <li><strong>Hypothesis formation:</strong> What components might be involved?</li>
+      <li><strong>Causal testing:</strong> Use patching/ablation to test necessity</li>
+      <li><strong>Composition analysis:</strong> How do components communicate?</li>
+      <li><strong>Minimality testing:</strong> Can we remove any components?</li>
+      <li><strong>Faithfulness validation:</strong> Does it work across distribution?</li>
+    </ol>
+
+    <h3>2. Path Patching: Tracing Information Flow</h3>
+    <p>
+      <strong>Path patching</strong> extends activation patching to trace <em>specific paths</em> through the network.
+      Instead of patching an entire layer, we patch only the pathway from component A to component B.
+    </p>
+
+    <h4>The Setup</h4>
+    <p>
+      Consider two runs: clean and corrupted. We want to know: does information flow from component A (e.g., attention
+      head 3.2) to component B (e.g., attention head 7.5)?
+    </p>
+
+    <div class="diagram">
+      Layer 3, Head 2 → [some path] → Layer 7, Head 5
+    </div>
+
+    <h4>Path Patching Procedure</h4>
+    <ol>
+      <li><strong>Run clean and corrupted:</strong> Get activations for both inputs</li>
+      <li><strong>Identify source and target:</strong> A is source (layer 3, head 2), B is target (layer 7, head 5)
+      </li>
+      <li><strong>Patch the connection:</strong> Run corrupted input, but replace A's contribution to B's input with
+        clean A's contribution</li>
+      <li><strong>Measure effect:</strong> Does patching this specific path restore clean behavior?</li>
+    </ol>
+
+    <h4>Implementation Detail</h4>
+    <p>
+      In transformers, component A writes to the residual stream. Component B reads from the residual stream. To patch
+      the path A→B:
+    </p>
+    <ol>
+      <li>Run corrupted forward pass up to B</li>
+      <li>Replace A's <em>output</em> (its write to residual) with clean A's output</li>
+      <li>Let B read from this modified residual stream</li>
+      <li>Continue forward pass normally</li>
+    </ol>
+
+    <p>
+      <strong>High path patching effect = A causally influences B</strong>
+    </p>
+
+    <h3>3. Composition Types in Attention Circuits</h3>
+    <p>
+      Multi-head attention circuits communicate through <strong>composition</strong>: one head's output influences
+      another head's computation. There are three main types:
+    </p>
+
+    <h4>Q-Composition (Query Composition)</h4>
+    <p>
+      Head A's output affects what Head B <em>pays attention to</em> by modifying B's query vectors.
+    </p>
+
+    <div class="diagram">
+      Head A output → adds to residual → Head B reads → computes queries → attention pattern changes
+    </div>
+
+    <p>
+      <strong>Example:</strong> Binding circuits use Q-composition. An earlier head identifies an entity, and a later
+      head uses this information to determine <em>where to look</em> for attributes.
+    </p>
+
+    <h4>K-Composition (Key Composition)</h4>
+    <p>
+      Head A's output affects <em>what Head B attends to</em> by modifying B's key vectors.
+    </p>
+
+    <div class="diagram">
+      Head A output → adds to residual → Head B reads → computes keys → changes what gets attended
+    </div>
+
+    <p>
+      <strong>Example:</strong> Induction circuits use K-composition. The previous-token head modifies key
+      representations so the induction head can find the right token to copy from.
+    </p>
+
+    <h4>V-Composition (Value Composition)</h4>
+    <p>
+      Head A's output affects <em>what information Head B extracts</em> by modifying B's value vectors.
+    </p>
+
+    <div class="diagram">
+      Head A output → adds to residual → Head B reads → computes values → changes what information is moved
+    </div>
+
+    <p>
+      <strong>How to distinguish:</strong> Path patch from A to B's Q/K/V inputs separately. Whichever has the highest
+      effect tells you the composition type.
+    </p>
+
+    <h3>4. Case Study 1: The Induction Circuit</h3>
+    <p>
+      Induction is the simplest and most fundamental circuit: <strong>copy the token that previously followed the
+        current pattern</strong>.
+    </p>
+
+    <h4>The Behavior</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Input: "When Mary and John went to the store, Mary gave a drink to"<br>
+      Model predicts: "John" (copies the token that followed "Mary" earlier)
+    </code>
+
+    <h4>The Two-Head Circuit</h4>
+    <p>
+      The induction circuit requires two attention heads working together:
+    </p>
+
+    <p><strong>Head 1: Previous-Token Head (early layer)</strong></p>
+    <ul>
+      <li>Attends from each token to the previous token</li>
+      <li>Creates a "shifted" representation: position i contains information about token i-1</li>
+      <li>Writes this to the residual stream</li>
+    </ul>
+
+    <p><strong>Head 2: Induction Head (later layer)</strong></p>
+    <ul>
+      <li>Reads the shifted representation from Head 1</li>
+      <li>Looks for positions where the previous token matches the current token</li>
+      <li>Attends to the <em>next</em> token after that match</li>
+      <li>Copies information forward to predict the next token</li>
+    </ul>
+
+    <div class="diagram">
+      "Mary and John ... Mary"<br>
+      ↓ Previous-token head (layer 2)<br>
+      Position "Mary₂" now encodes info about "..."<br>
+      ↓ Induction head (layer 6) via K-composition<br>
+      Keys modified → finds "Mary₁" followed by "and"<br>
+      ↓ Attends to "John"<br>
+      Predicts: "John"
+    </div>
+
+    <h4>Why K-Composition?</h4>
+    <p>
+      The composition is through <strong>keys</strong> (K-composition):
+    </p>
+    <ul>
+      <li>Previous-token head modifies the residual stream</li>
+      <li>Induction head computes keys from the modified residual</li>
+      <li>These modified keys help it find the matching earlier occurrence</li>
+      <li>The induction head's attention pattern changes based on previous-token head output</li>
+    </ul>
+
+    <h4>Testing the Circuit</h4>
+    <p><strong>Necessity (ablation):</strong></p>
+    <ul>
+      <li>Ablate previous-token head → induction fails</li>
+      <li>Ablate induction head → induction fails</li>
+      <li>Both are necessary</li>
+    </ul>
+
+    <p><strong>Sufficiency (path patching):</strong></p>
+    <ul>
+      <li>Path patch: previous-token head → induction head (via K) → high effect</li>
+      <li>Path patch: previous-token head → induction head (via Q or V) → low effect</li>
+      <li>Confirms K-composition</li>
+    </ul>
+
+    <p><strong>Minimality:</strong></p>
+    <ul>
+      <li>Two heads are sufficient</li>
+      <li>Removing either breaks the behavior</li>
+      <li>This is a minimal circuit</li>
+    </ul>
+
+    <h3>5. Case Study 2: Binding Circuits</h3>
+    <p>
+      <strong>Binding</strong> is about associating attributes with entities: remembering that "tall" goes with person
+      1 and "short" goes with person 2.
+    </p>
+
+    <h4>The Behavior</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The tall person and the short person walked into a room.<br>
+      The tall person sat down."<br><br>
+      Question: Which person sat? → person 1 (the tall one)
+    </code>
+
+    <h4>The Binding Circuit</h4>
+    <p>
+      Nikhil's work identified a multi-head circuit for maintaining attribute-entity bindings:
+    </p>
+
+    <p><strong>Phase 1: Create Bindings (during first mention)</strong></p>
+    <ul>
+      <li>Attribute extraction heads identify "tall", "short"</li>
+      <li>Entity heads identify "person" mentions</li>
+      <li>Binding heads associate attributes with entity positions</li>
+      <li>Store binding vectors in the residual stream</li>
+    </ul>
+
+    <p><strong>Phase 2: Retrieve Bindings (during second mention)</strong></p>
+    <ul>
+      <li>Query head processes "the tall person"</li>
+      <li>Uses Q-composition to look up which position was "tall"</li>
+      <li>Retrieves the bound entity information</li>
+    </ul>
+
+    <div class="diagram">
+      "The TALL person₁ and the SHORT person₂"<br>
+      ↓ Binding heads (layer 4-6)<br>
+      Residual stores: position₁ ← tall, position₂ ← short<br>
+      ↓<br>
+      "The TALL person sat"<br>
+      ↓ Query head (layer 8) via Q-composition<br>
+      Queries modified → retrieves position₁ binding<br>
+      → Resolves to person₁
+    </div>
+
+    <h4>Why Q-Composition?</h4>
+    <p>
+      The composition is through <strong>queries</strong> (Q-composition):
+    </p>
+    <ul>
+      <li>Binding heads write to residual stream</li>
+      <li>Query head computes queries from modified residual</li>
+      <li>These modified queries determine <em>where to look</em> for the right entity</li>
+      <li>The attention pattern is controlled by the binding information</li>
+    </ul>
+
+    <h4>Comparing Induction and Binding</h4>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>Induction Circuit</th>
+        <th>Binding Circuit</th>
+      </tr>
+      <tr>
+        <td>Composition Type</td>
+        <td>K-composition</td>
+        <td>Q-composition</td>
+      </tr>
+      <tr>
+        <td>What's Modified</td>
+        <td>What gets attended to (keys)</td>
+        <td>Where to attend from (queries)</td>
+      </tr>
+      <tr>
+        <td>Complexity</td>
+        <td>2 heads minimum</td>
+        <td>Multiple heads (3-5)</td>
+      </tr>
+      <tr>
+        <td>Task</td>
+        <td>Pattern copying</td>
+        <td>Attribute-entity association</td>
+      </tr>
+      <tr>
+        <td>Information Stored</td>
+        <td>Token identity (shifted)</td>
+        <td>Binding vectors</td>
+      </tr>
+    </table>
+
+    <h3>6. Case Study 3: Concept Induction (Feucht et al.)</h3>
+    <p>
+      The Feucht paper discovered that induction operates at <strong>two levels</strong>: token-level and
+      concept-level.
+    </p>
+
+    <h4>Token-Level Induction</h4>
+    <p>
+      The standard induction circuit we just studied: copy exact tokens.
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "When Mary and John went to the store, Mary gave a drink to"<br>
+      → Predicts: "John" (exact token match)
+    </code>
+
+    <h4>Concept-Level Induction</h4>
+    <p>
+      A parallel mechanism that copies <strong>semantic patterns</strong>, not just tokens.
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "When Mary and John went to the store, Mary gave a drink to"<br>
+      BUT if "John" is edited in the model's weights to "Jonathan":<br>
+      → Still predicts: "Jonathan" (semantic association, not token)
+    </code>
+
+    <h4>The Dual-Route Model</h4>
+    <p>
+      The model uses <strong>both routes simultaneously</strong>:
+    </p>
+
+    <p><strong>Route 1: Token Circuit (attention-based)</strong></p>
+    <ul>
+      <li>Uses induction heads as described above</li>
+      <li>Fast, pattern-matching based</li>
+      <li>Works even for nonsense tokens</li>
+    </ul>
+
+    <p><strong>Route 2: Concept Circuit (MLP-based)</strong></p>
+    <ul>
+      <li>MLPs store semantic associations (like ROME showed)</li>
+      <li>Retrieves based on meaning, not position</li>
+      <li>Can override token-based predictions</li>
+    </ul>
+
+    <div class="diagram">
+      Input: "Mary ... Mary"<br>
+      ↙ ↘<br>
+      Token Route (attention) Concept Route (MLP)<br>
+      ↓ ↓<br>
+      "John" (pattern match) "Jonathan" (semantic)<br>
+      ↘ ↙<br>
+      Combined prediction
+    </div>
+
+    <h4>When Each Route Dominates</h4>
+    <ul>
+      <li><strong>Strong context:</strong> Token route dominates (exact pattern repetition)</li>
+      <li><strong>Weak context:</strong> Concept route dominates (semantic association)</li>
+      <li><strong>Novel tokens:</strong> Token route only (no concept stored)</li>
+      <li><strong>Common entities:</strong> Routes compete, can conflict</li>
+    </ul>
+
+    <h4>Implications for Circuit Analysis</h4>
+    <p>
+      This reveals an important lesson: <strong>behaviors can have multiple implementations</strong>. Circuit discovery
+      must account for:
+    </p>
+    <ul>
+      <li>Redundant circuits that solve the same task</li>
+      <li>Context-dependent circuit selection</li>
+      <li>Interactions between circuit types (attention vs MLP)</li>
+      <li>Graceful degradation when one circuit is ablated</li>
+    </ul>
+
+    <h3>7. Automated Circuit Discovery: ACDC</h3>
+    <p>
+      Manually finding circuits is tedious. <strong>Automated Circuit Discovery (ACDC)</strong> systematically searches
+      for circuits using path patching.
+    </p>
+
+    <h4>The ACDC Algorithm</h4>
+    <ol>
+      <li><strong>Start with full model:</strong> All components are candidates</li>
+      <li><strong>For each edge (A→B):</strong>
+        <ul>
+          <li>Path patch from A to B</li>
+          <li>Measure causal effect</li>
+          <li>If effect is below threshold, remove edge</li>
+        </ul>
+      </li>
+      <li><strong>Iteratively prune:</strong> Remove low-effect edges</li>
+      <li><strong>Result:</strong> Minimal subgraph with only high-effect connections</li>
+    </ol>
+
+    <h4>Advantages</h4>
+    <ul>
+      <li><strong>Systematic:</strong> Tests all possible edges</li>
+      <li><strong>Minimal:</strong> Automatically prunes unnecessary components</li>
+      <li><strong>Reproducible:</strong> Consistent methodology</li>
+    </ul>
+
+    <h4>Limitations</h4>
+    <ul>
+      <li><strong>Computational cost:</strong> O(components²) path patching operations</li>
+      <li><strong>Threshold sensitivity:</strong> Results depend on pruning threshold</li>
+      <li><strong>Linear assumption:</strong> May miss nonlinear interactions</li>
+      <li><strong>Dataset dependent:</strong> Circuit may vary across different examples</li>
+    </ul>
+
+    <h4>Best Practices</h4>
+    <ul>
+      <li>Use hierarchical pruning: layers first, then heads, then neurons</li>
+      <li>Test on diverse examples, not just one</li>
+      <li>Validate discovered circuit with ablation studies</li>
+      <li>Check faithfulness on out-of-distribution data</li>
+    </ul>
+
+    <h3>8. Testing Circuit Faithfulness</h3>
+    <p>
+      A circuit is <strong>faithful</strong> if it actually explains how the full model works, not just a spurious
+      correlation.
+    </p>
+
+    <h4>Faithfulness Tests</h4>
+
+    <p><strong>1. Ablation Test:</strong></p>
+    <ul>
+      <li>Ablate all components <em>outside</em> the circuit</li>
+      <li>If behavior is preserved, circuit is sufficient</li>
+      <li>If behavior breaks, circuit is incomplete</li>
+    </ul>
+
+    <p><strong>2. Out-of-Distribution Test:</strong></p>
+    <ul>
+      <li>Test circuit on examples different from discovery dataset</li>
+      <li>Does it still work? Then it's likely faithful</li>
+      <li>If it fails, it may have overfit to the discovery distribution</li>
+    </ul>
+
+    <p><strong>3. Adversarial Test:</strong></p>
+    <ul>
+      <li>Create inputs designed to break the circuit's logic</li>
+      <li>Example: For induction, add conflicting patterns</li>
+      <li>Does the circuit fail gracefully as expected?</li>
+    </ul>
+
+    <p><strong>4. Intervention Test:</strong></p>
+    <ul>
+      <li>Modify circuit components with specific interventions</li>
+      <li>Do outputs change in predictable ways?</li>
+      <li>Example: If you flip a binding vector, does the attribute switch entities?</li>
+    </ul>
+
+    <p><strong>5. Necessity and Sufficiency:</strong></p>
+    <ul>
+      <li><strong>Necessary:</strong> Removing any component breaks behavior</li>
+      <li><strong>Sufficient:</strong> Circuit alone reproduces behavior</li>
+      <li>Both must hold for faithful circuit</li>
+    </ul>
+
+    <h3>9. Common Pitfalls in Circuit Analysis</h3>
+
+    <h4>Pitfall 1: Confusing Correlation with Causation</h4>
+    <p>
+      Just because a component activates during a behavior doesn't mean it causes the behavior. Always use causal
+      interventions (patching/ablation) to test.
+    </p>
+
+    <h4>Pitfall 2: Ignoring Polysemanticity</h4>
+    <p>
+      A single head might implement multiple circuits for different tasks. Test that your circuit is specific to your
+      target behavior.
+    </p>
+
+    <h4>Pitfall 3: Dataset Overfitting</h4>
+    <p>
+      Circuits found on one dataset may not generalize. Always validate on diverse, out-of-distribution examples.
+    </p>
+
+    <h4>Pitfall 4: Over-Pruning</h4>
+    <p>
+      Setting the pruning threshold too high removes genuinely important components. Validate that your "minimal"
+      circuit still works.
+    </p>
+
+    <h4>Pitfall 5: Missing Redundancy</h4>
+    <p>
+      Models often have redundant circuits (like token and concept induction). Ablating one circuit may not reveal it if
+      another compensates.
+    </p>
+
+    <h3>10. Research Workflow for Circuit Discovery</h3>
+    <ol>
+      <li><strong>Define target behavior precisely:</strong> What computation are you studying?</li>
+      <li><strong>Create minimal test cases:</strong> Simple examples that isolate the behavior</li>
+      <li><strong>Hypothesize candidate components:</strong> Based on prior work or initial observations</li>
+      <li><strong>Test necessity with ablation:</strong> Which components are required?</li>
+      <li><strong>Test composition with path patching:</strong> How do components communicate?</li>
+      <li><strong>Identify composition type:</strong> Q, K, or V composition?</li>
+      <li><strong>Map complete circuit:</strong> Draw the computational graph</li>
+      <li><strong>Test minimality:</strong> Can any component be removed?</li>
+      <li><strong>Validate faithfulness:</strong> Does it work out-of-distribution?</li>
+      <li><strong>Characterize failure modes:</strong> When and how does the circuit break?</li>
+      <li><strong>Compare with other circuits:</strong> How does this relate to known circuits?</li>
+    </ol>
+
+    <p>
+      <strong>Goal:</strong> Not just "this circuit exists" but "this is how the model solves this task, and here's why
+      this architecture makes sense."
+    </p>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on experience with circuit discovery:
+    </p>
+    <ul>
+      <li>Implement path patching to trace information flow</li>
+      <li>Find induction circuits using K-composition analysis</li>
+      <li>Analyze binding circuits with Q-composition</li>
+      <li>Test token vs concept induction (dual-route model)</li>
+      <li>Run automated circuit discovery with ACDC-style algorithms</li>
+      <li>Validate circuit minimality and faithfulness</li>
+      <li>Compare composition patterns across different circuit types</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Circuit Discovery for Your Concept</h3>
+
+      <p>
+        <strong>Goal:</strong> Identify and characterize the minimal circuit that implements your concept in the model.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>Hypothesis Formation:</strong>
+          <ul>
+            <li>Based on Week 4's causal analysis, hypothesize which components form the circuit</li>
+            <li>Is your concept more like induction (attention) or facts (MLP)?</li>
+            <li>What composition patterns might be involved?</li>
+          </ul>
+        </li>
+
+        <li><strong>Path Patching Analysis:</strong>
+          <ul>
+            <li>Use path patching to test connections between candidate components</li>
+            <li>Create a heatmap showing which paths have high causal effects</li>
+            <li>Identify the strongest paths in your circuit</li>
+          </ul>
+        </li>
+
+        <li><strong>Composition Analysis:</strong>
+          <ul>
+            <li>For attention-based components, determine composition type (Q/K/V)</li>
+            <li>Path patch through each composition channel separately</li>
+            <li>Which type(s) dominate for your concept?</li>
+          </ul>
+        </li>
+
+        <li><strong>Circuit Minimality:</strong>
+          <ul>
+            <li>Test if each component is necessary (ablation)</li>
+            <li>Test if the circuit is sufficient (ablate everything else)</li>
+            <li>Remove any components that aren't critical</li>
+            <li>Document your minimal circuit with a diagram</li>
+          </ul>
+        </li>
+
+        <li><strong>Faithfulness Testing:</strong>
+          <ul>
+            <li>Test circuit on out-of-distribution examples</li>
+            <li>Create adversarial examples to probe failure modes</li>
+            <li>Does the circuit work consistently? When does it break?</li>
+          </ul>
+        </li>
+
+        <li><strong>Circuit Comparison:</strong>
+          <ul>
+            <li>Compare your circuit to induction/binding/concept-induction patterns</li>
+            <li>Which circuit type is most similar?</li>
+            <li>What's unique about your circuit?</li>
+          </ul>
+        </li>
+
+        <li><strong>Mechanistic Interpretation:</strong>
+          <ul>
+            <li>Explain <em>how</em> your circuit computes your concept</li>
+            <li>What does each component do?</li>
+            <li>Why does this architecture make sense for your concept?</li>
+            <li>Are there redundant circuits (like token vs concept routes)?</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Jupyter notebook with all experiments and code</li>
+        <li>Written report (6-7 pages) including:
+          <ul>
+            <li>Circuit diagram with all components and connections</li>
+            <li>Path patching heatmaps</li>
+            <li>Composition analysis results (Q/K/V)</li>
+            <li>Minimality and faithfulness tests</li>
+            <li>Mechanistic explanation of circuit operation</li>
+            <li>Comparison with known circuit types</li>
+            <li>Failure mode analysis</li>
+          </ul>
+        </li>
+        <li>Visualizations:
+          <ul>
+            <li>Circuit diagram (components and connections)</li>
+            <li>Path patching effect matrix</li>
+            <li>Composition type breakdown</li>
+            <li>Ablation results showing necessity</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 6 class
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
