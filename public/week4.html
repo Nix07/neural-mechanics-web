@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 4: Causal Mediation Analysis - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 4: Causal Mediation Analysis</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Understanding what a model computes is one thing; understanding <em>how</em> it computes it is another. This week
+      introduces causal intervention techniques that let you test hypotheses about which components are responsible for
+      specific behaviors. Through activation patching, causal tracing, and attribution methods, you'll learn to
+      identify the mechanisms that matter, moving from correlation to causation in interpretability research.
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Set up and execute activation patching experiments between two prompts</li>
+      <li>Explain the difference between noise patching and clean (counterfactual) patching</li>
+      <li>Define and compute average causal effect (ACE), total effect, and indirect effect</li>
+      <li>Explain how ROME uses causal tracing to localize factual knowledge in networks</li>
+      <li>Contrast ROME's findings with entity tracking and binding vector discoveries</li>
+      <li>Apply gradient-based attribution patching to identify important activations</li>
+      <li>Use Average Indirect Effect (AIE) to systematically identify causally important components</li>
+      <li>Design effective counterfactual datasets for patching experiments</li>
+      <li>Find and use function vectors and their associated attention heads</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2202.05262" target="_blank">Locating and Editing Factual Associations in
+            GPT</a>
+        </div>
+        <div class="reading-description">The ROME paper - causal tracing to localize where factual knowledge is stored
+        </div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2304.14767" target="_blank">Patchscopes: A Unifying Framework for Inspecting
+            Hidden Representations</a>
+        </div>
+        <div class="reading-description">Framework for understanding different patching and intervention techniques
+        </div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2310.04625" target="_blank">Function Vectors in Large Language Models</a>
+        </div>
+        <div class="reading-description">Finding task-specific vectors through causal intervention</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2304.14997" target="_blank">Causal Tracing and Knowledge Localization in
+            Language Models</a>
+        </div>
+        <div class="reading-description">Theoretical foundations of causal intervention in neural networks</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://rome.baulab.info/" target="_blank">ROME Project Page</a>
+        </div>
+        <div class="reading-description">Interactive demos and additional resources (not arXiv)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://finetuning.baulab.info/" target="_blank">Entity Tracking and Binding Vectors</a>
+        </div>
+        <div class="reading-description">Study of how models track entities through context (project page)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2211.00593" target="_blank">Attribution Patching: Activation Patching At
+            Scale</a>
+        </div>
+        <div class="reading-description">Gradient-based method for efficient attribution</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: From Observation to Causation</h2>
+
+    <h3>1. The Challenge: Correlation vs. Causation</h3>
+    <p>
+      Visualization shows us <em>what</em> is represented. Steering shows us we can <em>change</em> behavior. But
+      neither tells us which specific components are <strong>causally responsible</strong> for a behavior.
+    </p>
+
+    <p>
+      <strong>Example:</strong> If a model correctly answers "The capital of France is Paris," we might observe:
+    </p>
+    <ul>
+      <li>Certain neurons activate strongly for "France"</li>
+      <li>Attention heads attend from "capital" to "France"</li>
+      <li>MLP layers at certain positions have high activation</li>
+    </ul>
+
+    <p>
+      But which of these are <strong>necessary</strong> for the correct answer? Which are merely correlated? Causal
+      intervention lets us test this.
+    </p>
+
+    <h3>2. Activation Patching: The Core Technique</h3>
+    <p>
+      <strong>Activation patching</strong> is the fundamental intervention method: replace activations from one forward
+      pass with activations from another, then measure the effect.
+    </p>
+
+    <h4>Basic Setup</h4>
+    <ol>
+      <li><strong>Clean run:</strong> Run the model on a prompt where it behaves correctly<br>
+        <code>"The capital of France is" → "Paris" ✓</code>
+      </li>
+      <li><strong>Corrupted run:</strong> Run on a prompt where behavior differs<br>
+        <code>"The capital of Germany is" → "Berlin"</code>
+      </li>
+      <li><strong>Patch:</strong> In a new run on the corrupted prompt, replace specific activations with those from
+        the clean run</li>
+      <li><strong>Measure:</strong> Does the model now produce the clean run's output?</li>
+    </ol>
+
+    <div class="diagram">
+      Corrupted: "Germany" → activations → "Berlin"<br>
+      Clean: "France" → activations → "Paris"<br><br>
+      Patched: "Germany" + [patched activations from "France"] → ???<br><br>
+      If output → "Paris": patched component was causally important!
+    </div>
+
+    <h4>Interpretation</h4>
+    <ul>
+      <li><strong>If patching restores clean behavior:</strong> The patched component is causally sufficient (in this
+        context)</li>
+      <li><strong>If patching has no effect:</strong> The component is not necessary for the behavior</li>
+      <li><strong>Partial restoration:</strong> Component plays a role but is not solely responsible</li>
+    </ul>
+
+    <h3>3. Noise Patching vs. Clean Patching</h3>
+    <p>
+      There are two main patching strategies, each answering different questions:
+    </p>
+
+    <h4>Noise Patching (Ablation)</h4>
+    <p>
+      Replace activations with random noise or zeros:
+    </p>
+    <div class="diagram">
+      Original: "The capital of France is" → "Paris"<br>
+      Noise patched: "The capital of France is" + [noise] → ???
+    </div>
+
+    <p>
+      <strong>Question answered:</strong> Is this component <em>necessary</em> for the behavior?<br>
+      <strong>Interpretation:</strong> If performance degrades, the component was contributing.
+    </p>
+
+    <h4>Clean (Counterfactual) Patching</h4>
+    <p>
+      Replace activations with those from a different, meaningful prompt:
+    </p>
+    <div class="diagram">
+      Corrupted: "The capital of Germany is" → "Berlin"<br>
+      Clean: "The capital of France is" → "Paris"<br>
+      Patched: "Germany" + [France activations] → "Paris"?
+    </div>
+
+    <p>
+      <strong>Question answered:</strong> Is this component <em>sufficient</em> to change behavior from corrupted to
+      clean?<br>
+      <strong>Interpretation:</strong> If behavior changes, this component causally mediates the difference.
+    </p>
+
+    <h4>Choosing Your Strategy</h4>
+    <table>
+      <tr>
+        <th>Use Case</th>
+        <th>Strategy</th>
+        <th>Why</th>
+      </tr>
+      <tr>
+        <td>Find necessary components</td>
+        <td>Noise patching</td>
+        <td>See what breaks when removed</td>
+      </tr>
+      <tr>
+        <td>Find sufficient components</td>
+        <td>Clean patching</td>
+        <td>See what can transfer behavior</td>
+      </tr>
+      <tr>
+        <td>Understand factual recall</td>
+        <td>Clean patching</td>
+        <td>Isolate subject-specific processing</td>
+      </tr>
+      <tr>
+        <td>Test robustness</td>
+        <td>Noise patching</td>
+        <td>Find critical dependencies</td>
+      </tr>
+    </table>
+
+    <h3>4. Causal Effects: Formal Definitions</h3>
+    <p>
+      To reason precisely about interventions, we need formal definitions from causal inference.
+    </p>
+
+    <h4>Average Causal Effect (ACE)</h4>
+    <p>
+      The effect of changing one variable while holding others constant:
+    </p>
+    <div class="math">
+      ACE = E[Y | do(X=x₁)] - E[Y | do(X=x₀)]
+    </div>
+
+    <p>
+      <strong>In neural networks:</strong> The difference in output when we intervene to set a component's activation to
+      x₁ vs x₀.
+    </p>
+
+    <h4>Total Effect</h4>
+    <p>
+      The overall impact of X on Y, including all paths (direct and indirect):
+    </p>
+    <div class="diagram">
+      X → Y (direct)<br>
+      X → Z → Y (indirect through Z)<br><br>
+      Total Effect = Direct Effect + Indirect Effects
+    </div>
+
+    <h4>Indirect Effect</h4>
+    <p>
+      The effect of X on Y that flows <em>through</em> intermediate variable Z:
+    </p>
+    <div class="math">
+      Indirect Effect = E[Y | do(Z = value_when_X=x₁), X=x₀] - E[Y | X=x₀]
+    </div>
+
+    <p>
+      <strong>Example:</strong> How much does changing "France" to "Germany" at position 5 affect the output through its
+      effect on layer 10's MLP?
+    </p>
+
+    <h3>5. ROME: Causal Tracing for Knowledge Localization</h3>
+    <p>
+      The ROME paper uses causal tracing to answer: <strong>Where is factual knowledge stored in GPT models?</strong>
+    </p>
+
+    <h4>The Experiment</h4>
+    <ol>
+      <li><strong>Clean prompt:</strong> "The Space Needle is located in the city of" → "Seattle"</li>
+      <li><strong>Corrupted prompt:</strong> Add noise to all token embeddings</li>
+      <li><strong>Systematic patching:</strong> Restore clean activations one component at a time</li>
+      <li><strong>Measure:</strong> Does the model recover the correct answer?</li>
+    </ol>
+
+    <h4>Key Findings</h4>
+    <ul>
+      <li><strong>Critical window:</strong> Restoring the <em>last subject token</em> ("Needle") at <em>middle MLP
+          layers</em> (layers 5-10 in GPT-2 XL) is sufficient to recover factual recall</li>
+      <li><strong>Localized storage:</strong> Factual associations are stored in specific MLP weights, not distributed
+        across the network</li>
+      <li><strong>Layer specificity:</strong> Early layers encode syntax/position, middle layers store facts, late
+        layers decode to vocabulary</li>
+    </ul>
+
+    <div class="diagram">
+      Subject: "Space Needle"<br>
+      ↓<br>
+      Middle MLP layers (5-10) at last subject token<br>
+      ↓<br>
+      Retrieve: "located in Seattle"<br>
+      ↓<br>
+      Output: "Seattle"
+    </div>
+
+    <h4>Methodology: Average Indirect Effect (AIE)</h4>
+    <p>
+      ROME measures the <strong>indirect effect</strong> of the subject through each component:
+    </p>
+    <ol>
+      <li>Run corrupted prompt (all noise)</li>
+      <li>Patch clean activations at state S (e.g., layer 8, position "Needle")</li>
+      <li>Measure: how much does this restore correct output?</li>
+      <li>Repeat for all states S</li>
+      <li>States with high AIE are causally important</li>
+    </ol>
+
+    <h3>6. Entity Tracking and Binding Vectors</h3>
+    <p>
+      The entity tracking work (finetuning.baulab.info) studied a different question: <strong>How do models track which
+        attributes belong to which entities?</strong>
+    </p>
+
+    <h4>The Setup</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The tall person and the short person walked into the room.<br>
+      The tall person sat down."
+    </code>
+
+    <p>
+      Question: How does the model remember "tall" is bound to the first person when processing "The tall person sat
+      down"?
+    </p>
+
+    <h4>Findings: Binding Vectors</h4>
+    <ul>
+      <li><strong>Binding information</strong> is stored in attention head outputs, not MLPs</li>
+      <li>Specific attention heads maintain <strong>binding vectors</strong> that associate attributes with entities
+      </li>
+      <li>These binding vectors can be <strong>extracted and reused</strong> across contexts</li>
+      <li>Patching binding vectors transfers attribute associations</li>
+    </ul>
+
+    <h4>Contrast with ROME</h4>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>ROME (Factual Knowledge)</th>
+        <th>Entity Tracking (Bindings)</th>
+      </tr>
+      <tr>
+        <td>Storage</td>
+        <td>MLP layers</td>
+        <td>Attention heads</td>
+      </tr>
+      <tr>
+        <td>Layer</td>
+        <td>Middle layers (5-10)</td>
+        <td>Various layers, task-dependent</td>
+      </tr>
+      <tr>
+        <td>What's stored</td>
+        <td>Long-term facts ("Seattle")</td>
+        <td>Context-specific bindings ("tall" ↔ person 1)</td>
+      </tr>
+      <tr>
+        <td>Localization</td>
+        <td>Highly localized (specific MLPs)</td>
+        <td>More distributed (multiple heads)</td>
+      </tr>
+    </table>
+
+    <p>
+      <strong>Lesson:</strong> Different types of information are stored in different architectural components. Facts go
+      in MLPs, bindings in attention.
+    </p>
+
+    <h3>7. Gradient-Based Attribution Patching</h3>
+    <p>
+      Testing every possible component via patching is expensive. <strong>Gradient-based attribution</strong> estimates
+      causal importance efficiently using gradients.
+    </p>
+
+    <h4>The Idea</h4>
+    <p>
+      Instead of actually patching every activation, approximate the effect using gradients:
+    </p>
+
+    <div class="math">
+      Attribution(activation) ≈ gradient(loss w.r.t. activation) × (clean_value - corrupted_value)
+    </div>
+
+    <p>
+      This gives a first-order approximation of how much patching that activation would change the output.
+    </p>
+
+    <h4>Algorithm</h4>
+    <ol>
+      <li>Run clean and corrupted forward passes, save all activations</li>
+      <li>Run corrupted pass again, computing gradients w.r.t. output loss</li>
+      <li>For each activation: <code>attribution = gradient × Δactivation</code></li>
+      <li>Activations with high attribution are predicted to be important</li>
+    </ol>
+
+    <h4>Advantages</h4>
+    <ul>
+      <li><strong>Speed:</strong> One backward pass instead of thousands of forward passes</li>
+      <li><strong>Fine-grained:</strong> Can attribute to individual neurons, not just layers</li>
+      <li><strong>Actionable:</strong> Identifies specific interventions to test</li>
+    </ul>
+
+    <h4>Limitations</h4>
+    <ul>
+      <li>Linear approximation may miss nonlinear effects</li>
+      <li>Doesn't account for interactions between components</li>
+      <li>Should be validated with actual patching on top candidates</li>
+    </ul>
+
+    <h3>8. Average Indirect Effect (AIE) for Systematic Search</h3>
+    <p>
+      AIE provides a systematic framework for finding all causally important components.
+    </p>
+
+    <h4>The Method</h4>
+    <p>
+      For each component (layer, head, neuron):
+    </p>
+    <ol>
+      <li>Start with corrupted run</li>
+      <li>Patch only that component with clean activations</li>
+      <li>Measure effect on output: <code>AIE = P(correct | patch) - P(correct | no patch)</code></li>
+      <li>Repeat across many examples</li>
+      <li>Components with high average AIE are important</li>
+    </ol>
+
+    <h4>Hierarchical Search</h4>
+    <p>
+      Use AIE hierarchically to narrow down:
+    </p>
+    <ol>
+      <li>Test each layer → find important layers</li>
+      <li>Test each component in important layers → find important heads/neurons</li>
+      <li>Test positions × components → find spatiotemporal importance</li>
+    </ol>
+
+    <h4>Interpretation</h4>
+    <ul>
+      <li><strong>High AIE:</strong> Component mediates the causal effect (is in the causal path)</li>
+      <li><strong>Zero AIE:</strong> Component is not in the causal path for this behavior</li>
+      <li><strong>Negative AIE:</strong> Component actually suppresses the behavior (inhibitory)</li>
+    </ul>
+
+    <h3>9. Function Vectors: Elegant Application of Patching</h3>
+    <p>
+      <strong>Function vectors</strong> encode specific computational functions (like "negate" or "compare") and can be
+      extracted through causal intervention.
+    </p>
+
+    <h4>Core Idea</h4>
+    <p>
+      If a function is represented as a vector, adding/subtracting it should enable/disable that function:
+    </p>
+
+    <div class="diagram">
+      Original: "The tower is tall" → "tall"<br>
+      + Negation vector: "The tower is tall" → "short"<br>
+      - Negation vector: (might enhance affirmation)
+    </div>
+
+    <h4>Finding Function Vectors</h4>
+    <ol>
+      <li><strong>Create pairs:</strong> Sentences that differ only in the target function
+        <ul>
+          <li>"The tower is tall" / "The tower is short" (negation)</li>
+          <li>"Paris is larger than Lyon" / "Lyon is smaller than Paris" (comparison reversal)</li>
+        </ul>
+      </li>
+      <li><strong>Extract activations:</strong> Get activation differences at various layers/heads</li>
+      <li><strong>Find direction:</strong> Compute mean difference across pairs</li>
+      <li><strong>Test causally:</strong> Add vector to new examples, verify it performs the function</li>
+    </ol>
+
+    <h4>Function Vector Attention Heads</h4>
+    <p>
+      Some attention heads specialize in computing specific functions. You can identify them by:
+    </p>
+    <ul>
+      <li>High AIE when patching for function-related tasks</li>
+      <li>Attention patterns consistent with the function (e.g., comparison heads attend between compared entities)</li>
+      <li>Output vectors aligned with the function vector</li>
+    </ul>
+
+    <h4>Applications</h4>
+    <ul>
+      <li><strong>Negation:</strong> "NOT" function, flips sentiment/truth</li>
+      <li><strong>Comparison:</strong> "greater than", "less than"</li>
+      <li><strong>Temporal:</strong> "past", "future", "present"</li>
+      <li><strong>Modality:</strong> "possible", "necessary", "actual"</li>
+    </ul>
+
+    <h3>10. Designing Counterfactual Datasets</h3>
+    <p>
+      Effective causal experiments require carefully designed counterfactual pairs.
+    </p>
+
+    <h4>Principles</h4>
+
+    <p><strong>1. Minimal Pairs:</strong> Change only the target variable</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "France" / "Germany" (minimal change)<br>
+      Bad: "France" / "The United States of America" (length differs)
+    </code>
+
+    <p><strong>2. Matched Structure:</strong> Keep syntax and structure identical</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "The capital of France" / "The capital of Germany"<br>
+      Bad: "France's capital" / "The capital of Germany" (different structure)
+    </code>
+
+    <p><strong>3. Clear Causation:</strong> The changed variable should clearly cause the output difference</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "happy" / "sad" → sentiment changes<br>
+      Bad: "happy Tuesday" / "sad Wednesday" → multiple changes
+    </code>
+
+    <p><strong>4. Sufficient Diversity:</strong> Test across varied contexts</p>
+    <ul>
+      <li>Different sentence structures</li>
+      <li>Different positions of target variable</li>
+      <li>Different surrounding context</li>
+    </ul>
+
+    <h4>Common Patterns</h4>
+
+    <p><strong>Subject Substitution:</strong></p>
+    <code>The [subject] is located in [object]</code>
+
+    <p><strong>Attribute Swapping:</strong></p>
+    <code>The [adjective] person walked / The [different adjective] person walked</code>
+
+    <p><strong>Negation Toggle:</strong></p>
+    <code>The tower is tall / The tower is not tall</code>
+
+    <p><strong>Relation Reversal:</strong></p>
+    <code>A is greater than B / A is less than B</code>
+
+    <h4>Validation</h4>
+    <p>
+      Test your dataset:
+    </p>
+    <ul>
+      <li>Does the model produce different outputs for each pair?</li>
+      <li>Are the outputs consistent with your hypothesis?</li>
+      <li>Do results generalize across multiple examples?</li>
+      <li>Are there confounds (other variables that changed)?</li>
+    </ul>
+
+    <h3>Putting It All Together: A Research Workflow</h3>
+    <ol>
+      <li><strong>Hypothesis:</strong> Formulate what you think the model is doing</li>
+      <li><strong>Dataset:</strong> Design counterfactual pairs testing your hypothesis</li>
+      <li><strong>Baseline:</strong> Verify the model shows the target behavior</li>
+      <li><strong>Coarse search:</strong> Use AIE to find important layers/components</li>
+      <li><strong>Gradient attribution:</strong> Narrow down to specific activations</li>
+      <li><strong>Causal validation:</strong> Patch top candidates, measure effects</li>
+      <li><strong>Interpretation:</strong> Build mechanistic story from findings</li>
+      <li><strong>Generalization:</strong> Test on new examples/tasks</li>
+    </ol>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on experience with causal intervention:
+    </p>
+    <ul>
+      <li>Implement basic activation patching</li>
+      <li>Compare noise vs. clean patching</li>
+      <li>Compute causal effects (ACE, total effect, indirect effect)</li>
+      <li>Replicate ROME-style causal tracing on a small scale</li>
+      <li>Apply gradient-based attribution</li>
+      <li>Calculate AIE across components</li>
+      <li>Extract and test function vectors</li>
+      <li>Design and evaluate counterfactual datasets</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Causal Analysis of Your Concept</h3>
+
+      <p>
+        <strong>Goal:</strong> Use causal intervention techniques to identify which components of the model are
+        responsible for processing your concept.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>Counterfactual Dataset:</strong>
+          <ul>
+            <li>Design 15-25 minimal pairs for your concept</li>
+            <li>One version exhibits your concept, one doesn't</li>
+            <li>Keep all other variables constant</li>
+            <li>Validate that model behavior differs appropriately</li>
+          </ul>
+        </li>
+
+        <li><strong>Coarse Localization (AIE):</strong>
+          <ul>
+            <li>Use AIE to test each layer</li>
+            <li>Identify which layers are causally important</li>
+            <li>Test both attention and MLP components separately</li>
+            <li>Create visualization showing AIE across layers</li>
+          </ul>
+        </li>
+
+        <li><strong>Fine-Grained Attribution:</strong>
+          <ul>
+            <li>Apply gradient-based attribution within important layers</li>
+            <li>Identify top 10-20 most important activations</li>
+            <li>Validate with direct patching experiments</li>
+            <li>Do gradient predictions match patching results?</li>
+          </ul>
+        </li>
+
+        <li><strong>Component Analysis:</strong>
+          <ul>
+            <li>For top components, characterize what they do</li>
+            <li>Are they in attention heads or MLPs?</li>
+            <li>Which token positions are important?</li>
+            <li>Compare with ROME (MLPs) or entity tracking (attention) patterns</li>
+          </ul>
+        </li>
+
+        <li><strong>Function Vectors (if applicable):</strong>
+          <ul>
+            <li>If your concept involves a function, try extracting a function vector</li>
+            <li>Test if adding/subtracting it enables/disables the concept</li>
+            <li>Identify associated attention heads</li>
+          </ul>
+        </li>
+
+        <li><strong>Analysis and Interpretation:</strong>
+          <ul>
+            <li>Where is your concept processed? (layers, components, positions)</li>
+            <li>Is it localized like facts or distributed like bindings?</li>
+            <li>What causal pathways mediate your concept?</li>
+            <li>How do your findings compare to ROME/entity tracking?</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Jupyter notebook with all experiments and code</li>
+        <li>Written report (5-6 pages) including:
+          <ul>
+            <li>Counterfactual dataset with validation</li>
+            <li>AIE results and layer-wise analysis</li>
+            <li>Attribution findings with visualizations</li>
+            <li>Component characterization</li>
+            <li>Mechanistic interpretation of findings</li>
+            <li>Comparison with ROME/entity tracking patterns</li>
+          </ul>
+        </li>
+        <li>Visualizations:
+          <ul>
+            <li>Heatmap of AIE across layers/components</li>
+            <li>Attribution scores for top activations</li>
+            <li>Patching effect curves</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 5 class
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>

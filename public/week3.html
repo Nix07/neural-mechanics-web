@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 3: Representation Visualization - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 3: Representation Visualization</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      This week focuses on techniques for making the invisible visible. You'll learn how to visualize high-dimensional
+      activation vectors, understand the geometric structure of representations, and use visualization to discover
+      interpretable patterns. From PCA projections to attention heatmaps, from the geometry of truth to the dual-route
+      model of induction, you'll develop the visual intuition essential for mechanistic interpretability research.
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Apply fundamental linear algebra concepts: vectors, dot products, norms, matrix-vector products</li>
+      <li>Understand and apply Singular Value Decomposition (SVD) and Principal Component Analysis (PCA)</li>
+      <li>Use PCA to visualize high-dimensional activation vectors in 2D/3D</li>
+      <li>Explain the "geometry of truth" and how concepts form linear subspaces</li>
+      <li>Compute and interpret mass mean-difference vectors and Euclidean classifiers</li>
+      <li>Understand the geometry of token embeddings (encoder) and unembeddings (decoder)</li>
+      <li>Perform and interpret semantic-vector arithmetic (e.g., king - man + woman ≈ queen)</li>
+      <li>Use the logit lens to visualize what the model "thinks" at intermediate layers</li>
+      <li>Visualize and interpret attention patterns across heads and layers</li>
+      <li>Explain how induction heads work and visualize their characteristic attention patterns</li>
+      <li>Distinguish between token-level induction and concept-level induction</li>
+      <li>Understand the dual-route model of induction and how it relates to semantic processing</li>
+      <li>Explain how concept induction heads attend to the last token of multi-token words</li>
+      <li>Demonstrate that concept-level representations enable semantic-vector arithmetic</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2310.06824" target="_blank">The Geometry of Truth: Emergent Linear Structure
+            in Large Language Model Representations</a>
+        </div>
+        <div class="reading-description">How truth forms linear subspaces across contexts and models</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2209.11895" target="_blank">In-context Learning and Induction Heads</a>
+        </div>
+        <div class="reading-description">Discovering and visualizing induction heads through attention patterns</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2406.16116" target="_blank">Not All Language Model Features Are Linear</a>
+        </div>
+        <div class="reading-description">Exploring when and how features deviate from linear structure (includes
+          multi-token analysis)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2012.14913" target="_blank">The Singular Value Decompositions of Transformer
+            Weight Matrices are Highly Interpretable</a>
+        </div>
+        <div class="reading-description">Using SVD/PCA to find interpretable structure in weights and activations</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens" target="_blank">
+            Interpreting GPT: The Logit Lens</a>
+        </div>
+        <div class="reading-description">Blog post introducing the logit lens technique (LessWrong, not arXiv)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2209.10652" target="_blank">Toy Models of Superposition</a>
+        </div>
+        <div class="reading-description">Geometric understanding of how features pack into activation space</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/1301.3781" target="_blank">Linguistic Regularities in Continuous Space Word
+            Representations (Word2Vec)</a>
+        </div>
+        <div class="reading-description">Classic paper on semantic-vector arithmetic</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework
+            for Transformer Circuits</a>
+        </div>
+        <div class="reading-description">Technical reference on attention patterns and composition</div>
+      </div>
+    </div>
+
+    <h3>Note on Dual-Route Induction</h3>
+    <p style="margin-left: 20px; color: #555;">
+      <em>The Feucht et al. paper on dual-route induction and concept-level copying is forthcoming. In lecture, we'll
+        discuss the key findings: how concept induction heads attend to the last token of multi-token words and how
+        their representations support semantic-vector arithmetic better than token-level induction.</em>
+    </p>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: Visualizing the Geometry of Language Model Representations</h2>
+
+    <h3>1. Linear Algebra Review</h3>
+    <p>
+      Before diving into visualization, let's review the mathematical tools we'll use.
+    </p>
+
+    <h4>Vectors and Operations</h4>
+    <p>
+      A <strong>vector</strong> is a list of numbers: <code>v = [v₁, v₂, ..., vₙ]</code>
+    </p>
+    <ul>
+      <li><strong>Dot product:</strong> <code>v · w = v₁w₁ + v₂w₂ + ... + vₙwₙ</code> (measures similarity/projection)
+      </li>
+      <li><strong>Norm (length):</strong> <code>||v|| = √(v · v)</code></li>
+      <li><strong>Cosine similarity:</strong> <code>cos(θ) = (v · w) / (||v|| ||w||)</code></li>
+    </ul>
+
+    <h4>Matrix-Vector Products</h4>
+    <p>
+      A matrix <code>M</code> transforms vectors: <code>y = Mx</code><br>
+      Each row of <code>M</code> computes one dot product with <code>x</code>
+    </p>
+
+    <h4>Singular Value Decomposition (SVD)</h4>
+    <p>
+      Any matrix <code>M</code> can be decomposed as: <code>M = UΣVᵀ</code>
+    </p>
+    <ul>
+      <li><code>U</code>: Left singular vectors (output space basis)</li>
+      <li><code>Σ</code>: Singular values (scaling factors, diagonal matrix)</li>
+      <li><code>V</code>: Right singular vectors (input space basis)</li>
+    </ul>
+
+    <h4>Principal Component Analysis (PCA)</h4>
+    <p>
+      PCA finds the directions of maximum variance in data:
+    </p>
+    <ol>
+      <li>Center the data: subtract the mean</li>
+      <li>Compute SVD of the centered data matrix</li>
+      <li>The columns of <code>V</code> are the principal components</li>
+      <li>Project data onto top k components for dimensionality reduction</li>
+    </ol>
+
+    <p>
+      <strong>Why PCA matters:</strong> It lets us visualize 768-dimensional activation vectors in 2D or 3D while
+      preserving the most important structure.
+    </p>
+
+    <h3>2. Visualizing Activation Vectors with PCA</h3>
+    <p>
+      Activation vectors live in high-dimensional space (typically 768-12,288 dimensions). PCA projects them into 2D or
+      3D while preserving as much variance as possible.
+    </p>
+
+    <h4>Example: Visualizing Word Embeddings</h4>
+    <ol>
+      <li>Collect activation vectors for many words</li>
+      <li>Apply PCA to find the top 2 principal components</li>
+      <li>Plot each word at its projected coordinates</li>
+      <li>Observe clusters: animals together, countries together, etc.</li>
+    </ol>
+
+    <p>
+      <strong>What to look for:</strong>
+    </p>
+    <ul>
+      <li>Semantic clusters (related concepts group together)</li>
+      <li>Linear structure (arithmetic relationships visible as parallel arrows)</li>
+      <li>Outliers (unusual or polysemantic words)</li>
+    </ul>
+
+    <h3>3. The Geometry of Truth</h3>
+    <p>
+      A remarkable finding: truth is represented as a <strong>linear direction</strong> in activation space, consistent
+      across diverse contexts.
+    </p>
+
+    <h4>Key Results</h4>
+    <ul>
+      <li>True vs. false statements produce systematically different activations</li>
+      <li>The difference vector (truth direction) generalizes across topics</li>
+      <li>Truth forms a linear subspace that can be found via PCA on contrastive examples</li>
+      <li>This structure emerges without explicit truth training</li>
+    </ul>
+
+    <h4>Mass Mean-Difference Vectors</h4>
+    <p>
+      A simple but powerful technique:
+    </p>
+    <ol>
+      <li>Collect activations for many examples with property A</li>
+      <li>Collect activations for many examples without property A</li>
+      <li>Compute: <code>direction_A = mean(with_A) - mean(without_A)</code></li>
+      <li>This direction captures the essence of property A</li>
+    </ol>
+
+    <p>
+      <strong>Applications:</strong>
+    </p>
+    <ul>
+      <li>Truth vs. false</li>
+      <li>Positive vs. negative sentiment</li>
+      <li>Formal vs. informal language</li>
+      <li>Your concept vs. not-your-concept</li>
+    </ul>
+
+    <h4>Euclidean Classifiers</h4>
+    <p>
+      Use the mass mean-difference vector as a classifier:
+    </p>
+    <div class="diagram">
+      score = activation · direction_vector<br>
+      if score > threshold: predict property A present<br>
+      else: predict property A absent
+    </div>
+
+    <p>
+      This simple linear classifier often works surprisingly well, supporting the linear representation hypothesis.
+    </p>
+
+    <h3>4. The Geometry of Token Embeddings and Unembeddings</h3>
+
+    <h4>Token Embedding Matrix (Encoder)</h4>
+    <p>
+      Converts token IDs to vectors: <code>E[token_id] → vector</code><br>
+      Each row of <code>E</code> is a token's initial representation.
+    </p>
+
+    <h4>Unembedding Matrix (Decoder)</h4>
+    <p>
+      Converts final activations to vocabulary logits: <code>logits = U × activation</code><br>
+      Each row of <code>U</code> is a direction in activation space that "votes" for that token.
+    </p>
+
+    <h4>Geometric Insight</h4>
+    <p>
+      Token embedding and unembedding matrices often share similar geometric structure:
+    </p>
+    <ul>
+      <li>Semantically similar tokens have similar embedding vectors</li>
+      <li>Similar tokens have similar unembedding directions</li>
+      <li>The dot product <code>E[i] · U[j]ᵀ</code> measures how much token i "predicts" token j</li>
+      <li>PCA on embedding/unembedding matrices reveals semantic clusters</li>
+    </ul>
+
+    <h3>5. Semantic-Vector Arithmetic</h3>
+    <p>
+      One of the most striking properties of neural language representations: you can do meaningful arithmetic with
+      concept vectors.
+    </p>
+
+    <h4>Classic Examples</h4>
+    <div class="diagram">
+      king - man + woman ≈ queen<br>
+      Paris - France + Germany ≈ Berlin<br>
+      walking - walk + swim ≈ swimming
+    </div>
+
+    <h4>Why It Works</h4>
+    <p>
+      If concepts are linear directions, then:
+    </p>
+    <ul>
+      <li>"Male" is a direction in embedding space</li>
+      <li>"Royalty" is another direction</li>
+      <li>"King" ≈ "royalty" + "male"</li>
+      <li>"Queen" ≈ "royalty" + "female"</li>
+      <li>Therefore: king - male + female ≈ queen</li>
+    </ul>
+
+    <h4>Limitations</h4>
+    <ul>
+      <li>Works best for simple, compositional relationships</li>
+      <li>Quality depends on training data biases</li>
+      <li>Not all concepts compose linearly</li>
+    </ul>
+
+    <p>
+      We'll see later how <strong>concept-level induction</strong> relies on this arithmetic property.
+    </p>
+
+    <h3>6. The Logit Lens</h3>
+    <p>
+      The <strong>logit lens</strong> is a technique for understanding what the model is "thinking" at intermediate
+      layers, before it reaches the final output.
+    </p>
+
+    <h4>How It Works</h4>
+    <ol>
+      <li>Extract activation vector at layer L</li>
+      <li>Apply the unembedding matrix: <code>intermediate_logits = U × activation_L</code></li>
+      <li>Convert to probabilities: <code>probs = softmax(intermediate_logits)</code></li>
+      <li>Examine top predictions</li>
+    </ol>
+
+    <h4>What You Learn</h4>
+    <p>
+      The logit lens reveals:
+    </p>
+    <ul>
+      <li>How predictions evolve across layers</li>
+      <li>When the model "decides" on its answer (which layer)</li>
+      <li>Whether early layers have different hypotheses than final output</li>
+      <li>How context modifies representations layer by layer</li>
+    </ul>
+
+    <h4>Example: Factual Recall</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Prompt: "The capital of France is"<br><br>
+      Layer 0: (embedding) → "France", "Paris", "the"<br>
+      Layer 3: → "Paris", "a", "the"<br>
+      Layer 6: → "Paris", "Lyon", "Marseille"<br>
+      Layer 12: (final) → "Paris", "the", "France"<br>
+    </code>
+
+    <p>
+      This shows the model refining its prediction across layers, with middle layers strongest on the correct answer.
+    </p>
+
+    <h3>7. Visualizing Attention Patterns</h3>
+    <p>
+      Attention weights tell us which tokens each position is "looking at." Visualizing these patterns reveals
+      interpretable structure.
+    </p>
+
+    <h4>Attention Heatmap</h4>
+    <p>
+      For each head, create a matrix where <code>A[i,j]</code> = attention from position i to position j<br>
+      Plot as a heatmap with tokens on both axes.
+    </p>
+
+    <h4>Common Patterns</h4>
+    <ul>
+      <li><strong>Diagonal:</strong> Attending to same position (self-attention)</li>
+      <li><strong>Previous token:</strong> Strong band just below diagonal</li>
+      <li><strong>Beginning of sequence:</strong> Vertical stripe at position 0</li>
+      <li><strong>Punctuation:</strong> Attending to periods, commas</li>
+      <li><strong>Syntactic dependencies:</strong> Verbs attending to subjects</li>
+    </ul>
+
+    <h3>8. Induction Heads: Visualizing Pattern-Copying</h3>
+    <p>
+      Now we dive deep into <strong>induction heads</strong>, one of the first interpretable circuits discovered in
+      transformers.
+    </p>
+
+    <h4>What Induction Heads Do</h4>
+    <p>
+      Pattern copying: if the model has seen <code>[A][B]</code> earlier, then upon seeing <code>[A]</code> again, it
+      predicts <code>[B]</code>.
+    </p>
+
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Input: "foo bar baz foo bar baz foo"<br>
+      At final "foo", model predicts: "bar" (copying the pattern)
+    </code>
+
+    <h4>How They Work: Two-Head Cooperation</h4>
+    <p>
+      Induction requires <strong>two attention heads working together</strong> across layers:
+    </p>
+
+    <p><strong>Step 1: Previous-Token Head (earlier layer)</strong></p>
+    <ul>
+      <li>Attends to position i-1 from position i</li>
+      <li>Copies information about what came before</li>
+      <li>Writes this to the residual stream</li>
+    </ul>
+
+    <div class="diagram">
+      At "bar": attend to previous token → residual stream now encodes "previous token was foo"
+    </div>
+
+    <p><strong>Step 2: Induction Head (later layer)</strong></p>
+    <ul>
+      <li>Looks for positions where the previous token matches current context</li>
+      <li>When it finds a match, it attends to what came after in the past</li>
+      <li>Promotes that token in its output</li>
+    </ul>
+
+    <div class="diagram">
+      Current: "foo"<br>
+      Induction head: "Find where previous token was 'foo'"<br>
+      → Finds earlier "foo bar"<br>
+      → Attends to "bar" (what came after "foo")<br>
+      → Predicts "bar" for current position
+    </div>
+
+    <h4>Characteristic Attention Pattern</h4>
+    <p>
+      Induction heads have a distinctive "stripe" pattern in attention visualization:
+    </p>
+    <ul>
+      <li>Strong attention to positions where pattern previously occurred</li>
+      <li>Offset by +1 (attending to what came after the match)</li>
+      <li>Creates a characteristic diagonal stripe pattern offset from the main diagonal</li>
+    </ul>
+
+    <h3>9. Token Induction vs. Concept Induction</h3>
+    <p>
+      Not all induction is created equal. Recent work has revealed two fundamentally different types.
+    </p>
+
+    <h4>Token-Level Induction</h4>
+    <p>
+      Copies <strong>literal tokens</strong>:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "Alice went to the store. Bob went to the park. Alice went to the ___"<br>
+      → Predicts "store" (exact token that followed "Alice went to the" before)
+    </code>
+
+    <p>
+      <strong>Limitation:</strong> Fails when surface form changes but meaning is the same.
+    </p>
+
+    <h4>Concept-Level Induction</h4>
+    <p>
+      Copies <strong>semantic patterns</strong>:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The capital of France is Paris. The capital of Germany is Berlin. The capital of Italy is ___"<br>
+      → Predicts "Rome" (concept pattern: [country] → [capital])<br>
+    </code>
+
+    <p>
+      Even though "France", "Germany", and "Italy" are different tokens, the model recognizes the semantic pattern and
+      applies it.
+    </p>
+
+    <h4>Key Differences</h4>
+    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+      <tr style="background-color: #f0f0f0;">
+        <th style="border: 1px solid #ccc; padding: 8px;">Property</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Token Induction</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Concept Induction</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Matching</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Exact token match</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Semantic similarity</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Copying</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Literal token</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Semantic role</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Generalization</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Limited</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Strong</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Vector Arithmetic</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Not required</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Essential</td>
+      </tr>
+    </table>
+
+    <h3>10. The Dual-Route Model of Induction</h3>
+    <p>
+      Research has shown that transformers implement <strong>both routes</strong> simultaneously, with different
+      attention heads specializing in each type.
+    </p>
+
+    <h4>Dual-Route Architecture</h4>
+    <ul>
+      <li><strong>Route 1 (Token):</strong> Fast, exact-match based copying</li>
+      <li><strong>Route 2 (Concept):</strong> Slower, semantic-similarity based copying</li>
+      <li>Both routes contribute to final predictions</li>
+      <li>Model can use whichever is more appropriate for context</li>
+    </ul>
+
+    <h4>Multi-Token Words: A Key Insight</h4>
+    <p>
+      One striking finding: <strong>concept induction heads attend to the last token of multi-token words</strong>.
+    </p>
+
+    <p>
+      Example: "San Francisco" is tokenized as ["San", "Francisco"]
+    </p>
+    <ul>
+      <li><strong>Token induction:</strong> Might attend to "San" (first token)</li>
+      <li><strong>Concept induction:</strong> Attends to "Francisco" (last token)</li>
+    </ul>
+
+    <p>
+      <strong>Why?</strong> The last token's representation has accumulated information from previous tokens through
+      attention, creating a more complete semantic representation of "San Francisco" as a city.
+    </p>
+
+    <h4>Semantic-Vector Arithmetic in Concept Induction</h4>
+    <p>
+      Concept induction heads rely on semantic similarity in activation space:
+    </p>
+    <ol>
+      <li>Represent "France", "Germany", "Italy" as activation vectors</li>
+      <li>These vectors are similar (all countries)</li>
+      <li>Find where vector similar to "France" appeared before</li>
+      <li>Copy what came after (in semantic role space: the capital)</li>
+    </ol>
+
+    <p>
+      This enables generalization through vector arithmetic:
+    </p>
+    <div class="diagram">
+      "Italy" ≈ "France" in semantic space<br>
+      → Find context where "France" occurred → [capital]<br>
+      → Apply same semantic relationship to "Italy" → [its capital]
+    </div>
+
+    <p>
+      <strong>Evidence:</strong> Concept induction heads' representations show better semantic-vector arithmetic
+      properties than token induction heads. You can perform operations like "Paris - France + Italy" in their
+      activation space and get "Rome".
+    </p>
+
+    <h3>Putting It All Together: A Visualization Toolkit</h3>
+    <p>
+      You now have multiple tools for understanding representations:
+    </p>
+    <ol>
+      <li><strong>PCA:</strong> Reduce dimensionality, visualize clusters and structure</li>
+      <li><strong>Mass mean-difference:</strong> Find concept directions</li>
+      <li><strong>Geometric analysis:</strong> Understand truth, token encodings/decodings</li>
+      <li><strong>Vector arithmetic:</strong> Test compositional structure</li>
+      <li><strong>Logit lens:</strong> See intermediate predictions</li>
+      <li><strong>Attention visualization:</strong> Understand information flow</li>
+      <li><strong>Induction analysis:</strong> Distinguish token vs. concept copying</li>
+    </ol>
+
+    <p>
+      These techniques combine to give you a comprehensive view of how language models represent and process
+      information.
+    </p>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on practice with visualization techniques:
+    </p>
+    <ul>
+      <li>Apply PCA to activation vectors and create 2D/3D visualizations</li>
+      <li>Compute and visualize mass mean-difference vectors</li>
+      <li>Explore token embedding and unembedding geometry</li>
+      <li>Perform semantic-vector arithmetic</li>
+      <li>Implement and apply the logit lens</li>
+      <li>Visualize attention patterns as heatmaps</li>
+      <li>Find and visualize induction heads</li>
+      <li>Test token vs. concept induction</li>
+      <li>Analyze multi-token word processing in concept induction</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Visualize Your Concept's Geometric Structure</h3>
+
+      <p>
+        <strong>Goal:</strong> Use visualization techniques to understand how your concept is represented
+        geometrically in the model.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>PCA Visualization:</strong>
+          <ul>
+            <li>Collect activations for 50-100 examples (with and without your concept)</li>
+            <li>Apply PCA and create 2D visualization</li>
+            <li>Color points by whether they have your concept</li>
+            <li>Do examples cluster? Is there clear separation?</li>
+          </ul>
+        </li>
+
+        <li><strong>Concept Direction:</strong>
+          <ul>
+            <li>Compute mass mean-difference vector for your concept</li>
+            <li>Build a Euclidean classifier and report accuracy</li>
+            <li>Visualize the concept direction in your PCA plot</li>
+            <li>Compare across layers: which layer has the clearest geometric structure?</li>
+          </ul>
+        </li>
+
+        <li><strong>Semantic Arithmetic:</strong>
+          <ul>
+            <li>Test whether your concept supports vector arithmetic</li>
+            <li>Design 3-5 analogies (A:B :: C:?)</li>
+            <li>Compute vector arithmetic and find nearest neighbors</li>
+            <li>Does it work? Why or why not?</li>
+          </ul>
+        </li>
+
+        <li><strong>Logit Lens Analysis:</strong>
+          <ul>
+            <li>Apply logit lens across all layers</li>
+            <li>Track how predictions evolve for concept-relevant prompts</li>
+            <li>Which layer first shows strong signal for your concept?</li>
+            <li>Create visualization showing prediction evolution</li>
+          </ul>
+        </li>
+
+        <li><strong>Attention Analysis (Optional):</strong>
+          <ul>
+            <li>If your concept relates to specific tokens or patterns, visualize attention</li>
+            <li>Find heads that attend to concept-relevant positions</li>
+            <li>Does attention structure differ for examples with vs. without your concept?</li>
+          </ul>
+        </li>
+
+        <li><strong>Induction Testing (If Applicable):</strong>
+          <ul>
+            <li>If your concept involves pattern copying, test for induction</li>
+            <li>Is it token-level or concept-level induction?</li>
+            <li>Visualize relevant attention heads</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Jupyter notebook with all visualizations and analysis</li>
+        <li>Written report (4-5 pages) including:
+          <ul>
+            <li>PCA plots with interpretation</li>
+            <li>Concept direction analysis and classifier performance</li>
+            <li>Semantic arithmetic experiments and results</li>
+            <li>Logit lens evolution plots</li>
+            <li>Layer-wise comparison of geometric structure</li>
+            <li>Insights about how your concept is represented</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 4 class
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
