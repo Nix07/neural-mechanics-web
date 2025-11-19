@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 6: Probes and Masks - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    .warning-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 6: Probes and Masks</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Previous weeks focused on direct intervention: patching activations, tracing circuits, measuring causal effects.
+      This week introduces <strong>auxiliary models</strong>—small models trained to help us understand larger ones.
+      Probes extract specific information from representations, while masks identify which components matter. These
+      methods are faster and differentiable, but require careful interpretation to avoid spurious conclusions.
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Explain the role of auxiliary models in interpretability and when to use them vs direct intervention methods
+      </li>
+      <li>Implement linear probes to extract specific information from model representations</li>
+      <li>Compare linear vs nonlinear (MLP) probes and explain the interpretability tradeoff</li>
+      <li>Design probe training protocols: dataset construction, train/test splits, and control tasks</li>
+      <li>Interpret probe accuracy: distinguish between "information is present" vs "information is used causally"</li>
+      <li>Use control tasks to validate that probes measure intended concepts (e.g., selectivity tests)</li>
+      <li>Implement learned masks to identify important components (neurons, heads, layers)</li>
+      <li>Explain the difference between hard ablation, soft masking, and learned masks</li>
+      <li>Apply regularization techniques (L0, L1) to encourage sparse, interpretable masks</li>
+      <li>Compare probing results with causal intervention results: when do they agree/disagree?</li>
+      <li>Identify probe pitfalls: overfitting (learning spurious correlations), underfitting (probe too simple), and the
+        "information presence ≠ causal use" fallacy</li>
+      <li>Use masking for automated component selection and pruning</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/1909.03368" target="_blank">What do you learn from context? Probing for
+            sentence structure in contextualized word representations</a>
+        </div>
+        <div class="reading-description">Foundational paper on probing methodology and control tasks</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2003.02912" target="_blank">A Primer on Neural Network Architectures for
+            Natural Language Processing</a>
+        </div>
+        <div class="reading-description">Section on probing classifiers and their interpretation (see Chapter 7)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2201.12361" target="_blank">Discovering Latent Knowledge in Language Models
+            Without Supervision</a>
+        </div>
+        <div class="reading-description">CCS method: contrast-consistent search for truthful probes</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2106.03826" target="_blank">Learning to Learn with Feedback and Local
+            Plasticity</a>
+        </div>
+        <div class="reading-description">Learned masks for model understanding and pruning</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/1909.01066" target="_blank">Designing and Interpreting Probes with Control
+            Tasks</a>
+        </div>
+        <div class="reading-description">How to validate probes with proper control experiments</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2004.03061" target="_blank">Information-Theoretic Probing with Minimum
+            Description Length</a>
+        </div>
+        <div class="reading-description">MDL framework for evaluating probe complexity</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/1905.06316" target="_blank">Probing Neural Network Comprehension of Natural
+            Language Arguments</a>
+        </div>
+        <div class="reading-description">Case study on probing for reasoning and argumentation</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/1905.05950" target="_blank">The Lottery Ticket Hypothesis: Finding Sparse,
+            Trainable Neural Networks</a>
+        </div>
+        <div class="reading-description">Related work on finding important subnetworks via masking</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: Auxiliary Models for Interpretability</h2>
+
+    <h3>1. Why Use Auxiliary Models?</h3>
+    <p>
+      In previous weeks, we used <strong>direct intervention</strong>: patching activations, ablating components,
+      tracing circuits. These methods are powerful but have limitations:
+    </p>
+
+    <ul>
+      <li><strong>Expensive:</strong> Testing every component requires many forward passes</li>
+      <li><strong>Discrete:</strong> Hard ablations aren't differentiable</li>
+      <li><strong>Hypothesis-driven:</strong> You need to know what to look for</li>
+    </ul>
+
+    <p>
+      <strong>Auxiliary models</strong> offer complementary benefits:
+    </p>
+
+    <ul>
+      <li><strong>Efficient:</strong> Train once, test anywhere</li>
+      <li><strong>Differentiable:</strong> Can use gradient-based optimization</li>
+      <li><strong>Exploratory:</strong> Can discover patterns you didn't expect</li>
+    </ul>
+
+    <h4>Two Main Types</h4>
+    <p><strong>Probes:</strong> Small models that read information from representations</p>
+    <div class="diagram">
+      Hidden State → [Probe] → Predicted Concept
+    </div>
+
+    <p><strong>Masks:</strong> Learned parameters that identify important components</p>
+    <div class="diagram">
+      Component × [Mask Weight] → Masked Component → Output
+    </div>
+
+    <h4>Key Question: What Do They Tell Us?</h4>
+    <p>
+      <strong>Critical distinction:</strong> Probes and masks show what <em>could be done</em> with representations,
+      not necessarily what the model <em>actually does</em>. Always validate with causal interventions.
+    </p>
+
+    <h3>2. Linear Probes: Reading Out Information</h3>
+    <p>
+      A <strong>linear probe</strong> is the simplest auxiliary model: a linear classifier trained to extract specific
+      information from hidden states.
+    </p>
+
+    <h4>The Setup</h4>
+    <p>
+      Given hidden states <code>h</code> at some layer, train a linear classifier to predict concept <code>y</code>:
+    </p>
+
+    <div class="math">
+      ŷ = Wh + b
+    </div>
+
+    <p>
+      Where <code>W</code> is a weight matrix and <code>b</code> is a bias vector.
+    </p>
+
+    <h4>Training Procedure</h4>
+    <ol>
+      <li><strong>Extract representations:</strong> Run model on labeled data, save hidden states</li>
+      <li><strong>Freeze main model:</strong> Don't update the main model's weights</li>
+      <li><strong>Train classifier:</strong> Optimize <code>W</code> and <code>b</code> to predict labels</li>
+      <li><strong>Evaluate:</strong> Test on held-out data</li>
+    </ol>
+
+    <h4>What High Probe Accuracy Means</h4>
+    <p>
+      If a linear probe achieves high accuracy, it tells us:
+    </p>
+    <ul>
+      <li>✓ The information is <strong>linearly accessible</strong> in the representation</li>
+      <li>✓ A simple linear transformation can extract it</li>
+      <li>✗ Does NOT prove the model uses this information causally</li>
+      <li>✗ Does NOT prove the model uses it in this way</li>
+    </ul>
+
+    <h4>Example: Probing for Sentiment</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Text: "This movie was terrible"<br>
+      Hidden state at layer 8: [h₁, h₂, ..., h₇₆₈]<br>
+      Linear probe: ŷ = W·h + b<br>
+      Prediction: Negative sentiment (98% confidence)
+    </code>
+
+    <p>
+      <strong>Interpretation:</strong> Layer 8 contains linearly accessible sentiment information. But does the model
+      actually <em>use</em> this information? Need to verify with interventions.
+    </p>
+
+    <h3>3. Nonlinear Probes: MLP Probes</h3>
+    <p>
+      Sometimes information isn't linearly accessible. <strong>MLP probes</strong> (multi-layer perceptrons) can
+      extract nonlinear patterns.
+    </p>
+
+    <h4>Architecture</h4>
+    <div class="math">
+      ŷ = W₂ · ReLU(W₁h + b₁) + b₂
+    </div>
+
+    <p>
+      This adds a hidden layer with nonlinear activation, allowing more complex transformations.
+    </p>
+
+    <h4>The Interpretability Tradeoff</h4>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>Linear Probe</th>
+        <th>MLP Probe</th>
+      </tr>
+      <tr>
+        <td>Expressiveness</td>
+        <td>Limited (linear only)</td>
+        <td>High (nonlinear patterns)</td>
+      </tr>
+      <tr>
+        <td>Interpretability</td>
+        <td>Clear (linear direction)</td>
+        <td>Opaque (nonlinear transformation)</td>
+      </tr>
+      <tr>
+        <td>What it measures</td>
+        <td>Linearly accessible info</td>
+        <td>Computationally accessible info</td>
+      </tr>
+      <tr>
+        <td>Overfitting risk</td>
+        <td>Lower</td>
+        <td>Higher</td>
+      </tr>
+    </table>
+
+    <h4>When to Use Each</h4>
+    <ul>
+      <li><strong>Start with linear:</strong> Simpler, more interpretable, sufficient for many concepts</li>
+      <li><strong>Try MLP if:</strong> Linear probe fails but you believe information is present</li>
+      <li><strong>Compare both:</strong> Gap between linear and MLP performance reveals nonlinearity</li>
+    </ul>
+
+    <div class="warning-box">
+      <strong>Warning:</strong> High MLP probe accuracy with low linear probe accuracy suggests information is present
+      but not in a simple, interpretable form. The model may not use it the way your MLP probe does.
+    </div>
+
+    <h3>4. Probe Training: Methodology and Best Practices</h3>
+
+    <h4>Dataset Construction</h4>
+    <p><strong>1. Balanced classes:</strong></p>
+    <ul>
+      <li>Equal (or known) distribution of labels</li>
+      <li>Prevents probe from learning spurious correlations</li>
+      <li>Example: 50% positive, 50% negative sentiment</li>
+    </ul>
+
+    <p><strong>2. Minimal confounds:</strong></p>
+    <ul>
+      <li>Control for other variables that correlate with target</li>
+      <li>Example: If probing for tense, balance for sentiment</li>
+      <li>Otherwise probe might learn sentiment instead of tense</li>
+    </ul>
+
+    <p><strong>3. Diverse examples:</strong></p>
+    <ul>
+      <li>Different sentence structures, lengths, vocabularies</li>
+      <li>Test generalization, not memorization</li>
+    </ul>
+
+    <h4>Train/Test Splits</h4>
+    <ul>
+      <li><strong>Standard split:</strong> 80% train, 10% validation, 10% test</li>
+      <li><strong>Cross-validation:</strong> For small datasets, use k-fold CV</li>
+      <li><strong>Distribution shift test:</strong> Create test set from different domain</li>
+    </ul>
+
+    <h4>Training Hyperparameters</h4>
+    <ul>
+      <li><strong>Learning rate:</strong> Start with 1e-3, tune if needed</li>
+      <li><strong>Regularization:</strong> L2 penalty to prevent overfitting</li>
+      <li><strong>Early stopping:</strong> Stop when validation accuracy plateaus</li>
+      <li><strong>Batch size:</strong> 32-128 typically works well</li>
+    </ul>
+
+    <h3>5. Control Tasks: Validating Probe Behavior</h3>
+    <p>
+      <strong>Control tasks</strong> verify that probes actually measure what you think they measure, not spurious
+      correlations.
+    </p>
+
+    <h4>Selectivity Test</h4>
+    <p>
+      <strong>Question:</strong> Does the probe specifically extract your target concept, or does it respond to other
+      properties?
+    </p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Train probe on your concept (e.g., "is sentence past tense?")</li>
+      <li>Create control dataset with different concept (e.g., "is sentence negative?")</li>
+      <li>Test probe on control dataset</li>
+      <li>Probe should have ~random accuracy on control task</li>
+    </ol>
+
+    <p>
+      <strong>If probe succeeds on control:</strong> It's not specifically measuring your concept, it's picking up a
+      confound.
+    </p>
+
+    <h4>Random Label Test</h4>
+    <p>
+      <strong>Question:</strong> Is the probe overfitting to training data?
+    </p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Randomize labels in training set</li>
+      <li>Train probe on random labels</li>
+      <li>If probe achieves high accuracy, it's overfitting</li>
+      <li>Real patterns should not be learnable from random labels</li>
+    </ol>
+
+    <h4>Layer Progression Test</h4>
+    <p>
+      <strong>Question:</strong> Which layers contain the information?
+    </p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Train probes at every layer</li>
+      <li>Plot accuracy vs layer</li>
+      <li>Reveals where information emerges and flows</li>
+    </ol>
+
+    <h3>6. Probe Pitfalls: What Can Go Wrong</h3>
+
+    <h4>Pitfall 1: Overfitting</h4>
+    <p>
+      <strong>Problem:</strong> Probe learns spurious patterns specific to training data.
+    </p>
+
+    <p><strong>Symptoms:</strong></p>
+    <ul>
+      <li>High training accuracy, low test accuracy</li>
+      <li>Probe uses many parameters (high capacity)</li>
+      <li>Works on training distribution, fails on shifted distribution</li>
+    </ul>
+
+    <p><strong>Solutions:</strong></p>
+    <ul>
+      <li>Regularization (L2 penalty, dropout)</li>
+      <li>More training data</li>
+      <li>Simpler probe (linear instead of MLP)</li>
+      <li>Early stopping based on validation set</li>
+      <li>Cross-validation</li>
+    </ul>
+
+    <h4>Pitfall 2: Underfitting</h4>
+    <p>
+      <strong>Problem:</strong> Probe is too simple to extract available information.
+    </p>
+
+    <p><strong>Symptoms:</strong></p>
+    <ul>
+      <li>Low accuracy on both training and test sets</li>
+      <li>Linear probe fails but concept seems extractable</li>
+      <li>Gap between human intuition and probe performance</li>
+    </ul>
+
+    <p><strong>Solutions:</strong></p>
+    <ul>
+      <li>Try nonlinear probe (MLP)</li>
+      <li>Increase probe capacity</li>
+      <li>Check if information is actually present (use intervention)</li>
+      <li>Try different layers</li>
+      <li>Verify data quality and labels</li>
+    </ul>
+
+    <h4>Pitfall 3: The "Information Presence ≠ Causal Use" Fallacy</h4>
+    <p>
+      <strong>Problem:</strong> High probe accuracy doesn't prove the model uses that information.
+    </p>
+
+    <div class="diagram">
+      Probe success: Information is ACCESSIBLE<br>
+      ≠<br>
+      Model uses it: Information is USED CAUSALLY
+    </div>
+
+    <p><strong>Example:</strong></p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      You can probe for "number of vowels in sentence"<br>
+      Probe achieves 95% accuracy<br>
+      → Information is linearly accessible<br>
+      <br>
+      But does the model use vowel count for predictions?<br>
+      → Probably not! It's likely a spurious byproduct
+    </code>
+
+    <p><strong>Solution: Validate with interventions</strong></p>
+    <ul>
+      <li>Use activation patching to modify the probed direction</li>
+      <li>If output changes as expected, information is causally used</li>
+      <li>If output unchanged, information is merely present</li>
+    </ul>
+
+    <h4>Pitfall 4: Confounds and Spurious Correlations</h4>
+    <p>
+      <strong>Problem:</strong> Probe learns correlated features instead of target concept.
+    </p>
+
+    <p><strong>Example:</strong></p>
+    <ul>
+      <li>Goal: Probe for whether sentence mentions "France"</li>
+      <li>Confound: Most France examples also mention "Paris"</li>
+      <li>Probe might learn to detect "Paris" instead of "France"</li>
+    </ul>
+
+    <p><strong>Solutions:</strong></p>
+    <ul>
+      <li>Use control tasks to test selectivity</li>
+      <li>Balance confounds in training data</li>
+      <li>Test on adversarial examples (France without Paris)</li>
+    </ul>
+
+    <h3>7. Learned Masks: Identifying Important Components</h3>
+    <p>
+      Instead of hard ablation, <strong>learned masks</strong> use continuous parameters to identify which components
+      matter.
+    </p>
+
+    <h4>The Setup</h4>
+    <p>
+      Each component (neuron, head, layer) gets a mask parameter <code>m ∈ [0, 1]</code>:
+    </p>
+
+    <div class="math">
+      output = m × component_activation
+    </div>
+
+    <p>
+      Where <code>m=1</code> means "keep component" and <code>m=0</code> means "ablate component".
+    </p>
+
+    <h4>Training Objective</h4>
+    <p>
+      Optimize masks to maintain model performance while minimizing mask sum:
+    </p>
+
+    <div class="math">
+      Loss = Task_Loss + λ · Σ(mask_weights)
+    </div>
+
+    <ul>
+      <li><strong>Task_Loss:</strong> Keep model predictions accurate</li>
+      <li><strong>Σ(mask_weights):</strong> Prefer sparse masks (fewer active components)</li>
+      <li><strong>λ:</strong> Regularization strength (controls sparsity)</li>
+    </ul>
+
+    <h4>Interpretation</h4>
+    <ul>
+      <li><strong>High mask weight (m ≈ 1):</strong> Component is important for task</li>
+      <li><strong>Low mask weight (m ≈ 0):</strong> Component is not necessary</li>
+      <li><strong>Intermediate weights:</strong> Component has some effect</li>
+    </ul>
+
+    <h3>8. Hard Ablation vs Soft Masking vs Learned Masks</h3>
+
+    <table>
+      <tr>
+        <th>Method</th>
+        <th>How it Works</th>
+        <th>Advantages</th>
+        <th>Disadvantages</th>
+      </tr>
+      <tr>
+        <td><strong>Hard Ablation</strong></td>
+        <td>Set activation to zero</td>
+        <td>
+          • Clear interpretation<br>
+          • Causal claim<br>
+          • No training needed
+        </td>
+        <td>
+          • Not differentiable<br>
+          • Expensive (test each)<br>
+          • Binary (on/off)
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Soft Masking</strong></td>
+        <td>Multiply by weight m ∈ [0,1]</td>
+        <td>
+          • Differentiable<br>
+          • Continuous effect<br>
+          • Can interpolate
+        </td>
+        <td>
+          • Still need to set m<br>
+          • Interpretation less clear<br>
+          • Not truly causal
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Learned Masks</strong></td>
+        <td>Train m to optimize objective</td>
+        <td>
+          • Automated discovery<br>
+          • Differentiable<br>
+          • Finds importance jointly
+        </td>
+        <td>
+          • Requires training<br>
+          • Task-specific<br>
+          • Correlation not causation
+        </td>
+      </tr>
+    </table>
+
+    <h4>When to Use Each</h4>
+    <ul>
+      <li><strong>Hard ablation:</strong> Testing specific hypotheses, validating causal claims</li>
+      <li><strong>Soft masking:</strong> Analyzing effect magnitude, interpolating between states</li>
+      <li><strong>Learned masks:</strong> Exploratory discovery, automated pruning, gradient-based search</li>
+    </ul>
+
+    <h3>9. Sparse Regularization for Interpretable Masks</h3>
+    <p>
+      Without regularization, learned masks tend to keep most components active (not interpretable). <strong>Sparsity
+        regularization</strong> encourages simpler solutions.
+    </p>
+
+    <h4>L1 Regularization</h4>
+    <p>
+      Add sum of absolute mask weights to loss:
+    </p>
+
+    <div class="math">
+      Loss = Task_Loss + λ · Σ|mᵢ|
+    </div>
+
+    <p><strong>Effect:</strong> Drives small weights to exactly zero (sparse solution)</p>
+
+    <h4>L0 Regularization (Approximate)</h4>
+    <p>
+      Penalize the <em>number</em> of non-zero weights:
+    </p>
+
+    <div class="math">
+      Loss = Task_Loss + λ · ||m||₀
+    </div>
+
+    <p>
+      Since L0 norm is non-differentiable, use continuous relaxations:
+    </p>
+    <ul>
+      <li><strong>Hard concrete distribution:</strong> Samples binary masks during training</li>
+      <li><strong>Sigmoid with temperature:</strong> Sharp sigmoid approximates step function</li>
+    </ul>
+
+    <h4>Choosing Regularization Strength (λ)</h4>
+    <ul>
+      <li><strong>Too low:</strong> Dense masks (many components active), not interpretable</li>
+      <li><strong>Too high:</strong> Over-pruning, task performance degrades</li>
+      <li><strong>Sweet spot:</strong> Maximum sparsity while maintaining performance</li>
+    </ul>
+
+    <p><strong>Practical approach:</strong></p>
+    <ol>
+      <li>Train with multiple λ values</li>
+      <li>Plot: task accuracy vs number of active components</li>
+      <li>Choose λ at the "elbow" of the curve</li>
+    </ol>
+
+    <h4>Benefits of Sparse Masks</h4>
+    <ul>
+      <li><strong>Interpretability:</strong> Easier to understand with fewer components</li>
+      <li><strong>Efficiency:</strong> Can actually remove components (pruning)</li>
+      <li><strong>Generalization:</strong> Simpler models often generalize better</li>
+      <li><strong>Falsifiability:</strong> Clear claims about which components matter</li>
+    </ul>
+
+    <h3>10. Comparing Probes with Causal Interventions</h3>
+    <p>
+      Probes and interventions often give different answers. Understanding when and why reveals what each method
+      measures.
+    </p>
+
+    <h4>Case 1: Agreement (Best Case)</h4>
+    <div class="diagram">
+      Probe: Concept X is linearly accessible at layer 8<br>
+      Intervention: Patching layer 8 transfers concept X<br>
+      → Information is both PRESENT and CAUSALLY USED
+    </div>
+
+    <p><strong>Interpretation:</strong> Strong evidence that layer 8 processes concept X.</p>
+
+    <h4>Case 2: Probe Succeeds, Intervention Fails</h4>
+    <div class="diagram">
+      Probe: 95% accuracy for concept X<br>
+      Intervention: Patching has no effect on X-related outputs<br>
+      → Information is PRESENT but NOT CAUSALLY USED
+    </div>
+
+    <p><strong>Interpretation:</strong> The model computes X but doesn't use it for this task. It might be:</p>
+    <ul>
+      <li>A byproduct of other computations</li>
+      <li>Used for different tasks/contexts</li>
+      <li>Spuriously correlated information</li>
+    </ul>
+
+    <h4>Case 3: Probe Fails, Intervention Succeeds</h4>
+    <div class="diagram">
+      Probe: Low accuracy (random guessing)<br>
+      Intervention: Patching strongly affects X-related outputs<br>
+      → Information is USED but NOT LINEARLY ACCESSIBLE
+    </div>
+
+    <p><strong>Interpretation:</strong> The model uses X in a nonlinear or distributed way that linear probes can't
+      extract. Try:</p>
+    <ul>
+      <li>Nonlinear (MLP) probes</li>
+      <li>Different layers</li>
+      <li>Multiple layers combined</li>
+    </ul>
+
+    <h4>Case 4: Both Fail</h4>
+    <div class="diagram">
+      Probe: Low accuracy<br>
+      Intervention: No effect<br>
+      → Information is ABSENT (or you're looking in the wrong place)
+    </div>
+
+    <h4>Best Practice: Use Both Methods</h4>
+    <ol>
+      <li><strong>Start with probes:</strong> Fast exploration, identify candidate layers</li>
+      <li><strong>Validate with interventions:</strong> Test causal role of high-probe layers</li>
+      <li><strong>Investigate disagreements:</strong> Learn about representational structure</li>
+    </ol>
+
+    <h3>11. Using Masks for Automated Discovery</h3>
+    <p>
+      Learned masks can automate component selection, complementing manual circuit discovery.
+    </p>
+
+    <h4>Workflow</h4>
+    <ol>
+      <li><strong>Define task:</strong> What behavior are you studying?</li>
+      <li><strong>Initialize masks:</strong> One parameter per component (all start at 1.0)</li>
+      <li><strong>Train masks:</strong> Optimize to maintain behavior with sparsity penalty</li>
+      <li><strong>Threshold:</strong> Components with high masks are important</li>
+      <li><strong>Validate:</strong> Use ablation to verify causal importance</li>
+    </ol>
+
+    <h4>Hierarchical Masking</h4>
+    <p>
+      Progressively narrow down from coarse to fine-grained:
+    </p>
+    <ol>
+      <li><strong>Layer-level masks:</strong> Which layers matter?</li>
+      <li><strong>Head-level masks:</strong> Within important layers, which heads?</li>
+      <li><strong>Neuron-level masks:</strong> Within important heads, which neurons?</li>
+    </ol>
+
+    <p>
+      This reduces search space and computational cost.
+    </p>
+
+    <h4>Comparison with ACDC (Week 5)</h4>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>ACDC (Path Patching)</th>
+        <th>Learned Masks</th>
+      </tr>
+      <tr>
+        <td>Method</td>
+        <td>Ablation-based</td>
+        <td>Gradient-based</td>
+      </tr>
+      <tr>
+        <td>Causal claim</td>
+        <td>Strong (actual intervention)</td>
+        <td>Weak (correlation)</td>
+      </tr>
+      <tr>
+        <td>Speed</td>
+        <td>Slow (test each edge)</td>
+        <td>Fast (parallel gradient)</td>
+      </tr>
+      <tr>
+        <td>Granularity</td>
+        <td>Edges between components</td>
+        <td>Individual components</td>
+      </tr>
+      <tr>
+        <td>Best for</td>
+        <td>Validating specific circuits</td>
+        <td>Exploratory discovery</td>
+      </tr>
+    </table>
+
+    <h3>12. Research Workflow: Combining Probes and Interventions</h3>
+    <ol>
+      <li><strong>Explore with probes:</strong>
+        <ul>
+          <li>Train probes at all layers for your concept</li>
+          <li>Identify candidate layers with high accuracy</li>
+          <li>Fast, covers entire model</li>
+        </ul>
+      </li>
+
+      <li><strong>Discover with masks:</strong>
+        <ul>
+          <li>Train learned masks on concept-relevant task</li>
+          <li>Identify important components (high mask weights)</li>
+          <li>Hierarchical: layers → heads → neurons</li>
+        </ul>
+      </li>
+
+      <li><strong>Validate with interventions:</strong>
+        <ul>
+          <li>Use activation patching on probe-identified layers</li>
+          <li>Ablate mask-identified components</li>
+          <li>Verify causal role</li>
+        </ul>
+      </li>
+
+      <li><strong>Investigate disagreements:</strong>
+        <ul>
+          <li>If probe succeeds but intervention fails: information present but unused</li>
+          <li>If intervention succeeds but probe fails: nonlinear or distributed representation</li>
+          <li>Both reveal important properties of how the model works</li>
+        </ul>
+      </li>
+
+      <li><strong>Iterate:</strong>
+        <ul>
+          <li>Use findings to refine hypotheses</li>
+          <li>Design better probes based on intervention results</li>
+          <li>Test new components suggested by masks</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Goal:</strong> Triangulate understanding using multiple methods. No single technique tells the whole
+      story.
+    </p>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on experience with probes and masks:
+    </p>
+    <ul>
+      <li>Train linear probes for concept detection across layers</li>
+      <li>Compare linear vs MLP probe performance</li>
+      <li>Implement control tasks to validate probes</li>
+      <li>Test for overfitting and underfitting</li>
+      <li>Train learned masks with L1/L0 regularization</li>
+      <li>Compare probe findings with intervention results</li>
+      <li>Identify and interpret disagreements between methods</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Probing and Masking Your Concept</h3>
+
+      <p>
+        <strong>Goal:</strong> Use probes and masks to identify where your concept is represented, then validate
+        findings with interventions.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>Probe Training:</strong>
+          <ul>
+            <li>Create balanced dataset for your concept (positive and negative examples)</li>
+            <li>Train linear probes at every layer</li>
+            <li>Plot probe accuracy vs layer to visualize information flow</li>
+            <li>Train MLP probes for comparison</li>
+          </ul>
+        </li>
+
+        <li><strong>Control Tasks:</strong>
+          <ul>
+            <li>Design selectivity control task (different concept, similar structure)</li>
+            <li>Test probes on control task to verify specificity</li>
+            <li>Random label baseline to test for overfitting</li>
+          </ul>
+        </li>
+
+        <li><strong>Learned Masks:</strong>
+          <ul>
+            <li>Train component masks with L1 regularization</li>
+            <li>Experiment with different λ values</li>
+            <li>Plot: performance vs sparsity tradeoff</li>
+            <li>Identify top components by mask weight</li>
+          </ul>
+        </li>
+
+        <li><strong>Validation with Interventions:</strong>
+          <ul>
+            <li>For top probe layers: test with activation patching</li>
+            <li>For top mask components: test with ablation</li>
+            <li>Compare probe/mask findings with intervention results</li>
+            <li>Investigate any disagreements</li>
+          </ul>
+        </li>
+
+        <li><strong>Analysis:</strong>
+          <ul>
+            <li>Where is your concept linearly accessible?</li>
+            <li>Where is it causally used?</li>
+            <li>Is representation linear or nonlinear?</li>
+            <li>Which components are truly necessary?</li>
+            <li>What do disagreements reveal about representation structure?</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Jupyter notebook with all experiments and code</li>
+        <li>Written report (5-6 pages) including:
+          <ul>
+            <li>Probe accuracy across layers (with visualizations)</li>
+            <li>Control task results and interpretation</li>
+            <li>Learned mask analysis (sparsity-performance tradeoff)</li>
+            <li>Validation results comparing probes/masks with interventions</li>
+            <li>Analysis of agreements and disagreements</li>
+            <li>Interpretation: what does this reveal about your concept?</li>
+          </ul>
+        </li>
+        <li>Visualizations:
+          <ul>
+            <li>Probe accuracy vs layer (line plot)</li>
+            <li>Linear vs MLP probe comparison</li>
+            <li>Mask weight distribution (histogram)</li>
+            <li>Sparsity-performance curve</li>
+            <li>Probe vs intervention comparison table</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 7 class
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
