@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 1: Benchmarking - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 1: Benchmarking</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Before we can understand what's happening inside a large language model, we need to know how to measure what it
+      does. This week introduces the fundamental methods for evaluating LLM behavior, from basic probability outputs to
+      sophisticated benchmarking strategies. You'll learn how to design effective prompts, interpret model outputs, and
+      assess whether a model has truly learned a concept or simply memorized training data.
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Describe what an autoregressive language modeling neural network calculates, including its inputs and how it
+        outputs probabilities for a single token</li>
+      <li>Explain how to sample probabilistic output autoregressively to generate long outputs</li>
+      <li>Apply three prompting strategies for measuring model capabilities: instruction-following, cloze prompts, and
+        in-context learning</li>
+      <li>Use methods for conforming to easy-to-evaluate output formats through ICL, custom decoding, or MCQ prompting
+      </li>
+      <li>Evaluate long-form output using an LLM-as-judge approach</li>
+      <li>Understand and compute evaluation metrics: precision, recall, F1, and perplexity</li>
+      <li>Apply statistical significance testing and interpret error bars in evaluation results</li>
+      <li>Distinguish between memorization and generalization, and identify the risk of training data overlap and
+        contamination</li>
+      <li>Describe the approaches used by HELM to create fair and accurate benchmarks</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2211.09110" target="_blank">Holistic Evaluation of Language Models (HELM)</a>
+        </div>
+        <div class="reading-description">Comprehensive benchmark framework covering accuracy, calibration, robustness,
+          fairness, and efficiency</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2005.14165" target="_blank">Language Models are Few-Shot Learners (GPT-3)</a>
+        </div>
+        <div class="reading-description">Foundational paper on in-context learning and prompting strategies for
+          evaluation</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2306.04528" target="_blank">Judging LLM-as-a-Judge with MT-Bench and
+            Chatbot Arena</a>
+        </div>
+        <div class="reading-description">Methods for using LLMs to evaluate open-ended responses reliably</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2104.08758" target="_blank">Extracting Training Data from Large Language
+            Models</a>
+        </div>
+        <div class="reading-description">Understanding memorization vs. generalization through training data extraction
+        </div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2311.01964" target="_blank">Rethinking Benchmark and Contamination for
+            Language Models with Rephrased Samples</a>
+        </div>
+        <div class="reading-description">Methods for detecting and addressing training data contamination</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2212.09251" target="_blank">Discovering Language Model Behaviors with
+            Model-Written Evaluations</a>
+        </div>
+        <div class="reading-description">Using models to generate diverse test cases automatically</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2109.07958" target="_blank">Measuring Massive Multitask Language Understanding
+            (MMLU)</a>
+        </div>
+        <div class="reading-description">Multiple-choice question format for evaluating knowledge across 57 subjects
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: Understanding and Measuring LLM Behavior</h2>
+
+    <h3>1. The Autoregressive Language Model</h3>
+    <p>
+      At its core, a large language model is a function that takes a sequence of tokens as input and produces a
+      probability distribution over the next token. Given a sequence of tokens <code>x₁, x₂, ..., xₙ</code>, the model
+      computes:
+    </p>
+    <p style="text-align: center; font-style: italic;">
+      P(xₙ₊₁ | x₁, x₂, ..., xₙ)
+    </p>
+    <p>
+      This is a distribution over the entire vocabulary—typically 50,000 to 100,000+ tokens. The model doesn't directly
+      generate text; it generates probabilities. Understanding this distinction is crucial: every behavior we observe
+      emerges from these probability distributions.
+    </p>
+
+    <h3>2. Autoregressive Sampling</h3>
+    <p>
+      To generate longer sequences, we sample from the model autoregressively:
+    </p>
+    <ul>
+      <li><strong>Greedy decoding:</strong> Always pick the highest probability token</li>
+      <li><strong>Temperature sampling:</strong> Sample from the distribution, with temperature controlling randomness
+      </li>
+      <li><strong>Top-k sampling:</strong> Sample only from the k most likely tokens</li>
+      <li><strong>Nucleus (top-p) sampling:</strong> Sample from the smallest set of tokens whose cumulative
+        probability exceeds p</li>
+    </ul>
+    <p>
+      Each strategy affects the diversity, coherence, and randomness of generated text. For benchmarking purposes,
+      greedy decoding or low-temperature sampling provides deterministic, reproducible results.
+    </p>
+
+    <h3>3. Prompting Strategies for Evaluation</h3>
+    <p>
+      How we prompt the model determines what capabilities we measure. Three fundamental strategies:
+    </p>
+
+    <h4>Instruction-Following</h4>
+    <p>
+      Modern models trained with instruction-tuning respond to direct commands:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "Translate the following sentence to French: Hello, how are you?"
+    </code>
+
+    <h4>Cloze Prompts</h4>
+    <p>
+      Format the task as text completion, measuring the probability of specific completions:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The capital of France is ___"
+    </code>
+    <p>
+      We can evaluate whether "Paris" has higher probability than alternatives. This works even with base models that
+      haven't seen instruction-tuning.
+    </p>
+
+    <h4>In-Context Learning (ICL)</h4>
+    <p>
+      Provide examples in the prompt to demonstrate the task:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Input: The movie was terrible.<br>
+      Sentiment: Negative<br><br>
+      Input: I loved every minute!<br>
+      Sentiment: Positive<br><br>
+      Input: It was okay, nothing special.<br>
+      Sentiment:
+    </code>
+    <p>
+      ICL allows us to test capabilities without fine-tuning and is particularly powerful for evaluating novel concepts.
+    </p>
+
+    <h3>4. Constraining Outputs for Evaluation</h3>
+    <p>
+      Reliable benchmarking requires outputs in predictable formats. Several approaches:
+    </p>
+    <ul>
+      <li><strong>Multiple choice questions:</strong> Force selection from predefined options by comparing token
+        probabilities for "A", "B", "C", "D"</li>
+      <li><strong>Custom decoding:</strong> Constrain the output vocabulary or use grammar-based sampling to ensure
+        valid formats (e.g., only allowing "Yes"/"No")</li>
+      <li><strong>Few-shot ICL:</strong> Demonstrate the desired format in examples, teaching the model to respond
+        consistently</li>
+      <li><strong>Probability-based evaluation:</strong> Instead of generating text, directly measure P(correct_answer)
+        vs P(incorrect_answer)</li>
+    </ul>
+
+    <h3>5. LLM-as-Judge for Long-Form Outputs</h3>
+    <p>
+      Some capabilities—like writing quality, reasoning coherence, or helpfulness—can't be reduced to multiple choice.
+      LLM-as-judge uses a strong model (often GPT-4) to evaluate outputs:
+    </p>
+    <ul>
+      <li>Provide the judge with evaluation criteria and rubrics</li>
+      <li>Ask for both a score and justification</li>
+      <li>Use pairwise comparison rather than absolute scoring for better reliability</li>
+      <li>Be aware of biases: judges favor longer responses, their own outputs, and certain styles</li>
+    </ul>
+    <p>
+      MT-Bench demonstrated that LLM judges correlate well with human judgments for many tasks, but always validate on
+      a subset with human evaluation.
+    </p>
+
+    <h3>6. Evaluation Metrics Beyond Accuracy</h3>
+    <p>
+      Different tasks require different metrics:
+    </p>
+
+    <h4>Classification Metrics</h4>
+    <ul>
+      <li><strong>Accuracy:</strong> Proportion of correct predictions (good for balanced classes)</li>
+      <li><strong>Precision:</strong> Of predicted positives, what fraction are actually positive? (TP / (TP + FP))
+      </li>
+      <li><strong>Recall:</strong> Of actual positives, what fraction did we find? (TP / (TP + FN))</li>
+      <li><strong>F1 Score:</strong> Harmonic mean of precision and recall: 2 × (precision × recall) / (precision +
+        recall)</li>
+    </ul>
+
+    <h4>Generation Metrics</h4>
+    <ul>
+      <li><strong>Perplexity:</strong> Measures how "surprised" the model is by a sequence. Lower is better. Defined as
+        exp(average negative log probability of tokens)</li>
+      <li><strong>BLEU, ROUGE:</strong> Compare generated text to reference texts (useful for translation, summarization)
+      </li>
+    </ul>
+
+    <h3>7. Statistical Significance and Error Bars</h3>
+    <p>
+      A model scoring 85% vs 83% on a benchmark might not be meaningfully different. We must quantify uncertainty:
+    </p>
+    <ul>
+      <li><strong>Standard error:</strong> For accuracy on n samples, SE = √(p(1-p)/n)</li>
+      <li><strong>Confidence intervals:</strong> 95% CI is approximately ± 2 × SE for large n</li>
+      <li><strong>Bootstrap resampling:</strong> Repeatedly sample (with replacement) from your test set to estimate
+        the distribution of scores</li>
+      <li><strong>Statistical tests:</strong> Use McNemar's test for comparing two models on the same examples</li>
+    </ul>
+    <p>
+      Rule of thumb: differences smaller than 2-3% on typical benchmark sizes often aren't statistically significant.
+    </p>
+
+    <h3>8. Memorization vs. Generalization</h3>
+    <p>
+      A fundamental question: Did the model learn the concept, or did it memorize training examples?
+    </p>
+
+    <h4>Training Data Contamination</h4>
+    <p>
+      If test examples appeared in training data, the model might simply recall them rather than demonstrate true
+      understanding. This is especially problematic because:
+    </p>
+    <ul>
+      <li>Popular benchmarks leak into training corpora (scraped web data, code repositories)</li>
+      <li>Models trained on "the whole internet" likely saw many benchmark examples</li>
+      <li>Paraphrased or slightly modified examples may still trigger memorization</li>
+    </ul>
+
+    <h4>Detecting and Mitigating Contamination</h4>
+    <ul>
+      <li><strong>N-gram overlap:</strong> Search training data for test example substrings</li>
+      <li><strong>Membership inference:</strong> Compare perplexity on test vs similar synthetic examples</li>
+      <li><strong>Rephrased evaluation:</strong> Create novel rewordings of test questions</li>
+      <li><strong>Held-out test sets:</strong> Keep evaluation data truly private until final evaluation</li>
+    </ul>
+
+    <h4>Generalization Tests</h4>
+    <p>
+      Beyond contamination, test for genuine understanding:
+    </p>
+    <ul>
+      <li>Novel compositions of known concepts</li>
+      <li>Out-of-distribution examples</li>
+      <li>Counterfactual variations</li>
+      <li>Transfer to related but different tasks</li>
+    </ul>
+
+    <h3>9. HELM: Holistic Evaluation</h3>
+    <p>
+      The Holistic Evaluation of Language Models (HELM) benchmark exemplifies comprehensive evaluation:
+    </p>
+
+    <h4>Key Principles</h4>
+    <ul>
+      <li><strong>Broad coverage:</strong> 42+ scenarios across question answering, reasoning, generation,
+        classification, etc.</li>
+      <li><strong>Multi-metric:</strong> Evaluates accuracy, calibration, robustness, fairness, bias, toxicity, and
+        efficiency</li>
+      <li><strong>Standardized prompting:</strong> Consistent few-shot examples and formatting across models</li>
+      <li><strong>Transparency:</strong> All prompts, data, and evaluation code are public</li>
+    </ul>
+
+    <h4>Metrics Beyond Accuracy</h4>
+    <ul>
+      <li><strong>Calibration:</strong> Do predicted probabilities match actual correctness rates?</li>
+      <li><strong>Robustness:</strong> Performance under perturbations (typos, paraphrases, contrast sets)</li>
+      <li><strong>Fairness:</strong> Equal performance across demographic groups</li>
+      <li><strong>Efficiency:</strong> Inference cost, carbon footprint</li>
+    </ul>
+
+    <h3>Putting It All Together</h3>
+    <p>
+      Effective benchmarking requires:
+    </p>
+    <ol>
+      <li>Understanding model fundamentals (token probabilities, sampling)</li>
+      <li>Choosing appropriate prompting strategies for your concept</li>
+      <li>Designing tasks with evaluable outputs</li>
+      <li>Selecting metrics that match your research questions</li>
+      <li>Quantifying uncertainty and statistical significance</li>
+      <li>Ruling out memorization through contamination checks and generalization tests</li>
+      <li>Following established best practices (HELM) for reproducible, fair evaluation</li>
+    </ol>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise will give you hands-on experience with the core concepts:
+    </p>
+    <ul>
+      <li>Load a small language model (GPT-2 or similar)</li>
+      <li>Examine token probability distributions</li>
+      <li>Implement different sampling strategies</li>
+      <li>Test cloze, ICL, and instruction prompts</li>
+      <li>Calculate precision, recall, F1, and perplexity</li>
+      <li>Perform statistical significance testing</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Design Benchmark Prompts for Your Concept</h3>
+
+      <p>
+        <strong>Goal:</strong> Create a preliminary benchmark to measure whether an LLM understands the concept your
+        team has chosen to investigate.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>Concept Selection:</strong> Briefly describe your chosen concept from your field (e.g., "legal
+          standing in tort law", "theory of mind in psychology", "proof by contradiction in mathematics")</li>
+
+        <li><strong>Prompt Suite:</strong> Design at least 10-15 test prompts that probe different aspects of your
+          concept, including:
+          <ul>
+            <li>At least one example using instruction-following</li>
+            <li>At least one cloze-style prompt</li>
+            <li>At least one few-shot ICL prompt</li>
+            <li>A mix of easy and challenging cases</li>
+          </ul>
+        </li>
+
+        <li><strong>Evaluation Strategy:</strong> For each prompt, specify:
+          <ul>
+            <li>How you'll evaluate the response (MCQ, exact match, LLM-as-judge, etc.)</li>
+            <li>What metrics you'll use (accuracy, F1, perplexity, human ratings, etc.)</li>
+            <li>What would count as evidence of understanding vs. memorization</li>
+          </ul>
+        </li>
+
+        <li><strong>Generalization Tests:</strong> Include at least 3 prompts specifically designed to test
+          generalization:
+          <ul>
+            <li>Novel combinations or edge cases unlikely to be in training data</li>
+            <li>Counterfactual scenarios</li>
+            <li>Transfer to related but distinct concepts</li>
+          </ul>
+        </li>
+
+        <li><strong>Written Report:</strong> Submit a 2-3 page document containing:
+          <ul>
+            <li>Your concept description and why it's important to measure</li>
+            <li>Your complete prompt suite with expected responses</li>
+            <li>Your evaluation methodology</li>
+            <li>Discussion of potential memorization vs. generalization concerns</li>
+            <li>How you'll measure statistical significance (sample size, confidence intervals)</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Written report (PDF)</li>
+        <li>Prompts in a structured format (JSON, CSV, or spreadsheet)</li>
+        <li>Optional: Initial test results on one or more models</li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 2 class
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
