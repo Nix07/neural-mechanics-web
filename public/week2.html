@@ -160,8 +160,6 @@
       <li>Explain the superposition hypothesis with a concrete example</li>
       <li>Identify and describe the main components of a transformer language model: token encoders, residual stream,
         token decoders, multihead attention layers, and MLP layers</li>
-      <li>Explain the mechanism of induction heads in detail, including how two attention heads cooperate to enable
-        pattern copying</li>
       <li>Understand sparse autoencoders (SAEs) at a level sufficient to use Neuronpedia</li>
       <li>Use Neuronpedia to find representation vectors for concepts</li>
       <li>Successfully steer a language model using representation vectors</li>
@@ -179,14 +177,6 @@
         </div>
         <div class="reading-description">Foundational paper on superposition, distributed representations, and why
           features don't align with neurons</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2209.11895" target="_blank">In-context Learning and Induction Heads</a>
-        </div>
-        <div class="reading-description">How two-layer attention mechanisms create pattern-copying behavior in
-          transformers</div>
       </div>
 
       <div class="reading-item">
@@ -454,60 +444,7 @@
       x_final → linear → logits → softmax → P(next token)
     </div>
 
-    <h3>8. Induction Heads: A Concrete Mechanism</h3>
-    <p>
-      <strong>Induction heads</strong> are one of the first interpretable circuits discovered in transformers. They
-      perform pattern copying: if the model has seen [A][B] earlier in the sequence, then upon seeing [A] again, it
-      predicts [B].
-    </p>
-
-    <h4>Example Behavior</h4>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "The cat sat on the mat. The dog sat on the rug. The cat sat on the ___"<br><br>
-      Model predicts: "mat" (copying the pattern that followed "cat sat on the" earlier)
-    </code>
-
-    <h4>How They Work: Two-Head Cooperation</h4>
-    <p>
-      Induction requires <strong>two attention heads working together</strong>:
-    </p>
-
-    <p><strong>Step 1: Previous Token Head (earlier layer)</strong></p>
-    <ul>
-      <li>Attends to the previous token position</li>
-      <li>Copies information about what token came before</li>
-      <li>Writes this to the residual stream</li>
-    </ul>
-
-    <div class="diagram">
-      Position i attends to position i-1<br>
-      Residual stream at "cat" now contains info about previous token
-    </div>
-
-    <p><strong>Step 2: Induction Head (later layer)</strong></p>
-    <ul>
-      <li>Searches for positions where the previous token matches the current context</li>
-      <li>When it finds [A] in the past, it looks at what came after: [B]</li>
-      <li>Copies [B] information forward to predict it next</li>
-    </ul>
-
-    <div class="diagram">
-      Current position: "The cat ..."<br>
-      Induction head: "I see 'cat', let me find where 'cat' appeared before"<br>
-      → Finds earlier "cat sat on the mat"<br>
-      → Predicts "sat" next (what came after "cat" before)
-    </div>
-
-    <h4>Why This Matters</h4>
-    <ul>
-      <li><strong>Interpretable mechanism:</strong> We can explain exactly how pattern-copying works</li>
-      <li><strong>Emergent behavior:</strong> This sophisticated behavior emerges from simple attention operations</li>
-      <li><strong>Compositionality:</strong> Shows how components cooperate to create circuits</li>
-      <li><strong>Existence proof:</strong> Demonstrates that meaningful, understandable mechanisms exist in trained
-        models</li>
-    </ul>
-
-    <h3>9. Sparse Autoencoders: Finding Features in Superposition</h3>
+    <h3>8. Sparse Autoencoders: Finding Features in Superposition</h3>
     <p>
       Since neurons are polysemantic due to superposition, we need tools to disentangle the features actually encoded
       in activation vectors. <strong>Sparse Autoencoders (SAEs)</strong> are one such tool.
@@ -550,7 +487,7 @@
       feature directions.
     </p>
 
-    <h3>10. Steering: Causal Intervention with Representation Vectors</h3>
+    <h3>9. Steering: Causal Intervention with Representation Vectors</h3>
     <p>
       Now we put it all together. If concepts are linear directions, we can <strong>steer</strong> behavior by adding
       concept vectors to activations.
@@ -609,7 +546,6 @@
       <li>Specifically, concepts are directions in activation space (linear hypothesis)</li>
       <li>Multiple concepts pack into fewer dimensions via superposition</li>
       <li>Transformers process sequences through attention and MLPs, modifying the residual stream</li>
-      <li>Interpretable mechanisms like induction heads show how components cooperate</li>
       <li>SAEs help us find interpretable feature directions despite superposition</li>
       <li>We can extract and apply these directions to steer model behavior</li>
     </ol>
@@ -623,7 +559,6 @@
     <ul>
       <li>Load a transformer language model and examine its architecture</li>
       <li>Extract and visualize activation vectors at different layers</li>
-      <li>Find and explore induction heads</li>
       <li>Extract steering vectors using contrastive pairs</li>
       <li>Apply steering vectors to control model behavior</li>
       <li>Experiment with Neuronpedia to find feature directions</li>
