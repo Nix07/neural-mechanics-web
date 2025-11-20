@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Proposal Template - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      font-size: 24pt;
+      margin-bottom: 10px;
+    }
+
+    .course-info {
+      text-align: center;
+      font-size: 12pt;
+      margin-bottom: 30px;
+      color: #555;
+    }
+
+    h2 {
+      color: #34495e;
+      font-size: 14pt;
+      margin-top: 25px;
+      border-bottom: 2px solid #bdc3c7;
+      padding-bottom: 5px;
+    }
+
+    h3 {
+      color: #555;
+      font-size: 12pt;
+      margin-top: 15px;
+      font-style: italic;
+    }
+
+    .instructions {
+      background-color: #f0f7ff;
+      border-left: 4px solid #3498db;
+      padding: 10px 15px;
+      margin: 15px 0;
+      font-size: 10pt;
+      color: #666;
+    }
+
+    .fill-in {
+      background-color: #f9f9f9;
+      border: 1px dashed #ccc;
+      padding: 15px;
+      margin: 10px 0;
+      min-height: 60px;
+      font-style: italic;
+      color: #999;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    ul {
+      margin: 10px 0;
+    }
+
+    li {
+      margin: 5px 0;
+    }
+
+    @media print {
+      .instructions {
+        display: none;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Project Proposal</h1>
+  <div class="course-info">
+    Neural Mechanics: Special Topics in AI<br>
+    Northeastern University, Spring 2026<br>
+    Prof. David Bau
+  </div>
+
+  <div class="instructions">
+    <strong>Instructions:</strong> Fill in each section below. Replace the gray placeholder text with your responses.
+    Delete these instruction boxes before submitting. Aim for 1-2 pages total (single-spaced). Submit as PDF to Canvas.
+  </div>
+
+  <div class="section">
+    <h2>1. Team Members & Expertise</h2>
+    <div class="instructions">
+      List each team member with their name, department, year, and relevant expertise/background.
+    </div>
+    <div class="fill-in">
+      <strong>Team Member 1:</strong> [Name], [Department], [Year]<br>
+      <em>Expertise:</em> [Describe relevant background, e.g., "PhD in Linguistics, specializes in semantics and
+      pragmatics"]<br><br>
+
+      <strong>Team Member 2:</strong> [Name], [Department], [Year]<br>
+      <em>Expertise:</em> [Describe relevant background]<br><br>
+
+      <strong>Team Member 3:</strong> [Name], [Department], [Year]<br>
+      <em>Expertise:</em> [Describe relevant background]<br>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2. Concept Description</h2>
+    <div class="instructions">
+      What concept will you study? Write 1-2 paragraphs explaining: (a) what the concept is, (b) why it's important in
+      your domain, and (c) why it's interesting for LLM interpretability.
+    </div>
+    <div class="fill-in">
+      [Your response here. Example: "We will study how LLMs represent musical key relationships (e.g., tonic, dominant,
+      subdominant). Musical key is fundamental to Western music theory and affects how listeners perceive tension and
+      resolution. Understanding whether LLMs encode these relationships could reveal how they process structured
+      conceptual systems beyond linguistic syntax..."]
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. Research Questions</h2>
+    <div class="instructions">
+      List 3-5 specific, testable questions you'll investigate. Frame them to be answerable with interpretability
+      methods.
+    </div>
+    <div class="fill-in">
+      <ol>
+        <li>[Example: "Where in the network is [concept] represented? (Which layers and components?)"]</li>
+        <li>[Example: "Is the representation localized (few neurons/heads) or distributed?"]</li>
+        <li>[Example: "Can we causally intervene to manipulate [concept] in model outputs?"]</li>
+        <li>[Your question 4]</li>
+        <li>[Your question 5]</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4. Preliminary Examples</h2>
+    <div class="instructions">
+      Provide 5-10 example sentences/prompts where your concept is present vs. absent. These demonstrate how you'll
+      operationalize the concept for testing. Be specific!
+    </div>
+    <div class="fill-in">
+      <strong>Concept Present:</strong>
+      <ul>
+        <li>[Example 1: "The chord progression moves from C major to G major, creating dominant tension."]</li>
+        <li>[Example 2: ...]</li>
+        <li>[Example 3: ...]</li>
+        <li>[Example 4: ...]</li>
+        <li>[Example 5: ...]</li>
+      </ul>
+
+      <strong>Concept Absent (Control):</strong>
+      <ul>
+        <li>[Example 1: "The melody uses notes C, D, E, F, G." (no key relationship)]</li>
+        <li>[Example 2: ...]</li>
+        <li>[Example 3: ...]</li>
+        <li>[Example 4: ...]</li>
+        <li>[Example 5: ...]</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>5. Methodology Overview</h2>
+    <div class="instructions">
+      Briefly outline which interpretability methods (from the course) you plan to use. You don't need detailed
+      implementation plans yet—just show you've thought about the approach.
+    </div>
+    <div class="fill-in">
+      [Example: "We will:<br>
+      <ul>
+        <li><strong>Week 1:</strong> Create a benchmark dataset of 200 examples testing key recognition</li>
+        <li><strong>Week 2:</strong> Use steering vectors to test if we can manipulate perceived key</li>
+        <li><strong>Weeks 4-5:</strong> Apply causal mediation and circuit analysis to identify key-processing
+          components</li>
+        <li><strong>Week 7:</strong> Train SAE to discover key-related features</li>
+        <li><strong>Week 8:</strong> Validate findings using IIA</li>
+      </ul>
+      "]
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>6. Success Criteria</h2>
+    <div class="instructions">
+      What would constitute a successful project? Remember: well-documented negative results are publishable!
+    </div>
+    <div class="fill-in">
+      [Example: "Success would be:<br>
+      <ul>
+        <li><strong>Strong result:</strong> Identify specific attention heads/layers encoding key relationships with
+          >80% IIA accuracy</li>
+        <li><strong>Moderate result:</strong> Find distributed representation with partial causal effects (50-80%)</li>
+        <li><strong>Null result (still valuable):</strong> Rigorous evidence that LLMs do NOT encode key relationships
+          despite surface-level performance, suggesting purely statistical pattern matching</li>
+      </ul>
+      Any of these outcomes, with proper validation, would be suitable for publication."]
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>7. Potential Challenges & Mitigation</h2>
+    <div class="instructions">
+      What might be difficult? How will you adapt if your initial approach doesn't work?
+    </div>
+    <div class="fill-in">
+      <strong>Challenge 1:</strong> [Example: "Concept may be too abstract/distributed to localize clearly"]<br>
+      <em>Mitigation:</em> [Example: "We'll start with simpler sub-concepts (e.g., major vs minor) before tackling full
+      key relationships"]<br><br>
+
+      <strong>Challenge 2:</strong> [Your challenge]<br>
+      <em>Mitigation:</em> [Your mitigation strategy]<br><br>
+
+      <strong>Challenge 3:</strong> [Your challenge]<br>
+      <em>Mitigation:</em> [Your mitigation strategy]<br>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>8. Timeline</h2>
+    <div class="instructions">
+      High-level timeline for your project milestones.
+    </div>
+    <div class="fill-in">
+      <ul>
+        <li><strong>Weeks 1-2:</strong> Dataset creation and baseline benchmarking</li>
+        <li><strong>Weeks 3-5:</strong> Initial localization (steering, visualization, circuits)</li>
+        <li><strong>Weeks 6-8:</strong> Validation and refinement (probes, SAEs, IIA)</li>
+        <li><strong>Weeks 9-11:</strong> Paper writing, additional analyses, addressing reviewer concerns</li>
+        <li><strong>Week 12:</strong> Final presentation</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>9. Broader Impact</h2>
+    <div class="instructions">
+      Optional: How might this research benefit your field or AI safety more broadly?
+    </div>
+    <div class="fill-in">
+      [Example: "Understanding how LLMs represent domain-specific structured knowledge (like musical theory) could
+      inform how we build more interpretable AI systems for education, help identify when models are merely mimicking vs
+      truly understanding concepts, and contribute to AI safety by revealing the limits of current LLM reasoning."]
+    </div>
+  </div>
+
+  <hr style="margin-top: 40px; border: none; border-top: 2px solid #ccc;">
+
+  <div style="text-align: center; color: #999; font-size: 10pt; margin-top: 20px;">
+    Submit to Canvas by [DUE DATE]<br>
+    Questions? Contact Prof. Bau (<a href="mailto:davidbau@northeastern.edu">davidbau@northeastern.edu</a>) or Nikhil
+    Prakash (<a href="mailto:prakash.nik@northeastern.edu">prakash.nik@northeastern.edu</a>)
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 0: Introduction & Course Overview</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body);"></script>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #333;
+    }
+
+    h1 {
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #34495e;
+      margin-top: 30px;
+      border-bottom: 2px solid #bdc3c7;
+      padding-bottom: 5px;
+    }
+
+    h3 {
+      color: #555;
+      margin-top: 20px;
+    }
+
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .info-box {
+      background-color: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .example-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .discussion-box {
+      background-color: #fff9e6;
+      border-left: 4px solid #f39c12;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .assignment-box {
+      background-color: #e8f8f5;
+      border-left: 4px solid #27ae60;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    ul {
+      margin: 10px 0;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+    }
+
+    .objectives {
+      background-color: #f0f7ff;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Week 0: Introduction & Course Overview</h1>
+
+  <div class="objectives">
+    <h3>Learning Objectives</h3>
+    <ul>
+      <li>Understand course structure, expectations, and grading</li>
+      <li>Grasp basic neural network concepts (accessible to non-ML students)</li>
+      <li>Appreciate the historical surprise and significance of in-context learning</li>
+      <li>See concrete examples of interpretability discoveries from early work</li>
+      <li>Understand function vector results at a high level (methods come later)</li>
+      <li>Identify characteristics of successful interdisciplinary interpretability projects</li>
+      <li>Form teams and propose a concept to study</li>
+    </ul>
+  </div>
+
+  <h2>1. Course Logistics</h2>
+
+  <h3>Course Overview</h3>
+  <p>
+    <strong>Goal:</strong> Study how large language models encode non-CS concepts through interpretability research,
+    culminating in papers suitable for submission to NeurIPS or similar venues.
+  </p>
+
+  <p>
+    <strong>Team Structure:</strong> Interdisciplinary teams of ~3 students:
+  </p>
+  <ul>
+    <li><strong>Non-CS PhD student:</strong> Domain expertise in your field (biology, linguistics, psychology, physics,
+      law, etc.)</li>
+    <li><strong>CS/ML PhD student:</strong> Technical ML background, PyTorch experience</li>
+    <li><strong>BauLab member:</strong> Expert in interpretability methods, will guide technical implementation</li>
+  </ul>
+
+  <h3>Course Structure</h3>
+  <table>
+    <tr>
+      <th>Weeks</th>
+      <th>Focus</th>
+    </tr>
+    <tr>
+      <td>0-1</td>
+      <td>Foundations: Course setup, benchmarking concepts</td>
+    </tr>
+    <tr>
+      <td>2-8</td>
+      <td>Methods: Core interpretability techniques (steering, circuits, probes, SAEs, validation)</td>
+    </tr>
+    <tr>
+      <td>9-11</td>
+      <td>Advanced topics: Attribution, skepticism, and research best practices</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Final presentations</td>
+    </tr>
+  </table>
+
+  <h3>Grading & Expectations</h3>
+  <div class="info-box">
+    <p><strong>This is a research course, not a traditional class.</strong></p>
+    <p>Grading will be based on:</p>
+    <ul>
+      <li><strong>Weekly exercises:</strong> Hands-on implementation of interpretability methods (30%)</li>
+      <li><strong>Project milestones:</strong> Proposal, preliminary results, draft figures (30%)</li>
+      <li><strong>Final deliverable:</strong> Research paper draft + presentation (40%)</li>
+    </ul>
+    <p><em>Success = rigorous investigation of your concept, not necessarily positive results. Negative results with
+        careful validation are publishable!</em></p>
+  </div>
+
+  <h2>2. Neural Networks 101: A Gentle Introduction</h2>
+
+  <p>
+    For students without ML backgrounds, here's what you need to know about neural networks.
+  </p>
+
+  <h3>What is a Neural Network?</h3>
+  <p>
+    A neural network is a <strong>function approximator</strong> composed of simple mathematical operations stacked in
+    layers. Think of it as a very flexible curve-fitting machine.
+  </p>
+
+  <p><strong>Basic building blocks:</strong></p>
+  <ul>
+    <li><strong>Neurons:</strong> Simple units that compute weighted sums: \( y = \text{activation}(w_1 x_1 + w_2 x_2 +
+      \ldots + b) \)</li>
+    <li><strong>Layers:</strong> Collections of neurons processing information in parallel</li>
+    <li><strong>Weights:</strong> Learnable parameters (typically millions to billions) adjusted during training</li>
+    <li><strong>Activations:</strong> Intermediate values as information flows through the network</li>
+  </ul>
+
+  <h3>How Do They Learn?</h3>
+  <p>
+    Training involves:
+  </p>
+  <ol>
+    <li><strong>Forward pass:</strong> Input → compute predictions</li>
+    <li><strong>Loss calculation:</strong> How wrong is the prediction?</li>
+    <li><strong>Backward pass (backpropagation):</strong> Compute gradients showing how to adjust weights</li>
+    <li><strong>Update:</strong> Nudge weights to reduce loss</li>
+    <li><strong>Repeat:</strong> Millions of times on billions of examples</li>
+  </ol>
+
+  <h3>What are Transformers?</h3>
+  <p>
+    The architecture behind modern LLMs (GPT, Claude, etc.). Key innovation: <strong>attention mechanism</strong>
+    allows any word to look at any other word in context.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Example:</strong> In "The cat sat on the mat because <em>it</em> was soft", attention helps the model
+      connect "it" → "mat" (not "cat").</p>
+  </div>
+
+  <p><strong>Key components:</strong></p>
+  <ul>
+    <li><strong>Attention heads:</strong> ~144 per layer in GPT-2, each focusing on different patterns</li>
+    <li><strong>MLP layers:</strong> Process information at each position</li>
+    <li><strong>Residual stream:</strong> Information highway carrying representations through the network</li>
+  </ul>
+
+  <p>
+    <em>Don't worry if this feels abstract—we'll build intuition through concrete examples!</em>
+  </p>
+
+  <h2>3. The Historical Surprise: In-Context Learning</h2>
+
+  <h3>What is In-Context Learning (ICL)?</h3>
+  <p>
+    In 2020, GPT-3 shocked the AI community by demonstrating <strong>in-context learning</strong>: the ability to learn
+    new tasks from a few examples in the prompt, <em>without any gradient updates</em>.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Example: Translation without training</strong></p>
+    <p>
+      <strong>Prompt:</strong><br>
+      English: Hello → French: Bonjour<br>
+      English: Goodbye → French: Au revoir<br>
+      English: Thank you → French: <em>[model generates: Merci]</em>
+    </p>
+  </div>
+
+  <h3>Why This Was Shocking</h3>
+  <p>
+    Traditional ML: Train a model specifically for each task (translation, Q&A, summarization, etc.).
+  </p>
+  <p>
+    ICL: <strong>Same model, zero training, learns from prompt alone.</strong>
+  </p>
+
+  <div class="info-box">
+    <p><strong>Key Questions (still being researched!):</strong></p>
+    <ul>
+      <li>What algorithm do transformers implement during ICL? (Gradient descent? Bayesian inference?)</li>
+      <li>Where in the network does task recognition happen?</li>
+      <li>Which attention heads and layers are crucial?</li>
+      <li>How does ICL relate to pre-training?</li>
+    </ul>
+  </div>
+
+  <h3>Why This Matters for Interpretability</h3>
+  <p>
+    If we don't understand <em>how</em> models perform basic tasks like ICL, how can we trust them for critical
+    applications? Interpretability helps us:
+  </p>
+  <ul>
+    <li>Understand failure modes</li>
+    <li>Detect deception or unintended behavior</li>
+    <li>Build safer, more reliable AI systems</li>
+    <li>Bridge the gap between AI capabilities and human understanding</li>
+  </ul>
+
+  <h2>4. Early Interpretability Success Stories</h2>
+
+  <p>
+    Before LLMs, interpretability researchers discovered fascinating internal structure in other neural networks.
+  </p>
+
+  <h3>Case Study: The "Lamp-Controlling Neuron" in GANs</h3>
+
+  <p>
+    <strong>Background:</strong> GANs (Generative Adversarial Networks) can generate realistic images of bedrooms,
+    faces, etc. But what are the neurons doing?
+  </p>
+
+  <p>
+    <strong>Discovery (Bau et al., 2019):</strong> Researchers found individual neurons in a scene-generation GAN that
+    controlled specific objects:
+  </p>
+
+  <ul>
+    <li><strong>Neuron 281:</strong> When activated, adds lamps to generated bedroom images</li>
+    <li><strong>Neuron 398:</strong> Controls presence of doors</li>
+    <li><strong>Neuron 750:</strong> Adds trees to outdoor scenes</li>
+  </ul>
+
+  <div class="example-box">
+    <p><strong>Experiment:</strong></p>
+    <ol>
+      <li>Generate a bedroom image (no lamps)</li>
+      <li>Manually increase activation of "lamp neuron"</li>
+      <li>Result: Lamps appear in the image!</li>
+      <li>Decrease activation: Lamps disappear</li>
+    </ol>
+    <p><em>This demonstrated neurons can encode human-interpretable concepts.</em></p>
+  </div>
+
+  <h3>Other Early Discoveries</h3>
+  <ul>
+    <li><strong>Vision networks:</strong> Early layers detect edges, middle layers detect textures, late layers detect
+      objects (Zeiler & Fergus, 2014)</li>
+    <li><strong>Word embeddings:</strong> Vector arithmetic captures semantic relationships (king - man + woman = queen)
+    </li>
+    <li><strong>Adversarial examples:</strong> Tiny input perturbations cause catastrophic failures, revealing models
+      don't "see" like humans</li>
+  </ul>
+
+  <h3>The Challenge with LLMs</h3>
+  <p>
+    LLMs are <strong>far more complex</strong>:
+  </p>
+  <ul>
+    <li>175 billion parameters (GPT-3) vs ~100 million (early vision models)</li>
+    <li>Trained on diverse text data, not single domains</li>
+    <li>Perform thousands of tasks implicitly</li>
+    <li>Concepts are often distributed across many components</li>
+  </ul>
+
+  <p>
+    <strong>This course teaches methods to tackle this complexity.</strong>
+  </p>
+
+  <h2>5. Function Vectors: A Motivating Case Study</h2>
+
+  <p>
+    To show what's possible with modern interpretability, let's look at <strong>function vectors</strong>—a recent
+    breakthrough you'll study in detail in Week 4.
+  </p>
+
+  <h3>The Core Idea</h3>
+  <p>
+    <strong>Hypothesis:</strong> Abstract concepts might be represented as <em>directions in activation space</em>.
+  </p>
+
+  <p>
+    <strong>Method (simplified):</strong>
+  </p>
+  <ol>
+    <li>Find prompts where concept is present vs absent</li>
+    <li>Compute difference in model activations</li>
+    <li>This difference vector represents the concept</li>
+    <li>Add it to new inputs → inject the concept</li>
+  </ol>
+
+  <h3>Example: Country Capitals</h3>
+
+  <div class="example-box">
+    <p><strong>Setup (Hernandez et al., 2023):</strong></p>
+    <p>Prompt pairs:</p>
+    <ul>
+      <li>"The capital of France is" → "Paris" (capital context)</li>
+      <li>"France is known for" → "wine" (non-capital context)</li>
+    </ul>
+    <p>Compute: <strong>Function Vector</strong> = Activations(capital) - Activations(non-capital)</p>
+    <p><strong>Result:</strong> Adding this vector to "The capital of Italy is" improves the model's ability to answer
+      correctly!</p>
+  </div>
+
+  <h3>More Surprising Examples</h3>
+
+  <ul>
+    <li><strong>Sentiment:</strong> Extract "positive sentiment" vector, add to neutral text → model generates
+      happier completions</li>
+    <li><strong>Truthfulness:</strong> Steering models to be more/less truthful (Tigges et al., 2023)</li>
+    <li><strong>Linguistic properties:</strong> Tense, number agreement, formality</li>
+    <li><strong>Abstract concepts:</strong> Even concepts like "weddings" or "urban environments"</li>
+  </ul>
+
+  <h3>Why This Matters for Your Project</h3>
+
+  <p>
+    Function vectors show that <strong>abstract concepts have neural correlates</strong>. Your project will:
+  </p>
+  <ul>
+    <li>Identify where YOUR concept (from your domain) is represented</li>
+    <li>Validate that it's truly causal, not just correlational</li>
+    <li>Characterize how it's computed across the network</li>
+  </ul>
+
+  <p>
+    <em>Methods come in Weeks 2-8. For now, appreciate what's possible!</em>
+  </p>
+
+  <h2>6. What Makes a Good Interpretability Project?</h2>
+
+  <div class="discussion-box">
+    <h3>Interactive Discussion</h3>
+    <p><strong>Class Activity:</strong> We'll discuss these questions as a group. Think about your domain expertise!
+    </p>
+  </div>
+
+  <h3>Characteristics of Strong Projects</h3>
+
+  <table>
+    <tr>
+      <th>Good ✓</th>
+      <th>Challenging ✗</th>
+    </tr>
+    <tr>
+      <td><strong>Specific concept</strong><br>"How do models represent musical keys?"</td>
+      <td><strong>Too broad</strong><br>"How do models understand music?"</td>
+    </tr>
+    <tr>
+      <td><strong>Testable predictions</strong><br>"Intervening on pitch neurons should change key classification"</td>
+      <td><strong>Vague goals</strong><br>"Find music-related neurons"</td>
+    </tr>
+    <tr>
+      <td><strong>Domain expertise advantage</strong><br>Biologist studying protein folding concepts</td>
+      <td><strong>Generic CS concepts</strong><br>Another project on sentiment analysis</td>
+    </tr>
+    <tr>
+      <td><strong>Measurable</strong><br>"Subject-verb agreement accuracy"</td>
+      <td><strong>Subjective</strong><br>"Model creativity"</td>
+    </tr>
+    <tr>
+      <td><strong>Tractable scope</strong><br>One concept, multiple validation methods</td>
+      <td><strong>Too ambitious</strong><br>"Complete model of reasoning"</td>
+    </tr>
+  </table>
+
+  <h3>The Interdisciplinary Advantage</h3>
+
+  <p>
+    <strong>Why this course emphasizes non-CS concepts:</strong>
+  </p>
+  <ul>
+    <li>LLMs are trained on text from ALL domains (law, medicine, physics, music...)</li>
+    <li>Most interpretability research focuses on CS/NLP tasks (sentiment, syntax, factual knowledge)</li>
+    <li><strong>Gap:</strong> Domain-specific concepts are understudied but potentially revealing</li>
+    <li><strong>Your expertise:</strong> You know what concepts are fundamental in your field</li>
+    <li><strong>Our expertise:</strong> We know how to localize and validate them in LLMs</li>
+  </ul>
+
+  <h3>Example Project Ideas (From Various Domains)</h3>
+
+  <div class="example-box">
+    <p><strong>Biology:</strong></p>
+    <ul>
+      <li>Do models represent evolutionary relationships (phylogenetic trees)?</li>
+      <li>How are protein structures encoded?</li>
+      <li>Can we locate neurons tracking ecological relationships (predator/prey)?</li>
+    </ul>
+
+    <p><strong>Linguistics:</strong></p>
+    <ul>
+      <li>Politeness strategies across languages</li>
+      <li>Evidentiality (information source marking)</li>
+      <li>Topic vs focus in discourse</li>
+    </ul>
+
+    <p><strong>Psychology:</strong></p>
+    <ul>
+      <li>Theory of mind representations (beliefs, intentions)</li>
+      <li>Temporal reasoning and event structure</li>
+      <li>Causal attribution</li>
+    </ul>
+
+    <p><strong>Physics/Chemistry:</strong></p>
+    <ul>
+      <li>Conservation laws (energy, momentum)</li>
+      <li>Reaction mechanisms and transition states</li>
+      <li>Spatial reasoning in 3D molecular structures</li>
+    </ul>
+
+    <p><strong>Law:</strong></p>
+    <ul>
+      <li>Legal precedent and case similarity</li>
+      <li>Burden of proof concepts</li>
+      <li>Jurisdiction and legal standing</li>
+    </ul>
+
+    <p><strong>Music:</strong></p>
+    <ul>
+      <li>Harmonic relationships (tonic, dominant)</li>
+      <li>Rhythmic patterns and meter</li>
+      <li>Musical form (verse, chorus, bridge)</li>
+    </ul>
+  </div>
+
+  <h3>Discussion Questions</h3>
+
+  <div class="discussion-box">
+    <p><strong>In groups, discuss:</strong></p>
+    <ol>
+      <li>What is a fundamental concept in your domain that non-experts often misunderstand?</li>
+      <li>How would you test if an LLM understands this concept?</li>
+      <li>What would it mean to "localize" this concept in a neural network?</li>
+      <li>What failure modes might be interesting? (When does the model get it wrong?)</li>
+      <li>How could this research benefit your field or AI safety?</li>
+    </ol>
+  </div>
+
+  <h2>7. Assignment: Team Formation & Project Proposal</h2>
+
+  <div class="assignment-box">
+    <h3>Assignment (Due: End of Week 1)</h3>
+
+    <p><strong>Part 1: Form Teams</strong></p>
+    <ul>
+      <li>Groups of ~3 students (ideally: 1 non-CS PhD, 1 CS/ML PhD, 1 BauLab member)</li>
+      <li>Use Canvas discussion board or class Slack to coordinate</li>
+      <li>Consider complementary expertise (e.g., linguist + NLP researcher + interpretability expert)</li>
+    </ul>
+
+    <p><strong>Part 2: Write a Short Proposal (1-2 pages)</strong></p>
+
+    <p>Your proposal should include:</p>
+
+    <ol>
+      <li><strong>Team Members & Expertise</strong>
+        <ul>
+          <li>Names, departments, relevant background</li>
+        </ul>
+      </li>
+
+      <li><strong>Concept Description</strong>
+        <ul>
+          <li>What concept will you study? (1 paragraph)</li>
+          <li>Why is it important in your domain?</li>
+          <li>Why is it interesting for LLM interpretability?</li>
+        </ul>
+      </li>
+
+      <li><strong>Testable Questions</strong>
+        <ul>
+          <li>3-5 specific questions you'll investigate</li>
+          <li>Examples: "Where is this concept represented?", "Is it computed locally or distributed?", "Does it align
+            with human understanding?"</li>
+        </ul>
+      </li>
+
+      <li><strong>Preliminary Examples</strong>
+        <ul>
+          <li>5-10 example sentences/prompts where the concept is present vs absent</li>
+          <li>These will form the basis of your evaluation dataset</li>
+        </ul>
+      </li>
+
+      <li><strong>Success Criteria</strong>
+        <ul>
+          <li>What would constitute a successful project?</li>
+          <li>Remember: Null results with good methodology are publishable!</li>
+        </ul>
+      </li>
+
+      <li><strong>Potential Challenges</strong>
+        <ul>
+          <li>What might be difficult about this project?</li>
+          <li>How will you mitigate risks?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p><strong>Submission:</strong> Upload to Canvas by [DATE]. We'll provide feedback within one week.</p>
+
+    <p><strong>Template:</strong> Download the <a href="project_proposal_template.pdf">project proposal template</a> to
+      help structure your submission.</p>
+  </div>
+
+  <h2>8. Looking Ahead</h2>
+
+  <p><strong>Week 1:</strong> Benchmarking—how to create evaluation datasets for your concept</p>
+  <p><strong>Week 2:</strong> Steering—manipulating model behavior by adding activation vectors</p>
+  <p><strong>Week 3:</strong> Representation visualization—seeing what models encode</p>
+  <p><strong>Weeks 4-8:</strong> Advanced methods (circuits, probes, SAEs, validation)</p>
+
+  <p>
+    <strong>By the end:</strong> You'll have a complete research pipeline for characterizing YOUR concept in LLMs.
+  </p>
+
+  <div class="info-box">
+    <h3>Questions?</h3>
+    <p>Reach out to the teaching team:</p>
+    <ul>
+      <li>Prof. David Bau: <a href="mailto:davidbau@northeastern.edu">davidbau@northeastern.edu</a></li>
+      <li>Nikhil Prakash (TA): <a href="mailto:prakash.nik@northeastern.edu">prakash.nik@northeastern.edu</a></li>
+    </ul>
+    <p>Office hours: [See course website]</p>
+  </div>
+
+  <h2>References & Further Reading</h2>
+
+  <h3>Core Papers Mentioned</h3>
+  <ul>
+    <li><strong>In-Context Learning:</strong>
+      <ul>
+        <li>Brown et al. (2020). "Language Models are Few-Shot Learners" (GPT-3 paper). <a
+            href="https://arxiv.org/abs/2005.14165" target="_blank">arXiv:2005.14165</a></li>
+        <li>Garg et al. (2022). "What Can Transformers Learn In-Context?" <a href="https://arxiv.org/abs/2402.15119"
+            target="_blank">arXiv:2402.15119</a></li>
+      </ul>
+    </li>
+
+    <li><strong>GAN Interpretability:</strong>
+      <ul>
+        <li>Bau et al. (2019). "GAN Dissection: Visualizing and Understanding Generative Adversarial Networks". <a
+            href="https://arxiv.org/abs/1811.10597" target="_blank">arXiv:1811.10597</a></li>
+        <li>Interactive demo: <a href="https://gandissect.csail.mit.edu/"
+            target="_blank">gandissect.csail.mit.edu</a></li>
+      </ul>
+    </li>
+
+    <li><strong>Function Vectors:</strong>
+      <ul>
+        <li>Hernandez et al. (2023). "Linearity of Relation Decoding in Transformer LMs". <a
+            href="https://arxiv.org/abs/2308.09124" target="_blank">arXiv:2308.09124</a></li>
+        <li>Todd et al. (2023). "Function Vectors in Large Language Models". <a
+            href="https://arxiv.org/abs/2310.15213" target="_blank">arXiv:2310.15213</a></li>
+        <li>Tigges et al. (2023). "Linear Representations of Sentiment in LLMs". <a
+            href="https://arxiv.org/abs/2310.15154" target="_blank">arXiv:2310.15154</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3>Accessible Introductions</h3>
+  <ul>
+    <li><a href="https://transformer-circuits.pub/" target="_blank">Transformer Circuits Thread</a> (Anthropic) —
+      Visual explanations of interpretability concepts</li>
+    <li><a href="https://distill.pub/" target="_blank">Distill.pub</a> — Interactive ML explanations (now archived but
+      excellent)</li>
+    <li><a href="https://pair.withgoogle.com/explorables/" target="_blank">Google PAIR Explorables</a> — Interactive ML
+      concept demos</li>
+  </ul>
+
+  <h3>Supplementary Reading</h3>
+  <ul>
+    <li>Olah et al. (2020). "Zoom In: An Introduction to Circuits". <a href="https://distill.pub/2020/circuits/zoom-in/"
+        target="_blank">Distill</a></li>
+    <li>Elhage et al. (2021). "A Mathematical Framework for Transformer Circuits". <a
+        href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">Transformer Circuits</a></li>
+  </ul>
+
+</body>
+
+</html>

@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 8: Causal Abstraction and Validation - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    .research-box {
+      background-color: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .warning-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 8: Causal Abstraction and Validation</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      By now you've found circuits, discovered features, and made causal claims about model internals. But how do you
+      <em>know</em> your interpretations are correct? This week introduces <strong>causal abstraction</strong>—a
+      formal framework for rigorously testing whether neural components implement the computations you claim they do.
+      Through Interchange Intervention Analysis (IIA) and Distributed Alignment Search (DAS), you'll learn to validate
+      interpretability hypotheses with the same rigor expected in other scientific fields.
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Define causal models and explain what it means for a neural network to "implement" a high-level algorithm
+      </li>
+      <li>Understand alignment functions that map between high-level variables and neural components</li>
+      <li>Explain when causal abstraction holds versus when it breaks down</li>
+      <li>Implement Interchange Intervention Analysis (IIA) to test specific causal hypotheses</li>
+      <li>Distinguish IIA from simple activation patching and explain why IIA is more rigorous</li>
+      <li>Construct appropriate base and source distributions for IIA experiments</li>
+      <li>Interpret IIA results and understand when claims are validated versus falsified</li>
+      <li>Apply Distributed Alignment Search (DAS) to automatically discover which components implement which
+        functions</li>
+      <li>Validate discovered alignments using IIA</li>
+      <li>Use causal abstraction to validate circuit claims from Week 5</li>
+      <li>Test whether SAE features from Week 7 are causally used via IIA</li>
+      <li>Make rigorous, falsifiable claims about model internals for research papers</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2106.02997" target="_blank">Causal Abstractions of Neural Networks</a>
+        </div>
+        <div class="reading-description">Foundational paper introducing the causal abstraction framework</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2303.02536" target="_blank">Finding Alignments Between Interpretable Causal
+            Variables and Distributed Neural Representations</a>
+        </div>
+        <div class="reading-description">IIA methodology and Distributed Alignment Search (DAS)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://aclanthology.org/2021.acl-long.144/" target="_blank">Causal Analysis of Syntactic Agreement
+            Mechanisms in Neural Language Models</a>
+        </div>
+        <div class="reading-description">Application to subject-verb agreement (NLP example)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2301.04709" target="_blank">Causal Abstraction: A Theoretical Foundation for
+            Mechanistic Interpretability</a>
+        </div>
+        <div class="reading-description">Comprehensive theoretical treatment</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="http://ai.stanford.edu/blog/causal-abstraction/" target="_blank">Faithful, Interpretable Model
+            Explanations via Causal Abstraction (SAIL Blog)</a>
+        </div>
+        <div class="reading-description">Accessible introduction with examples</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2112.00826" target="_blank">Inducing Causal Structure for Interpretable Neural
+            Networks</a>
+        </div>
+        <div class="reading-description">Early work on causal structure in neural networks</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://www.lesswrong.com/posts/uLMWMeBG3ruoBRhMW/" target="_blank">A comparison of causal scrubbing,
+            causal abstractions, and related methods</a>
+        </div>
+        <div class="reading-description">Comparison with alternative validation frameworks</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: From Claims to Rigorous Validation</h2>
+
+    <h3>1. The Validation Problem</h3>
+    <p>
+      After seven weeks of interpretability methods, you've accumulated many claims:
+    </p>
+
+    <ul>
+      <li><strong>Week 4:</strong> "Component X is causally important" (patching)</li>
+      <li><strong>Week 5:</strong> "This circuit implements induction" (circuit discovery)</li>
+      <li><strong>Week 6:</strong> "Feature Y is linearly accessible" (probes)</li>
+      <li><strong>Week 7:</strong> "SAE feature Z represents concept C" (feature discovery)</li>
+    </ul>
+
+    <p>
+      But how do you <strong>know</strong> these claims are correct?
+    </p>
+
+    <h4>The Challenge: Proving Implementation</h4>
+    <p>
+      It's not enough to show:
+    </p>
+    <ul>
+      <li>✗ Component activates when behavior occurs (correlation)</li>
+      <li>✗ Ablating component breaks behavior (necessity)</li>
+      <li>✗ Patching component transfers behavior (sufficiency)</li>
+    </ul>
+
+    <p>
+      You need to show:
+    </p>
+    <ul>
+      <li>✓ Component plays the <em>specific causal role</em> you claim</li>
+      <li>✓ Component implements the <em>particular computation</em> in your hypothesis</li>
+      <li>✓ Your interpretation is <em>falsifiable</em> and has been tested</li>
+    </ul>
+
+    <div class="research-box">
+      <strong>Example:</strong> You claim "Head 5.2 implements entity tracking." But what does "implements" mean
+      precisely? Causal abstraction makes this formal and testable.
+    </div>
+
+    <h3>2. Causal Models: The High-Level View</h3>
+    <p>
+      A <strong>causal model</strong> specifies variables and their causal relationships.
+    </p>
+
+    <h4>Components of a Causal Model</h4>
+    <ul>
+      <li><strong>Variables:</strong> Quantities that take values (inputs, outputs, intermediates)</li>
+      <li><strong>Edges:</strong> Directed arrows showing causal influence</li>
+      <li><strong>Mechanisms:</strong> Functions computing each variable from its parents</li>
+    </ul>
+
+    <h4>Example: Addition Algorithm</h4>
+    <p>
+      Task: Add three numbers
+    </p>
+
+    <div class="diagram">
+      High-Level Causal Model:<br><br>
+      Input₁ ─┐<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─→ S₁ ─┐<br>
+      Input₂ ─┘&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─→ S₂ (output)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+      Input₃ ─────→ w ──┘<br><br>
+      Variables:<br>
+      • S₁ = Input₁ + Input₂<br>
+      • w = Input₃<br>
+      • S₂ = S₁ + w
+    </div>
+
+    <p>
+      This is an <strong>algorithm</strong>—a high-level description of the computation.
+    </p>
+
+    <h4>Interventions in Causal Models</h4>
+    <p>
+      We can <strong>intervene</strong> to set a variable to a specific value:
+    </p>
+
+    <div class="math">
+      do(S₁ = 9)
+    </div>
+
+    <p>
+      This means: "Force S₁ to be 9, regardless of its inputs."
+    </p>
+
+    <p>
+      Example: If Input₁=1, Input₂=3, Input₃=5:
+    </p>
+    <ul>
+      <li>Normal: S₁ = 1+3 = 4, S₂ = 4+5 = 9</li>
+      <li>Intervene do(S₁=9): S₁ = 9 (forced), S₂ = 9+5 = 14</li>
+    </ul>
+
+    <h3>3. Neural Networks as Causal Systems</h3>
+    <p>
+      Neural networks are also causal systems, but at a different level of abstraction.
+    </p>
+
+    <h4>Neural Network View</h4>
+    <ul>
+      <li><strong>Variables:</strong> Neuron activations, layer outputs, attention patterns</li>
+      <li><strong>Edges:</strong> Weights, connections between layers</li>
+      <li><strong>Mechanisms:</strong> Matrix multiplications, nonlinearities</li>
+    </ul>
+
+    <h4>Example: Neural Network for Addition</h4>
+    <div class="diagram">
+      Input layer (3 neurons)<br>
+      ↓<br>
+      Hidden layer L₁ (10 neurons)<br>
+      ↓<br>
+      Hidden layer L₂ (10 neurons)<br>
+      ↓<br>
+      Hidden layer L₃ (10 neurons)<br>
+      ↓<br>
+      Output layer (1 neuron)
+    </div>
+
+    <p>
+      This is an <strong>implementation</strong>—a low-level mechanistic description.
+    </p>
+
+    <h3>4. Causal Abstraction: Bridging the Levels</h3>
+    <p>
+      <strong>Question:</strong> Does this neural network implement the addition algorithm?
+    </p>
+
+    <p>
+      To answer, we need:
+    </p>
+    <ol>
+      <li><strong>Alignment function α:</strong> Maps high-level variables → neural components</li>
+      <li><strong>Abstraction condition:</strong> Test if interventions match across levels</li>
+    </ol>
+
+    <h4>Alignment Function</h4>
+    <p>
+      An <strong>alignment</strong> α specifies which neural components correspond to which high-level variables.
+    </p>
+
+    <p>
+      <strong>Hypothesis:</strong> α(S₁) = L₃ (Layer 3 implements S₁)
+    </p>
+
+    <p>
+      This is our interpretability claim: "Layer 3 computes the intermediate sum."
+    </p>
+
+    <h4>The Abstraction Condition</h4>
+    <p>
+      For abstraction to hold:
+    </p>
+
+    <div class="research-box">
+      If we intervene on S₁ in the high-level model, and on α(S₁) = L₃ in the neural network, the effects on outputs
+      should match.
+    </div>
+
+    <p>
+      Formally: Intervening on a high-level variable V and on its aligned component α(V) should produce the same
+      effect.
+    </p>
+
+    <h3>5. Interchange Intervention Analysis (IIA)</h3>
+    <p>
+      <strong>IIA</strong> is the method for testing the abstraction condition.
+    </p>
+
+    <h4>Core Idea</h4>
+    <p>
+      Take two inputs (base and source) and "swap" aligned components to see if effects match predictions.
+    </p>
+
+    <h4>IIA Procedure for Addition Example</h4>
+
+    <p><strong>Step 1: Define base and source inputs</strong></p>
+    <ul>
+      <li>Base input: [1, 3, 5] → S₁=4, w=5, S₂=9</li>
+      <li>Source input: [4, 5, 6] → S₁=9, w=6, S₂=15</li>
+    </ul>
+
+    <p><strong>Step 2: High-level intervention</strong></p>
+    <p>
+      Intervene on base using source value of S₁:
+    </p>
+    <ul>
+      <li>Set S₁ = 9 (from source)</li>
+      <li>Keep w = 5 (from base)</li>
+      <li>Result: S₂ = 9 + 5 = 14</li>
+    </ul>
+
+    <p><strong>Step 3: Neural network intervention</strong></p>
+    <p>
+      Run base input [1, 3, 5] through network, but:
+    </p>
+    <ul>
+      <li>Replace L₃ activations with L₃ from source input [4, 5, 6]</li>
+      <li>Continue forward pass from L₃ onward</li>
+      <li>Observe output</li>
+    </ul>
+
+    <p><strong>Step 4: Compare</strong></p>
+    <ul>
+      <li>High-level prediction: 14</li>
+      <li>Neural network output: ???</li>
+      <li>If ≈14: L₃ implements S₁ ✓</li>
+      <li>If not: L₃ does not implement S₁ ✗</li>
+    </ul>
+
+    <div class="diagram">
+      IIA Test:<br><br>
+      Base: [1,3,5] → L₃_base → Output_base = 9<br>
+      Source: [4,5,6] → L₃_source → Output_source = 15<br><br>
+      Interchange: [1,3,5] → L₃_source → Output_IIA = 14?<br><br>
+      If Output_IIA ≈ 14: Alignment validated!
+    </div>
+
+    <h4>IIA Error Metric</h4>
+    <p>
+      Compute error across many base/source pairs:
+    </p>
+
+    <div class="math">
+      IIA_error = Average |Output_IIA - Predicted_output|
+    </div>
+
+    <ul>
+      <li><strong>Low error (~0):</strong> Abstraction holds, alignment correct</li>
+      <li><strong>High error:</strong> Wrong alignment or no abstraction</li>
+    </ul>
+
+    <h3>6. IIA vs Simple Patching (Week 4)</h3>
+    <p>
+      How is IIA different from activation patching in Week 4?
+    </p>
+
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>Activation Patching (Week 4)</th>
+        <th>IIA (This Week)</th>
+      </tr>
+      <tr>
+        <td>High-level model</td>
+        <td>None (implicit)</td>
+        <td>Explicit causal model</td>
+      </tr>
+      <tr>
+        <td>Alignment</td>
+        <td>Implicit guess</td>
+        <td>Formally specified α</td>
+      </tr>
+      <tr>
+        <td>Test</td>
+        <td>"Does patching transfer behavior?"</td>
+        <td>"Does component play specific causal role?"</td>
+      </tr>
+      <tr>
+        <td>Prediction</td>
+        <td>None (just observe)</td>
+        <td>Quantitative prediction from model</td>
+      </tr>
+      <tr>
+        <td>Falsifiability</td>
+        <td>Weak</td>
+        <td>Strong (specific prediction)</td>
+      </tr>
+      <tr>
+        <td>Claim validated</td>
+        <td>"Component matters"</td>
+        <td>"Component implements X algorithm"</td>
+      </tr>
+    </table>
+
+    <div class="research-box">
+      <strong>Key difference:</strong> IIA makes a <em>specific quantitative prediction</em> from your hypothesis.
+      Patching just checks if something happens.
+    </div>
+
+    <h3>7. Subject-Verb Agreement: An NLP Example</h3>
+    <p>
+      Let's apply causal abstraction to a linguistic phenomenon.
+    </p>
+
+    <h4>The Task</h4>
+    <p>
+      Predict correct verb form based on subject number:
+    </p>
+
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The key to the cabinets ___"<br>
+      → "is" (singular, key is subject)<br><br>
+      "The keys to the cabinet ___"<br>
+      → "are" (plural, keys is subject)
+    </code>
+
+    <h4>High-Level Causal Model</h4>
+    <div class="diagram">
+      Sentence → Subject_Number → Verb_Prediction<br><br>
+      Variables:<br>
+      • Subject_Number ∈ {singular, plural}<br>
+      • Verb_Prediction ∈ {singular_form, plural_form}
+    </div>
+
+    <h4>Alignment Hypothesis</h4>
+    <p>
+      <strong>Claim:</strong> Specific attention heads track subject number across distance.
+    </p>
+
+    <p>
+      Example alignment: α(Subject_Number) = Layer 5, Heads {2, 7, 11}
+    </p>
+
+    <h4>IIA Test</h4>
+
+    <p><strong>Base sentence:</strong></p>
+    <code>"The key to the cabinets ___" (singular subject)</code>
+
+    <p><strong>Source sentence:</strong></p>
+    <code>"The keys to the cabinet ___" (plural subject)</code>
+
+    <p><strong>Intervention:</strong></p>
+    <ol>
+      <li>Run base through model</li>
+      <li>Replace Layer 5, Heads {2,7,11} with activations from source</li>
+      <li>Prediction: Should flip to plural verb form</li>
+    </ol>
+
+    <p><strong>Result:</strong></p>
+    <ul>
+      <li>If model now predicts "are": Alignment validated ✓</li>
+      <li>If still predicts "is": Wrong alignment ✗</li>
+    </ul>
+
+    <h4>Findings from Research</h4>
+    <p>
+      Finlayson et al. (2021) found:
+    </p>
+    <ul>
+      <li>Middle-to-late layers track subject number</li>
+      <li>Specific attention heads maintain this across distractors</li>
+      <li>IIA successfully validated which heads implement subject tracking</li>
+      <li>Some heads are necessary but not sufficient (need combinations)</li>
+    </ul>
+
+    <h3>8. Distributed Alignment Search (DAS)</h3>
+    <p>
+      Manually testing every possible alignment is intractable. <strong>DAS</strong> automates the search.
+    </p>
+
+    <h4>The Problem</h4>
+    <p>
+      For subject-verb agreement:
+    </p>
+    <ul>
+      <li>12 layers × 12 heads = 144 attention heads</li>
+      <li>Possible combinations: 2^144 ≈ 10^43</li>
+      <li>Can't test all manually</li>
+    </ul>
+
+    <h4>DAS Solution</h4>
+    <p>
+      Treat alignment search as optimization:
+    </p>
+
+    <div class="math">
+      α* = argmin_α IIA_error(α)
+    </div>
+
+    <p>
+      Find alignment α that minimizes IIA error.
+    </p>
+
+    <h4>DAS Algorithm (Simplified)</h4>
+    <ol>
+      <li><strong>Initialize:</strong> Start with random or null alignment</li>
+      <li><strong>Search:</strong>
+        <ul>
+          <li>For each component, test adding/removing from alignment</li>
+          <li>Compute IIA error for modified alignment</li>
+          <li>Keep modification if error decreases</li>
+        </ul>
+      </li>
+      <li><strong>Iterate:</strong> Repeat until convergence</li>
+      <li><strong>Validate:</strong> Test discovered alignment on held-out data</li>
+    </ol>
+
+    <h4>Search Strategies</h4>
+    <ul>
+      <li><strong>Greedy:</strong> Add one component at a time (fast but local)</li>
+      <li><strong>Beam search:</strong> Maintain top-k candidates (better but slower)</li>
+      <li><strong>Gradient-based:</strong> Use continuous relaxation (when applicable)</li>
+    </ul>
+
+    <h4>DAS in Practice</h4>
+    <p>
+      For subject-verb agreement:
+    </p>
+    <ol>
+      <li>DAS searches over attention heads</li>
+      <li>Finds combination that best predicts verb form</li>
+      <li>Returns: Layer 5 Heads {2, 7, 11} (example)</li>
+      <li>Validate with IIA on new sentences</li>
+    </ol>
+
+    <h4>Interpreting DAS Results</h4>
+    <div class="warning-box">
+      <strong>Important:</strong> DAS finds alignments that minimize error, but doesn't guarantee they're
+      interpretable or meaningful. Always validate with:
+      <ul>
+        <li>Manual inspection</li>
+        <li>Testing on new examples</li>
+        <li>Checking if alignment makes theoretical sense</li>
+      </ul>
+    </div>
+
+    <h3>9. Applying to Previous Weeks</h3>
+
+    <h4>9.1 Validating Circuits (Week 5)</h4>
+    <p>
+      <strong>Claim:</strong> "Induction circuit implements pattern-copying algorithm"
+    </p>
+
+    <p><strong>High-level model:</strong></p>
+    <div class="diagram">
+      Token_t-1 → Pattern_match → Copy_token<br><br>
+      Variables:<br>
+      • Pattern_match: Does current token match earlier token?<br>
+      • Copy_token: Token to copy if pattern matches
+    </div>
+
+    <p><strong>Alignment:</strong></p>
+    <ul>
+      <li>α(Pattern_match) = Previous-token head (Layer 2)</li>
+      <li>α(Copy_token) = Induction head (Layer 5)</li>
+    </ul>
+
+    <p><strong>IIA test:</strong></p>
+    <ul>
+      <li>Swap previous-token head between examples</li>
+      <li>Prediction: Should change which token gets copied</li>
+      <li>Validate circuit implements algorithm</li>
+    </ul>
+
+    <h4>9.2 Testing SAE Features (Week 7)</h4>
+    <p>
+      <strong>Claim:</strong> "SAE feature F represents concept C causally"
+    </p>
+
+    <p><strong>High-level model:</strong></p>
+    <div class="diagram">
+      Input → Concept_C → Output<br><br>
+      Concept_C = 1 if C present, 0 otherwise
+    </div>
+
+    <p><strong>Alignment:</strong></p>
+    <ul>
+      <li>α(Concept_C) = SAE feature F activation</li>
+    </ul>
+
+    <p><strong>IIA test:</strong></p>
+    <ul>
+      <li>Base: Input without C</li>
+      <li>Source: Input with C</li>
+      <li>Swap feature F activation</li>
+      <li>Prediction: Behavior should change as if C is present</li>
+    </ul>
+
+    <p><strong>Comparison with Week 7 steering:</strong></p>
+    <table>
+      <tr>
+        <th>Method</th>
+        <th>What It Tests</th>
+      </tr>
+      <tr>
+        <td>Steering (Week 7)</td>
+        <td>Amplifying F changes behavior</td>
+      </tr>
+      <tr>
+        <td>IIA (Week 8)</td>
+        <td>F plays specific causal role</td>
+      </tr>
+    </table>
+
+    <p>
+      IIA is more rigorous: makes quantitative prediction, not just "something changes."
+    </p>
+
+    <h4>9.3 Comparing with Probes (Week 6)</h4>
+    <p>
+      <strong>Probe finding:</strong> "Layer 8 linearly encodes sentiment"
+    </p>
+
+    <p><strong>IIA test:</strong></p>
+    <ul>
+      <li>Does Layer 8 <em>causally</em> determine sentiment output?</li>
+      <li>Or is it merely present but unused?</li>
+    </ul>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Define high-level model: Sentiment → Output</li>
+      <li>Align: α(Sentiment) = Layer 8 probe direction</li>
+      <li>Run IIA swapping Layer 8 between positive/negative examples</li>
+      <li>If output flips: Causally used ✓</li>
+      <li>If no effect: Present but not used ✗</li>
+    </ol>
+
+    <div class="research-box">
+      <strong>This resolves Week 6's key question:</strong> Probes show information is <em>accessible</em>. IIA shows
+      it's <em>used</em>.
+    </div>
+
+    <h3>10. Open Research Questions</h3>
+
+    <h4>Question 1: When Does Abstraction Break Down?</h4>
+    <p>
+      Not all neural networks cleanly implement high-level algorithms. When does abstraction fail?
+    </p>
+
+    <ul>
+      <li><strong>Distributed computation:</strong> No clean mapping to individual components</li>
+      <li><strong>Approximate implementation:</strong> Network uses shortcuts or heuristics</li>
+      <li><strong>Multiple strategies:</strong> Network uses different algorithms in different contexts</li>
+      <li><strong>Emergent computation:</strong> Behavior arises from interactions, not individual components</li>
+    </ul>
+
+    <h4>Question 2: Multiple Valid Abstractions</h4>
+    <p>
+      A network might implement the same behavior via different algorithms.
+    </p>
+
+    <p><strong>Example:</strong> Addition could be implemented as:</p>
+    <ul>
+      <li>Sequential: (a+b)+c</li>
+      <li>Parallel: a+b and compute c, then combine</li>
+      <li>Lookup table: Memorized sums</li>
+    </ul>
+
+    <p>
+      All have low IIA error but describe different mechanisms. Which is "correct"?
+    </p>
+
+    <h4>Question 3: Granularity of Abstraction</h4>
+    <p>
+      How fine-grained should your high-level model be?
+    </p>
+
+    <ul>
+      <li><strong>Too coarse:</strong> "Network does sentiment" (not falsifiable)</li>
+      <li><strong>Too fine:</strong> "Neuron 47 computes sigmoid of weighted sum" (just restating implementation)</li>
+      <li><strong>Right level:</strong> Captures meaningful computational steps</li>
+    </ul>
+
+    <p>
+      But what's "meaningful" is often unclear and task-dependent.
+    </p>
+
+    <h4>Question 4: Computational Tractability</h4>
+    <p>
+      DAS is expensive:
+    </p>
+    <ul>
+      <li>Each IIA test requires multiple forward passes</li>
+      <li>Search space is exponential in components</li>
+      <li>Scales poorly to large models (billions of parameters)</li>
+    </ul>
+
+    <p>
+      Open question: Can we make DAS tractable for modern LLMs?
+    </p>
+
+    <h4>Question 5: Error Tolerance</h4>
+    <p>
+      How much IIA error is acceptable?
+    </p>
+
+    <ul>
+      <li>Perfect abstraction: error = 0 (rare)</li>
+      <li>Approximate: error < threshold (common)</li>
+      <li>But what threshold? Task-dependent? Relative to baseline?</li>
+    </ul>
+
+    <h3>11. Making Rigorous Claims in Research</h3>
+    <p>
+      Causal abstraction enables stronger claims in papers:
+    </p>
+
+    <table>
+      <tr>
+        <th>Weak Claim</th>
+        <th>Strong Claim (with Causal Abstraction)</th>
+      </tr>
+      <tr>
+        <td>"Component X is important"</td>
+        <td>"Component X implements variable V in algorithm A (IIA error = 0.02)"</td>
+      </tr>
+      <tr>
+        <td>"Feature F activates for concept C"</td>
+        <td>"Feature F causally determines C-related behavior (validated via IIA, p < 0.001)"</td>
+      </tr>
+      <tr>
+        <td>"This circuit handles induction"</td>
+        <td>"This circuit implements pattern-copying algorithm (abstraction holds with error < 0.05)"</td>
+      </tr>
+    </table>
+
+    <h4>Best Practices for Papers</h4>
+    <ol>
+      <li><strong>Explicit high-level model:</strong> State algorithm clearly</li>
+      <li><strong>Formal alignment:</strong> Specify α precisely</li>
+      <li><strong>Quantitative results:</strong> Report IIA error with confidence intervals</li>
+      <li><strong>Falsifiability:</strong> Show what would disprove your claim</li>
+      <li><strong>Baselines:</strong> Compare against random/null alignments</li>
+      <li><strong>Generalization:</strong> Test on held-out data</li>
+    </ol>
+
+    <h3>12. Research Workflow</h3>
+
+    <ol>
+      <li><strong>Formulate hypothesis:</strong>
+        <ul>
+          <li>What high-level algorithm do you think the model uses?</li>
+          <li>Which components implement which parts?</li>
+        </ul>
+      </li>
+
+      <li><strong>Build causal model:</strong>
+        <ul>
+          <li>Define variables and their causal relationships</li>
+          <li>Make model as simple as possible but no simpler</li>
+        </ul>
+      </li>
+
+      <li><strong>Specify alignment:</strong>
+        <ul>
+          <li>Map high-level variables to neural components</li>
+          <li>Use findings from Weeks 4-7 to inform alignment</li>
+        </ul>
+      </li>
+
+      <li><strong>Run IIA:</strong>
+        <ul>
+          <li>Create base/source pairs</li>
+          <li>Compute predicted and actual outputs</li>
+          <li>Measure error</li>
+        </ul>
+      </li>
+
+      <li><strong>Interpret results:</strong>
+        <ul>
+          <li>Low error: Hypothesis supported</li>
+          <li>High error: Wrong alignment or wrong model</li>
+          <li>Partial success: Approximate abstraction</li>
+        </ul>
+      </li>
+
+      <li><strong>Refine or reject:</strong>
+        <ul>
+          <li>If rejected: Try DAS to find better alignment</li>
+          <li>Or revise high-level model</li>
+          <li>Or accept that abstraction doesn't hold</li>
+        </ul>
+      </li>
+
+      <li><strong>Validate:</strong>
+        <ul>
+          <li>Test on new examples</li>
+          <li>Check edge cases</li>
+          <li>Compare with alternative alignments</li>
+        </ul>
+      </li>
+
+      <li><strong>Document rigorously:</strong>
+        <ul>
+          <li>Report all details (model, alignment, error)</li>
+          <li>Include negative results</li>
+          <li>Make claims proportional to evidence</li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="research-box">
+      <strong>Integration with previous weeks:</strong>
+      <ul>
+        <li>Use Week 4 findings to identify candidate components</li>
+        <li>Use Week 5 circuits as basis for high-level models</li>
+        <li>Use Week 6 probes to test if features are causally used</li>
+        <li>Use Week 7 SAE features in alignments and validate them</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on experience with causal abstraction:
+    </p>
+    <ul>
+      <li>Build causal models for addition and subject-verb agreement</li>
+      <li>Implement Interchange Intervention Analysis (IIA)</li>
+      <li>Test alignments and compute IIA error</li>
+      <li>Compare IIA with simple activation patching</li>
+      <li>Implement simplified Distributed Alignment Search (DAS)</li>
+      <li>Validate circuits and features from previous weeks</li>
+      <li>Apply causal abstraction to your project concept</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="assignment">
+    <h2>Project Assignment</h2>
+
+    <div class="assignment-box">
+      <h3 style="margin-top: 0;">Rigorous Validation of Your Concept Claims</h3>
+
+      <p>
+        <strong>Goal:</strong> Use causal abstraction to rigorously validate your interpretability claims about how the
+        model processes your concept.
+      </p>
+
+      <h4>Requirements:</h4>
+      <ol>
+        <li><strong>High-Level Causal Model:</strong>
+          <ul>
+            <li>Define causal model for how your concept should be processed</li>
+            <li>Specify variables (inputs, intermediates, outputs)</li>
+            <li>Draw causal graph showing relationships</li>
+            <li>Justify why this model is appropriate</li>
+          </ul>
+        </li>
+
+        <li><strong>Alignment Hypothesis:</strong>
+          <ul>
+            <li>Map model variables to neural components</li>
+            <li>Use findings from Weeks 5-7 to motivate alignment</li>
+            <li>Be specific: which layers, heads, features?</li>
+            <li>State what would falsify your alignment</li>
+          </ul>
+        </li>
+
+        <li><strong>IIA Experiments:</strong>
+          <ul>
+            <li>Design base/source input pairs (minimum 20 pairs)</li>
+            <li>Run interchange interventions</li>
+            <li>Compute IIA error with confidence intervals</li>
+            <li>Compare against baseline (random alignment)</li>
+          </ul>
+        </li>
+
+        <li><strong>DAS Exploration:</strong>
+          <ul>
+            <li>Use DAS to search for alternative alignments</li>
+            <li>Compare DAS-discovered vs manually hypothesized alignments</li>
+            <li>Analyze which performs better and why</li>
+          </ul>
+        </li>
+
+        <li><strong>Integration Analysis:</strong>
+          <ul>
+            <li>How do IIA results compare with circuit findings (Week 5)?</li>
+            <li>Test if SAE features (Week 7) are causally used</li>
+            <li>Validate probe findings (Week 6) with IIA</li>
+            <li>Resolve any disagreements between methods</li>
+          </ul>
+        </li>
+
+        <li><strong>Rigorous Claims:</strong>
+          <ul>
+            <li>What can you now claim with high confidence?</li>
+            <li>What remains uncertain or approximate?</li>
+            <li>What would falsify your claims?</li>
+            <li>What are the limitations of your validation?</li>
+          </ul>
+        </li>
+      </ol>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li>Jupyter notebook with all experiments and code</li>
+        <li>Written report (7-8 pages) including:
+          <ul>
+            <li>Causal model specification with justification</li>
+            <li>Alignment hypothesis and rationale</li>
+            <li>IIA experimental design and results</li>
+            <li>IIA error analysis (mean, variance, confidence intervals)</li>
+            <li>DAS results and comparison with manual alignment</li>
+            <li>Integration with previous weeks' findings</li>
+            <li>Rigorous, falsifiable claims about your concept</li>
+            <li>Limitations and future work</li>
+          </ul>
+        </li>
+        <li>Visualizations:
+          <ul>
+            <li>Causal model diagram</li>
+            <li>IIA error distributions</li>
+            <li>Comparison: manual vs DAS alignments</li>
+            <li>Validation across methods (circuits, SAEs, probes, IIA)</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>
+        <strong>Due:</strong> Before Week 9 class
+      </p>
+
+      <p style="margin-top: 20px;">
+        <strong>Note:</strong> This is a crucial milestone for your research project. The rigorous validation you
+        perform here will strengthen your final paper significantly.
+      </p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
