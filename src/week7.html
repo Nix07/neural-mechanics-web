@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 7: Unsupervised Feature Discovery and Superposition - Neural Mechanics</title>
+  <title>Week 7: Unsupervised Feature Discovery (SAEs) + Interpretability Illusions and Superposition - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -161,7 +161,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 7: Unsupervised Feature Discovery</h1>
+    <h1>Week 7: Unsupervised Feature Discovery (SAEs) + Interpretability Illusions</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -878,6 +878,368 @@
     </div>
   </section>
 
+
+  <section id="interpretability-illusions">
+    <h2>Part 2: Interpretability Illusions (50% of content)</h2>
+
+    <div class="warning-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+      <h3>Reality Check for Feature Discovery</h3>
+      <p>
+        Sparse autoencoders produce clean, interpretable features. Individual neurons appear to encode specific concepts.
+        But what if these seemingly monosemantic representations are actually <strong>fragile illusions</strong>? This
+        section examines evidence that discovered features may not be as robust or meaningful as they first appear.
+      </p>
+    </div>
+
+    <h2>1. The BERT Interpretability Illusion (Bolukbasi et al., 2021)</h2>
+
+    <h3>The Intuition Behind Neuron Analysis</h3>
+    <p>
+      A common approach in interpretability: examine individual neurons or directions, find inputs that activate them
+      strongly, and conclude the neuron represents some concept. This has produced many published interpretations.
+    </p>
+
+    <p>
+      But <strong>Bolukbasi et al. (2021)</strong> systematically tested: do these seemingly clean interpretations actually
+      hold up?
+    </p>
+
+    <h3>The Experiment</h3>
+    <p>
+      Test neurons in BERT that appear to encode specific semantic categories:
+    </p>
+
+    <ol>
+      <li>Identify neurons that activate on specific concepts (e.g., "sports," "locations," "dates")</li>
+      <li>Test on <strong>counterfactual examples:</strong> minimally modified sentences that change the concept while
+        preserving structure</li>
+      <li>Test on <strong>multiple datasets</strong> beyond the training distribution</li>
+    </ol>
+
+    <h3>The Illusion Revealed</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p><strong>Key findings:</strong></p>
+      <ul>
+        <li>Neurons that appear to encode simple concepts on standard datasets <strong>fail to generalize</strong> to
+          counterfactuals</li>
+        <li>The same neuron appears to encode <em>different concepts</em> depending on which dataset you probe it with</li>
+        <li>What looks like a "sports neuron" is actually encoding something far more complex—perhaps a mixture of syntactic
+          patterns, word frequency, and correlations that <em>happen to align with sports</em> in typical text</li>
+      </ul>
+    </div>
+
+    <h3>Why This Happens</h3>
+    <p><strong>Two main causes:</strong></p>
+
+    <ol>
+      <li><strong>Geometric properties of embedding spaces:</strong> BERT's representation space has specific structure
+        where certain directions spuriously appear to correspond to simple concepts</li>
+
+      <li><strong>Dataset bias:</strong> Training corpora don't uniformly sample possible sentences. Correlations in the
+        data (e.g., "sports" co-occurring with certain syntactic structures) create apparent monosemantic neurons that are
+        actually polysemantic</li>
+    </ol>
+
+    <h3>Taxonomy of Concept Directions</h3>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 8px;">Type</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Scope</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Example</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Local concepts</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Only meaningful in small region</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Works on news articles, breaks on social media</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Dataset-level</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Only within training distribution</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Appears semantic but is actually frequency pattern</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Global concepts</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Meaningful across entire space</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">True semantic concepts (rare!)</td>
+      </tr>
+    </table>
+
+    <p>
+      <strong>Key insight:</strong> Most neurons that appear monosemantic are actually <strong>dataset-level or
+        local</strong>, not global. They work on typical examples but fail on edge cases, counterfactuals, or
+      out-of-distribution inputs.
+    </p>
+
+    <h3>Methodological Recommendations</h3>
+    <ul>
+      <li><strong>Test on multiple datasets:</strong> A concept interpretation that only holds on one dataset is suspect
+      </li>
+      <li><strong>Use counterfactual examples:</strong> Minimally edit inputs to isolate the concept</li>
+      <li><strong>Check for confounds:</strong> Could the neuron be responding to correlated properties (word frequency,
+        syntax, position)?</li>
+      <li><strong>Be skeptical of monosemanticity claims:</strong> Just because you can label a neuron doesn't mean it
+        actually encodes that label as a pure concept</li>
+    </ul>
+
+    <h2>2. Interpretability Illusions with Sparse Autoencoders (2025)</h2>
+
+    <h3>The SAE Promise (Recap from Part 1)</h3>
+    <p>
+      Sparse autoencoders decompose neural network activations into interpretable, monosemantic features. This seems like a
+      breakthrough: we can finally label what individual directions represent!
+    </p>
+
+    <p>
+      <strong>But a 2025 paper</strong> tested the <em>robustness</em> of SAE-based concept representations.
+    </p>
+
+    <h3>The Robustness Test</h3>
+    <p><strong>Question:</strong> Can adversarial perturbations manipulate which SAE features activate without changing
+      model behavior?</p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Train SAE on LLM activations</li>
+      <li>Identify interpretable features (e.g., "Golden Gate Bridge" feature)</li>
+      <li>Construct adversarial perturbations to inputs</li>
+      <li>Measure: Do perturbations change SAE activations while keeping model outputs unchanged?</li>
+    </ol>
+
+    <h3>The Illusion: Adversarial Fragility</h3>
+    <div class="warning-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+      <p><strong>Key findings:</strong></p>
+      <ul>
+        <li><strong>Tiny adversarial perturbations</strong> can drastically change which SAE features activate</li>
+        <li>These perturbations often have <strong>negligible effect on model outputs</strong></li>
+        <li>You can "fool" the interpretation without changing what the model does</li>
+        <li>Concept labels assigned to SAE features may be more fragile than they appear</li>
+      </ul>
+    </div>
+
+    <h3>Critical Question</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p>
+        If an SAE feature for "Golden Gate Bridge" can be activated by inputs that have nothing to do with the Golden Gate
+        Bridge (via adversarial perturbation), <strong>what does that feature really represent?</strong>
+      </p>
+
+      <p>
+        Options:
+      </p>
+      <ol>
+        <li>The feature is less monosemantic than it appears</li>
+        <li>The feature is real but adversarially fragile (like image classifiers)</li>
+        <li>Our method for labeling features is unreliable</li>
+        <li>All of the above</li>
+      </ol>
+    </div>
+
+    <h3>Implications for SAE Research</h3>
+    <p>
+      This doesn't mean SAEs are useless—but it means we need additional validation:
+    </p>
+
+    <ul>
+      <li><strong>Robustness testing:</strong> Are features stable under small input perturbations?</li>
+      <li><strong>Causal validation:</strong> Does intervening on a feature change behavior as predicted? (Week 4 methods)
+      </li>
+      <li><strong>Multi-dataset testing:</strong> Do features generalize beyond training distribution? (Bolukbasi lesson)
+      </li>
+      <li><strong>Adversarial testing:</strong> Can features be manipulated without changing outputs?</li>
+    </ul>
+
+    <h2>3. Connecting Illusions to SAE Validation</h2>
+
+    <h3>Validation Framework for Discovered Features</h3>
+    <p>
+      Given the evidence of illusions, how do we validate SAE features rigorously?
+    </p>
+
+    <div class="info-box" style="background-color: #e8f4f8; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
+      <h4>Comprehensive SAE Feature Validation</h4>
+
+      <p><strong>1. Monosemanticity Tests</strong></p>
+      <ul>
+        <li>Top activating examples: Do they all exhibit the labeled concept?</li>
+        <li>Counterfactual test: Does minimally changing concept change activation?</li>
+        <li>Multi-dataset test: Does feature activate consistently across datasets? (Bolukbasi)</li>
+      </ul>
+
+      <p><strong>2. Robustness Tests</strong></p>
+      <ul>
+        <li>Perturbation stability: Small input changes shouldn't drastically change feature activation</li>
+        <li>Adversarial test: Can feature be fooled without changing output? (SAE illusions paper)</li>
+        <li>Compare trained model SAE vs random model SAE (Week 4 sanity check)</li>
+      </ul>
+
+      <p><strong>3. Causal Tests</strong></p>
+      <ul>
+        <li>Ablation: Does zeroing feature break related behavior?</li>
+        <li>Steering: Does amplifying feature enhance related behavior?</li>
+        <li>Patching: Does feature mediate the causal path? (Week 4)</li>
+      </ul>
+
+      <p><strong>4. Reconstruction Quality</strong></p>
+      <ul>
+        <li>Does SAE faithfully reconstruct activations?</li>
+        <li>Does reconstruction preserve model behavior?</li>
+        <li>Trade-off: sparsity vs reconstruction fidelity</li>
+      </ul>
+
+      <p><strong>5. Human Validation</strong></p>
+      <ul>
+        <li>Can humans understand feature labels?</li>
+        <li>Do domain experts agree with interpretations?</li>
+        <li>Blind testing: can humans predict which inputs activate features?</li>
+      </ul>
+    </div>
+
+    <h3>When to Trust vs Distrust SAE Features</h3>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 8px;">Signal</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Trust Level</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Action</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature passes all 5 validation tests</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓✓✓ High</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Safe to use in research</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature is monosemantic and causal but fragile</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓✓ Moderate</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Use with caveats, report fragility</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature works on one dataset only</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓ Low</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Likely dataset-level artifact (Bolukbasi)</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature is adversarially manipulable</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">⚠ Very Low</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Interpretation is unstable</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature fails causal tests</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✗ None</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Correlated but not causal</td>
+      </tr>
+    </table>
+
+    <h2>4. Lessons for Your Project</h2>
+
+    <h3>If Using SAEs for Your Concept</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p><strong>Required validation steps:</strong></p>
+
+      <ol>
+        <li><strong>Find the feature:</strong> Use Part 1 methods to discover features related to your concept</li>
+
+        <li><strong>Test monosemanticity:</strong>
+          <ul>
+            <li>Show top activating examples</li>
+            <li>Create counterfactual examples (change concept, activation should change)</li>
+            <li>Test on multiple text sources (news, social media, academic, etc.)</li>
+          </ul>
+        </li>
+
+        <li><strong>Test robustness:</strong>
+          <ul>
+            <li>Paraphrase inputs: does feature still activate?</li>
+            <li>Add noise: is activation stable?</li>
+            <li>Test on random model SAE: does feature exist there? (shouldn't!)</li>
+          </ul>
+        </li>
+
+        <li><strong>Test causality:</strong>
+          <ul>
+            <li>Ablate feature: does concept-related behavior break?</li>
+            <li>Amplify feature: does behavior strengthen?</li>
+            <li>Use Week 4 patching to verify causal role</li>
+          </ul>
+        </li>
+
+        <li><strong>Document failures:</strong>
+          <ul>
+            <li>When does the feature not activate (false negatives)?</li>
+            <li>When does it activate incorrectly (false positives)?</li>
+            <li>Are there confounds (length, frequency, position)?</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <h3>Red Flags to Watch For</h3>
+    <ul>
+      <li><strong>🚩 Too perfect:</strong> Feature activates on all and only concept examples → likely overfitting to your
+        test set</li>
+      <li><strong>🚩 Dataset-dependent:</strong> Feature works on Wikipedia, fails on Twitter → not truly monosemantic
+        (Bolukbasi)</li>
+      <li><strong>🚩 Confounds:</strong> Feature correlates with word length/frequency/position, not actual concept</li>
+      <li><strong>🚩 No causal role:</strong> Ablating feature doesn't change behavior → just correlated, not used</li>
+      <li><strong>🚩 Cherry-picked examples:</strong> Only showing examples that work → confirmation bias</li>
+    </ul>
+
+    <h2>5. Summary: SAEs + Illusions</h2>
+
+    <h3>Part 1 Takeaways (SAE Methods)</h3>
+    <ul>
+      <li>SAEs decompose activations into sparse, interpretable features</li>
+      <li>Features appear more monosemantic than individual neurons</li>
+      <li>Training requires balancing sparsity and reconstruction</li>
+      <li>Multiple methods exist: TopK, learned thresholds, gated SAEs</li>
+    </ul>
+
+    <h3>Part 2 Takeaways (Illusions)</h3>
+    <ul>
+      <li>Seemingly monosemantic neurons may be dataset-level artifacts (Bolukbasi)</li>
+      <li>SAE features can be adversarially fragile (2025 paper)</li>
+      <li>Visual plausibility ≠ robustness ≠ causality</li>
+      <li>Comprehensive validation is essential</li>
+      <li>Report failures, not just successes</li>
+    </ul>
+
+    <h3>Integration with Course</h3>
+    <ul>
+      <li><strong>Week 4 (Causal Validation):</strong> Use patching to verify SAE features are causal</li>
+      <li><strong>Week 5 (Probes):</strong> Compare SAE features with probe results</li>
+      <li><strong>Week 6 (Attribution):</strong> Do SAE features align with high-attribution inputs?</li>
+      <li><strong>Week 8 (Circuits):</strong> How do features compose into circuits?</li>
+      <li><strong>Week 10 (Full Skepticism):</strong> Comprehensive study of all interpretability illusions</li>
+    </ul>
+
+    <h3>For Your Research</h3>
+    <p>
+      Use SAEs to discover features, but validate rigorously:
+    </p>
+    <ol>
+      <li>Run full validation protocol (monosemanticity, robustness, causality, reconstruction, human eval)</li>
+      <li>Test on multiple datasets and text types</li>
+      <li>Check for adversarial fragility</li>
+      <li>Integrate with other methods (probes, patching, attribution)</li>
+      <li>Report honestly: show failures, acknowledge limitations</li>
+    </ol>
+
+    <h2>References for Part 2 (Illusions)</h2>
+
+    <h3>Core Papers</h3>
+    <ul>
+      <li><strong>Bolukbasi et al. (2021):</strong> "An Interpretability Illusion for BERT." arXiv. <a
+          href="https://arxiv.org/abs/2104.07143" target="_blank">arXiv:2104.07143</a></li>
+      <li><strong>Interpretability Illusions with SAEs (2025):</strong> "Evaluating Robustness of Concept Representations."
+        <a href="https://arxiv.org/abs/2505.16004" target="_blank">arXiv:2505.16004</a>
+      </li>
+    </ul>
+
+    <h3>Related Work</h3>
+    <ul>
+      <li>Anthropic's Golden Gate Claude (2024): Example of SAE features that appear highly monosemantic</li>
+      <li>Templeton et al. (2024): Scaling monosemanticity with sparse autoencoders</li>
+      <li>Makelov et al. (2024): On the adversarial robustness of concept representations</li>
+    </ul>
+  </section>
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>

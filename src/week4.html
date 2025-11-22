@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 4: Causal Mediation Analysis - Neural Mechanics</title>
+  <title>Week 4: Causal Mediation Analysis + Validation Framework - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -154,7 +154,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 4: Causal Mediation Analysis</h1>
+    <h1>Week 4: Causal Mediation Analysis + Validation Framework</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -710,6 +710,324 @@
       <li><strong>Interpretation:</strong> Build mechanistic story from findings</li>
       <li><strong>Generalization:</strong> Test on new examples/tasks</li>
     </ol>
+  </section>
+
+  <section id="validation-framework">
+    <h2>Part 2: Validation Framework for Interpretability</h2>
+
+    <h3>The Need for Rigorous Validation</h3>
+    <p>
+      Causal intervention gives us powerful tools to test mechanistic hypotheses. But how do we know our interpretations
+      are actually correct? This section establishes a comprehensive validation framework that will be critical throughout
+      the course—especially as we encounter potential illusions and failure modes in Weeks 6, 7, and 10.
+    </p>
+
+    <h3>1. Levels of Validation (Doshi-Velez & Kim, 2017)</h3>
+    <p>
+      <strong>Doshi-Velez and Kim (2017)</strong> propose three levels of evaluation for interpretability methods:
+    </p>
+
+    <h4>Application-Grounded Evaluation</h4>
+    <p>
+      Test interpretations with real users performing real tasks in the actual application domain.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Have doctors use model explanations to make diagnoses, measure accuracy improvement</li>
+      <li><strong>Pros:</strong> Highest ecological validity, tests real-world utility</li>
+      <li><strong>Cons:</strong> Expensive, requires domain experts, slow iteration</li>
+      <li><strong>When to use:</strong> Final validation before deployment, high-stakes applications</li>
+    </ul>
+
+    <h4>Human-Grounded Evaluation</h4>
+    <p>
+      Test with lay users on simplified tasks that capture the essence of the real application.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Show users attention visualizations, ask if they make sense</li>
+      <li><strong>Pros:</strong> Faster than application-grounded, can use larger samples</li>
+      <li><strong>Cons:</strong> May not generalize to real application, subjective judgments</li>
+      <li><strong>When to use:</strong> Iterative development, when domain experts are unavailable</li>
+    </ul>
+
+    <h4>Functionally-Grounded Evaluation</h4>
+    <p>
+      Test interpretations using quantitative metrics without human subjects.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Measure if high-importance features (by attribution) actually change outputs when intervened on</li>
+      <li><strong>Pros:</strong> Fast, reproducible, scalable, no human subjects needed</li>
+      <li><strong>Cons:</strong> May miss aspects that matter to humans</li>
+      <li><strong>When to use:</strong> Initial validation, debugging, comparing methods</li>
+    </ul>
+
+    <h3>2. Faithfulness: The Core Requirement (Jacovi & Goldberg, 2020)</h3>
+    <p>
+      <strong>Jacovi and Goldberg (2020)</strong> argue that faithfulness is the fundamental property interpretations must satisfy:
+    </p>
+
+    <div class="diagram">
+      <strong>Faithfulness:</strong> An explanation is faithful if it accurately represents the model's true decision-making process.
+    </div>
+
+    <h4>Why Faithfulness Matters</h4>
+    <p>
+      An explanation can be:
+    </p>
+    <ul>
+      <li><strong>Plausible but unfaithful:</strong> Makes intuitive sense but doesn't reflect what the model actually does</li>
+      <li><strong>Faithful but implausible:</strong> Accurately describes the model but is hard to understand</li>
+    </ul>
+    <p>
+      <strong>Goal:</strong> Faithful AND plausible explanations. But when forced to choose, <em>faithfulness must come first</em>.
+    </p>
+
+    <h4>Testing Faithfulness</h4>
+    <p>The causal intervention methods from Part 1 are key faithfulness tests:</p>
+    <ol>
+      <li><strong>Forward simulation:</strong> If explanation says X causes Y, intervening on X should change Y</li>
+      <li><strong>Backward verification:</strong> If explanation highlights component C, ablating C should break the behavior</li>
+      <li><strong>Sufficiency test:</strong> Patching only the explained components should recover the behavior</li>
+    </ol>
+
+    <h3>3. Multi-Method Validation</h3>
+    <p>
+      No single interpretability method is perfect. Robust findings require convergent evidence from multiple independent methods.
+    </p>
+
+    <h4>Method Triangulation</h4>
+    <table>
+      <tr>
+        <th>Method Category</th>
+        <th>Example Methods</th>
+        <th>What It Tests</th>
+      </tr>
+      <tr>
+        <td><strong>Causal Intervention</strong></td>
+        <td>Patching, ablation, steering</td>
+        <td>Which components are necessary/sufficient</td>
+      </tr>
+      <tr>
+        <td><strong>Attribution</strong></td>
+        <td>Gradients, IG, SHAP, attention (Week 6)</td>
+        <td>Which inputs are important</td>
+      </tr>
+      <tr>
+        <td><strong>Probing</strong></td>
+        <td>Linear probes, logistic regression (Week 5)</td>
+        <td>What information is encoded</td>
+      </tr>
+      <tr>
+        <td><strong>Feature Discovery</strong></td>
+        <td>SAEs, dictionary learning (Week 7)</td>
+        <td>What features are represented</td>
+      </tr>
+      <tr>
+        <td><strong>Behavioral Testing</strong></td>
+        <td>Adversarial examples, edge cases</td>
+        <td>When does the interpretation fail</td>
+      </tr>
+    </table>
+
+    <p><strong>Validation strategy:</strong> Use at least 3 independent methods. If they agree, confidence increases. If they disagree, investigate why.</p>
+
+    <h3>4. Sanity Checks: Catching Illusions Early</h3>
+    <p>
+      Before trusting any interpretation, run basic sanity checks. These will be critical in Week 10 (Skepticism) when we study interpretability failures.
+    </p>
+
+    <h4>Model Randomization Test</h4>
+    <p>
+      <strong>Test:</strong> Does your interpretation change when applied to a randomly initialized model?
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      interpretation_trained = analyze(trained_model)<br>
+      interpretation_random = analyze(random_model)<br>
+      <br>
+      assert interpretation_trained != interpretation_random
+    </code>
+    <p>
+      <strong>Why it matters:</strong> If interpretations look the same for trained and random models, your method might just be detecting network architecture, not learned behavior.
+    </p>
+
+    <h4>Data Randomization Test</h4>
+    <p>
+      <strong>Test:</strong> Train a model on data with random labels. Does your interpretation change?
+    </p>
+    <ul>
+      <li>A model trained on random labels should have different (probably nonsensical) internal mechanisms</li>
+      <li>If interpretation looks the same, it's not capturing what the model learned</li>
+    </ul>
+
+    <h4>Ablation Completeness Test</h4>
+    <p>
+      <strong>Test:</strong> If you ablate all "important" components identified by your method, does the behavior break?
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      important_components = find_important_components(model)<br>
+      ablated_performance = test(model, ablate=important_components)<br>
+      <br>
+      assert ablated_performance << baseline_performance
+    </code>
+
+    <h4>Sign Test (for attribution methods)</h4>
+    <p>
+      <strong>Test:</strong> Do positive attributions actually help the predicted class?
+    </p>
+    <ul>
+      <li>Remove features with high positive attribution → performance should drop</li>
+      <li>Remove features with high negative attribution → performance might improve</li>
+      <li>If removing "important" features doesn't change output, attribution is unfaithful</li>
+    </ul>
+
+    <h3>5. Baseline Comparisons</h3>
+    <p>
+      Always compare your interpretability findings against appropriate baselines:
+    </p>
+
+    <h4>Random Baseline</h4>
+    <p>
+      Is your method better than random selection?
+    </p>
+    <ul>
+      <li>For component importance: Compare AIE of identified components vs. random components</li>
+      <li>For attribution: Compare removal of high-attribution features vs. random features</li>
+      <li><strong>Minimum bar:</strong> Your method must beat random</li>
+    </ul>
+
+    <h4>Frequency Baseline</h4>
+    <p>
+      Is your method just detecting frequent patterns?
+    </p>
+    <ul>
+      <li>For text: High-attribution words might just be common words</li>
+      <li>Test: Does attribution correlate with word frequency? If yes, consider TF-IDF weighting</li>
+    </ul>
+
+    <h4>Input × Gradient Baseline</h4>
+    <p>
+      For complex attribution methods, compare against simple Input × Gradient:
+    </p>
+    <ul>
+      <li>Does your expensive method (IG, SHAP) actually perform better?</li>
+      <li>By how much? Is the computational cost worth it?</li>
+    </ul>
+
+    <h3>6. Counterfactual Testing</h3>
+    <p>
+      The strongest validation: <strong>predict what will happen, then intervene and verify</strong>.
+    </p>
+
+    <h4>The Counterfactual Validation Loop</h4>
+    <ol>
+      <li><strong>Interpret:</strong> "Component C computes function F for concept X"</li>
+      <li><strong>Predict:</strong> "If I intervene on C, behavior related to X should change in way Y"</li>
+      <li><strong>Intervene:</strong> Actually modify C (patch, ablate, steer)</li>
+      <li><strong>Measure:</strong> Did Y happen?</li>
+      <li><strong>Iterate:</strong> If not, revise interpretation</li>
+    </ol>
+
+    <h4>Example: Validating a Factual Association</h4>
+    <div class="diagram">
+      <strong>Interpretation:</strong> "Layer 8 MLP at position 'Needle' stores the fact that Space Needle is in Seattle"<br><br>
+
+      <strong>Prediction 1:</strong> Ablating this component should make model fail to recall "Seattle"<br>
+      → Test: Ablate → measure accuracy drop ✓<br><br>
+
+      <strong>Prediction 2:</strong> Patching from "Eiffel Tower → Paris" should make model say "Paris"<br>
+      → Test: Patch → check output ✓<br><br>
+
+      <strong>Prediction 3:</strong> This component should activate for other factual recall tasks<br>
+      → Test: Check AIE on "The Colosseum is in...", "The Parthenon is in..." ✓
+    </div>
+
+    <h3>7. Validation Checklist for Your Research</h3>
+    <p>
+      Before claiming you've discovered something about how a model works, verify:
+    </p>
+
+    <div class="assignment-box">
+      <h4>Validation Checklist</h4>
+      <ol>
+        <li><strong>✓ Sanity checks passed:</strong>
+          <ul>
+            <li>Random model gives different interpretation</li>
+            <li>Random labels give different interpretation</li>
+            <li>Ablating "important" components breaks behavior</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Causal validation:</strong>
+          <ul>
+            <li>Intervention on identified components changes behavior as predicted</li>
+            <li>Effect size is substantial (not just statistically significant)</li>
+            <li>Results replicate across multiple examples</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Multi-method agreement:</strong>
+          <ul>
+            <li>At least 3 independent methods point to same components/features</li>
+            <li>If methods disagree, you understand why</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Baseline comparisons:</strong>
+          <ul>
+            <li>Performance beats random baseline</li>
+            <li>Results aren't explained by simple heuristics (frequency, position)</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Generalization:</strong>
+          <ul>
+            <li>Findings hold on held-out test set</li>
+            <li>Findings transfer to related tasks/prompts</li>
+            <li>You've characterized when the interpretation fails</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Negative results reported:</strong>
+          <ul>
+            <li>You've documented what doesn't work</li>
+            <li>You've shown edge cases where interpretation breaks</li>
+          </ul>
+        </li>
+      </ol>
+
+      <p><strong>Remember:</strong> This validation framework will be crucial as we study attribution methods (Week 6), SAEs (Week 7),
+      and especially when we examine interpretability illusions (Week 10). The methods that seem most convincing are often the ones
+      that need the most rigorous validation.</p>
+    </div>
+
+    <h3>8. Validation in the Wild: What Can Go Wrong</h3>
+    <p>
+      Preview of Week 10 issues to watch for:
+    </p>
+
+    <ul>
+      <li><strong>Confirmation bias:</strong> Finding what you expect to find, ignoring contradictory evidence</li>
+      <li><strong>Cherry-picking:</strong> Showing only examples that support your interpretation</li>
+      <li><strong>P-hacking:</strong> Testing many hypotheses, reporting only significant ones without correction</li>
+      <li><strong>Overfitting:</strong> Interpretation works on training data but not test data</li>
+      <li><strong>Confounds:</strong> Attributed importance is actually due to correlated features</li>
+      <li><strong>Visualization artifacts:</strong> Patterns in visualization don't reflect model computation</li>
+    </ul>
+
+    <p>
+      <strong>The solution:</strong> Rigorous application of this validation framework. We'll return to these issues in depth in Week 10.
+    </p>
+
+    <h3>Looking Ahead</h3>
+    <p>
+      This validation framework will be your foundation for the rest of the course:
+    </p>
+    <ul>
+      <li><strong>Week 5 (Probes):</strong> How do we validate that probes are faithful?</li>
+      <li><strong>Week 6 (Attribution):</strong> Which attribution methods pass sanity checks?</li>
+      <li><strong>Week 7 (SAEs):</strong> Are discovered features robust and meaningful?</li>
+      <li><strong>Week 8 (Circuits + Causal Abstraction):</strong> Formal frameworks for causal validation</li>
+      <li><strong>Week 10 (Skepticism):</strong> Detailed study of validation failures and how to avoid them</li>
+    </ul>
   </section>
 
   <section id="code-exercise">
