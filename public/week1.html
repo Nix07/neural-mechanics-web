@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 1: Benchmarking - Neural Mechanics</title>
+  <title>Week 1: Steering - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -45,6 +45,12 @@
       font-size: 1.2em;
       margin-top: 20px;
       margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
     }
 
     a {
@@ -109,6 +115,15 @@
       border-radius: 3px;
       font-family: 'Courier New', monospace;
     }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
   </style>
 </head>
 
@@ -116,7 +131,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 1: Benchmarking</h1>
+    <h1>Week 1: Steering</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -126,10 +141,10 @@
   <section id="overview">
     <h2>Overview</h2>
     <p>
-      Before we can understand what's happening inside a large language model, we need to know how to measure what it
-      does. This week introduces the fundamental methods for evaluating LLM behavior, from basic probability outputs to
-      sophisticated benchmarking strategies. You'll learn how to design effective prompts, interpret model outputs, and
-      assess whether a model has truly learned a concept or simply memorized training data.
+      This week, you'll move from measuring external behavior to exploring the internal representations that drive it.
+      You'll learn how neural networks process information, what activation vectors are, and how concepts are encoded
+      as directions in high-dimensional space. Most importantly, you'll gain hands-on experience extracting
+      representation vectors and using them to steer model behavior—your first step toward mechanistic control of LLMs.
     </p>
   </section>
 
@@ -137,19 +152,17 @@
     <h2>Learning Objectives</h2>
     <p>By the end of this week, you should be able to:</p>
     <ul>
-      <li>Describe what an autoregressive language modeling neural network calculates, including its inputs and how it
-        outputs probabilities for a single token</li>
-      <li>Explain how to sample probabilistic output autoregressively to generate long outputs</li>
-      <li>Apply three prompting strategies for measuring model capabilities: instruction-following, cloze prompts, and
-        in-context learning</li>
-      <li>Use methods for conforming to easy-to-evaluate output formats through ICL, custom decoding, or MCQ prompting
-      </li>
-      <li>Evaluate long-form output using an LLM-as-judge approach</li>
-      <li>Understand and compute evaluation metrics: precision, recall, F1, and perplexity</li>
-      <li>Apply statistical significance testing and interpret error bars in evaluation results</li>
-      <li>Distinguish between memorization and generalization, and identify the risk of training data overlap and
-        contamination</li>
-      <li>Describe the approaches used by HELM to create fair and accurate benchmarks</li>
+      <li>Explain what a feedforward neural network is and how it processes information</li>
+      <li>Describe how neural networks are trained and why individual neuron roles remain unknown after training</li>
+      <li>Define what an activation vector is and where it occurs in a neural network</li>
+      <li>Explain the distributed representation hypothesis</li>
+      <li>Explain the linear representation hypothesis and why it matters for interpretability</li>
+      <li>Explain the superposition hypothesis with a concrete example</li>
+      <li>Identify and describe the main components of a transformer language model: token encoders, residual stream,
+        token decoders, multihead attention layers, and MLP layers</li>
+      <li>Understand sparse autoencoders (SAEs) at a level sufficient to use Neuronpedia</li>
+      <li>Use Neuronpedia to find representation vectors for concepts</li>
+      <li>Successfully steer a language model using representation vectors</li>
     </ul>
   </section>
 
@@ -160,26 +173,26 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2211.09110" target="_blank">Holistic Evaluation of Language Models (HELM)</a>
+          <a href="https://arxiv.org/abs/2209.10652" target="_blank">Toy Models of Superposition</a>
         </div>
-        <div class="reading-description">Comprehensive benchmark framework covering accuracy, calibration, robustness,
-          fairness, and efficiency</div>
+        <div class="reading-description">Foundational paper on superposition, distributed representations, and why
+          features don't align with neurons</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2005.14165" target="_blank">Language Models are Few-Shot Learners (GPT-3)</a>
+          <a href="https://arxiv.org/abs/2308.10248" target="_blank">Inference-Time Intervention: Eliciting Truthful
+            Answers from a Language Model</a>
         </div>
-        <div class="reading-description">Foundational paper on in-context learning and prompting strategies for
-          evaluation</div>
+        <div class="reading-description">Extracting and applying steering vectors to control model behavior</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2306.04528" target="_blank">Judging LLM-as-a-Judge with MT-Bench and
-            Chatbot Arena</a>
+          <a href="https://arxiv.org/abs/2310.06824" target="_blank">Representation Engineering: A Top-Down Approach to
+            AI Transparency</a>
         </div>
-        <div class="reading-description">Methods for using LLMs to evaluate open-ended responses reliably</div>
+        <div class="reading-description">Framework for finding and manipulating high-level concept representations</div>
       </div>
     </div>
 
@@ -187,270 +200,368 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2104.08758" target="_blank">Extracting Training Data from Large Language
-            Models</a>
+          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework
+            for Transformer Circuits</a>
         </div>
-        <div class="reading-description">Understanding memorization vs. generalization through training data extraction
+        <div class="reading-description">Detailed explanation of transformer components and the residual stream (not
+          arxiv, but essential)</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2406.04093" target="_blank">Scaling and evaluating sparse autoencoders</a>
+        </div>
+        <div class="reading-description">Modern approach to decomposing superposition using SAEs</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2304.14767" target="_blank">Towards Monosemanticity: Decomposing Language
+            Models With Dictionary Learning</a>
+        </div>
+        <div class="reading-description">Anthropic's work on finding interpretable features with sparse dictionaries
         </div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2311.01964" target="_blank">Rethinking Benchmark and Contamination for
-            Language Models with Rephrased Samples</a>
+          <a href="https://arxiv.org/abs/2106.09685" target="_blank">The Geometry of Truth: Emergent Linear Structure
+            in Large Language Model Representations</a>
         </div>
-        <div class="reading-description">Methods for detecting and addressing training data contamination</div>
+        <div class="reading-description">Evidence for linear representation of concepts across diverse tasks</div>
       </div>
+    </div>
 
+    <h3>Tools & Resources</h3>
+    <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2212.09251" target="_blank">Discovering Language Model Behaviors with
-            Model-Written Evaluations</a>
+          <a href="https://www.neuronpedia.org/" target="_blank">Neuronpedia</a>
         </div>
-        <div class="reading-description">Using models to generate diverse test cases automatically</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2109.07958" target="_blank">Measuring Massive Multitask Language Understanding
-            (MMLU)</a>
-        </div>
-        <div class="reading-description">Multiple-choice question format for evaluating knowledge across 57 subjects
+        <div class="reading-description">Interactive tool for exploring SAE features and finding representation vectors
         </div>
       </div>
     </div>
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: Understanding and Measuring LLM Behavior</h2>
+    <h2>Tutorial: From Neurons to Steering</h2>
 
-    <h3>1. The Autoregressive Language Model</h3>
+    <h3>1. Feedforward Neural Networks: The Foundation</h3>
     <p>
-      At its core, a large language model is a function that takes a sequence of tokens as input and produces a
-      probability distribution over the next token. Given a sequence of tokens <code>x₁, x₂, ..., xₙ</code>, the model
-      computes:
-    </p>
-    <p style="text-align: center; font-style: italic;">
-      P(xₙ₊₁ | x₁, x₂, ..., xₙ)
-    </p>
-    <p>
-      This is a distribution over the entire vocabulary—typically 50,000 to 100,000+ tokens. The model doesn't directly
-      generate text; it generates probabilities. Understanding this distinction is crucial: every behavior we observe
-      emerges from these probability distributions.
-    </p>
-
-    <h3>2. Autoregressive Sampling</h3>
-    <p>
-      To generate longer sequences, we sample from the model autoregressively:
+      A <strong>feedforward neural network</strong> is a computational graph that transforms inputs to outputs through
+      layers of simple operations. Each layer consists of:
     </p>
     <ul>
-      <li><strong>Greedy decoding:</strong> Always pick the highest probability token</li>
-      <li><strong>Temperature sampling:</strong> Sample from the distribution, with temperature controlling randomness
+      <li><strong>Linear transformation:</strong> Multiply input by a weight matrix W and add bias b</li>
+      <li><strong>Nonlinear activation:</strong> Apply a function like ReLU or GELU element-wise</li>
+    </ul>
+
+    <div class="diagram">
+      Input → [Linear + Nonlinear] → [Linear + Nonlinear] → ... → Output
+    </div>
+
+    <p>
+      The magic is in the weights: billions of numbers that determine what the network computes. But where do these
+      weights come from?
+    </p>
+
+    <h3>2. Training: Optimization Without Explicit Design</h3>
+    <p>
+      Neural networks are <strong>trained</strong>, not programmed. The process:
+    </p>
+    <ol>
+      <li>Initialize weights randomly</li>
+      <li>Show the network many examples (e.g., predict next tokens)</li>
+      <li>Measure error between predictions and actual answers</li>
+      <li>Use gradient descent to adjust weights to reduce error</li>
+      <li>Repeat millions of times</li>
+    </ol>
+
+    <p>
+      This process is remarkably effective, but creates a fundamental interpretability challenge: <strong>We never
+        explicitly told the network what each neuron should do.</strong> The roles of individual neurons emerge from
+      optimization, and they can be arbitrary, redundant, or polysemantic (having multiple meanings).
+    </p>
+
+    <p>
+      This is why interpretability is hard: the network works, but we don't know <em>how</em> in terms of what
+      individual components compute.
+    </p>
+
+    <h3>3. Activation Vectors: Internal Computational States</h3>
+    <p>
+      As a neural network processes input, it creates intermediate representations at each layer. An <strong>activation
+        vector</strong> is the state of the network at a particular layer and position.
+    </p>
+
+    <p>
+      For a language model processing text, at each token position and each layer, there's a vector (typically
+      768-12,288 dimensions) representing what the network "knows" at that point:
+    </p>
+
+    <div class="diagram">
+      Input: "The cat sat on the"<br><br>
+      Layer 0: [v₀₀, v₀₁, v₀₂, v₀₃, v₀₄] ← activation vectors for each token<br>
+      Layer 1: [v₁₀, v₁₁, v₁₂, v₁₃, v₁₄]<br>
+      ...<br>
+      Layer 12: [v₁₂,₀, v₁₂,₁, v₁₂,₂, v₁₂,₃, v₁₂,₄]<br><br>
+      Output probabilities for next token
+    </div>
+
+    <p>
+      Each activation vector is a high-dimensional point in activation space. The hypothesis of mechanistic
+      interpretability is that these vectors encode meaningful information about the input in a structured way.
+    </p>
+
+    <h3>4. The Distributed Representation Hypothesis</h3>
+    <p>
+      Unlike symbolic systems where concepts are discrete symbols, neural networks use <strong>distributed
+        representations</strong>: each concept is represented by a pattern of activity across many neurons.
+    </p>
+
+    <p>
+      Key properties:
+    </p>
+    <ul>
+      <li><strong>Many neurons per concept:</strong> "cat" isn't stored in neuron #47; it's a pattern across thousands
+        of neurons</li>
+      <li><strong>Many concepts per neuron:</strong> Each neuron participates in representing multiple concepts</li>
+      <li><strong>Graceful degradation:</strong> Damage to a few neurons doesn't destroy specific concepts</li>
+      <li><strong>Similarity structure:</strong> Similar concepts have similar patterns (cat ≈ dog ≠ democracy)</li>
+    </ul>
+
+    <p>
+      This is powerful for learning but challenging for interpretation: we can't point to "the democracy neuron."
+    </p>
+
+    <h3>5. The Linear Representation Hypothesis</h3>
+    <p>
+      A more specific claim that has proven surprisingly accurate: <strong>concepts are represented as
+        directions</strong> in the high-dimensional activation space.
+    </p>
+
+    <p>
+      Formally: there exists a direction vector d such that the component of an activation vector a in direction d
+      measures the presence/strength of a concept:
+    </p>
+
+    <div class="diagram">
+      concept_strength = a · d (dot product)
+    </div>
+
+    <p>
+      Why this matters:
+    </p>
+    <ul>
+      <li><strong>Interpretability:</strong> We can find concept directions by comparing activations</li>
+      <li><strong>Intervention:</strong> We can add/subtract directions to steer behavior</li>
+      <li><strong>Measurement:</strong> We can quantify concept presence by projection</li>
+      <li><strong>Compositionality:</strong> Directions can be added/subtracted (king - man + woman ≈ queen)</li>
+    </ul>
+
+    <p>
+      Evidence: Linear probes work well, steering vectors are effective, truth directions exist across contexts, etc.
+    </p>
+
+    <h3>6. The Superposition Hypothesis</h3>
+    <p>
+      Here's a puzzle: models have ~100,000 neurons per layer but need to represent millions of features (concepts,
+      patterns, facts). How?
+    </p>
+
+    <p>
+      <strong>Superposition</strong>: Models represent more features than dimensions by storing them as
+      quasi-orthogonal directions, accepting some interference between features that rarely co-occur.
+    </p>
+
+    <h4>Simple Example: 2D Space, 3 Features</h4>
+    <div class="diagram">
+      Feature A: direction (1, 0)<br>
+      Feature B: direction (0, 1)<br>
+      Feature C: direction (1/√2, 1/√2)<br><br>
+      All nearly orthogonal if sparse!
+    </div>
+
+    <p>
+      With 100,000 dimensions and sparse features (most are zero for any given input), you can pack in millions of
+      directions with limited interference.
+    </p>
+
+    <p>
+      Consequences:
+    </p>
+    <ul>
+      <li>Individual neurons are polysemantic (respond to multiple unrelated features)</li>
+      <li>We need methods like SAEs to disentangle features from neurons</li>
+      <li>The network has compressed representations through clever geometry</li>
+    </ul>
+
+    <h3>7. Transformer Architecture: The Components</h3>
+    <p>
+      Modern language models use the transformer architecture. Understanding its components is essential for
+      mechanistic interpretability.
+    </p>
+
+    <h4>Core Components</h4>
+
+    <p><strong>Token Encoder:</strong> Converts each token (word piece) to an initial vector</p>
+    <div class="diagram">
+      "cat" → [0.2, -0.5, 0.8, ..., 0.1] (768-dim vector)
+    </div>
+
+    <p><strong>Residual Stream:</strong> The "main highway" of information flow. Each layer reads from and writes to
+      this stream.</p>
+    <div class="diagram">
+      x₀ = embed(token)<br>
+      x₁ = x₀ + attention₁(x₀) + MLP₁(x₀)<br>
+      x₂ = x₁ + attention₂(x₁) + MLP₂(x₁)<br>
+      ...<br>
+      xₙ = residual stream at layer n
+    </div>
+
+    <p>
+      Key insight: Each component adds information to the stream rather than replacing it. This enables information to
+      flow across many layers.
+    </p>
+
+    <p><strong>Multihead Attention:</strong> Looks at previous tokens to gather context. "Multi-head" means parallel
+      attention operations with different learned patterns.</p>
+
+    <ul>
+      <li>Computes attention scores: which previous tokens are relevant?</li>
+      <li>Weighted sum: combine information from relevant tokens</li>
+      <li><strong>Causal masking:</strong> Can only attend to current and previous tokens, never future ones (for
+        autoregressive generation)</li>
+    </ul>
+
+    <p><strong>MLP (Feed-Forward) Layers:</strong> After attention, each position independently processes its vector
+      through a 2-layer feedforward network. Often interpreted as memory storage.</p>
+
+    <p><strong>Token Decoder:</strong> The final layer converts the residual stream vector to probabilities over the
+      vocabulary</p>
+    <div class="diagram">
+      x_final → linear → logits → softmax → P(next token)
+    </div>
+
+    <h3>8. Sparse Autoencoders: Finding Features in Superposition</h3>
+    <p>
+      Since neurons are polysemantic due to superposition, we need tools to disentangle the features actually encoded
+      in activation vectors. <strong>Sparse Autoencoders (SAEs)</strong> are one such tool.
+    </p>
+
+    <h4>Basic Idea</h4>
+    <p>
+      Train a neural network to:
+    </p>
+    <ol>
+      <li><strong>Encode:</strong> Map activation vector (e.g., 768-dim) to larger sparse code (e.g., 16,384-dim) where
+        most elements are zero</li>
+      <li><strong>Decode:</strong> Reconstruct the original activation from the sparse code</li>
+      <li><strong>Sparsity:</strong> Encourage only a few features to be active at once</li>
+    </ol>
+
+    <div class="diagram">
+      activation (768) → encoder → sparse features (16,384) → decoder → reconstruction (768)
+    </div>
+
+    <p>
+      The learned sparse features often correspond to interpretable concepts: a direction for "medical terms", another
+      for "positive sentiment", etc.
+    </p>
+
+    <h4>Using Neuronpedia</h4>
+    <p>
+      <a href="https://www.neuronpedia.org/" target="_blank">Neuronpedia</a> is a database of SAE features trained on
+      various models. For this course:
+    </p>
+    <ul>
+      <li>Browse features by searching for concepts</li>
+      <li>See which text examples maximally activate each feature</li>
+      <li>Download feature vectors for use in steering</li>
+      <li>Understand what patterns the model has learned</li>
+    </ul>
+
+    <p>
+      You don't need to understand SAE training details—just know that they decompose activations into interpretable
+      feature directions.
+    </p>
+
+    <h3>9. Steering: Causal Intervention with Representation Vectors</h3>
+    <p>
+      Now we put it all together. If concepts are linear directions, we can <strong>steer</strong> behavior by adding
+      concept vectors to activations.
+    </p>
+
+    <h4>Finding a Steering Vector</h4>
+    <ol>
+      <li><strong>Contrastive examples:</strong> Create pairs where one has the concept, one doesn't
+        <ul>
+          <li>"Tell me how to bake cookies" vs "Refuse to tell me how to bake cookies"</li>
+        </ul>
       </li>
-      <li><strong>Top-k sampling:</strong> Sample only from the k most likely tokens</li>
-      <li><strong>Nucleus (top-p) sampling:</strong> Sample from the smallest set of tokens whose cumulative
-        probability exceeds p</li>
-    </ul>
-    <p>
-      Each strategy affects the diversity, coherence, and randomness of generated text. For benchmarking purposes,
-      greedy decoding or low-temperature sampling provides deterministic, reproducible results.
-    </p>
-
-    <h3>3. Prompting Strategies for Evaluation</h3>
-    <p>
-      How we prompt the model determines what capabilities we measure. Three fundamental strategies:
-    </p>
-
-    <h4>Instruction-Following</h4>
-    <p>
-      Modern models trained with instruction-tuning respond to direct commands:
-    </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "Translate the following sentence to French: Hello, how are you?"
-    </code>
-
-    <h4>Cloze Prompts</h4>
-    <p>
-      Format the task as text completion, measuring the probability of specific completions:
-    </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "The capital of France is ___"
-    </code>
-    <p>
-      We can evaluate whether "Paris" has higher probability than alternatives. This works even with base models that
-      haven't seen instruction-tuning.
-    </p>
-
-    <h4>In-Context Learning (ICL)</h4>
-    <p>
-      Provide examples in the prompt to demonstrate the task:
-    </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Input: The movie was terrible.<br>
-      Sentiment: Negative<br><br>
-      Input: I loved every minute!<br>
-      Sentiment: Positive<br><br>
-      Input: It was okay, nothing special.<br>
-      Sentiment:
-    </code>
-    <p>
-      ICL allows us to test capabilities without fine-tuning and is particularly powerful for evaluating novel concepts.
-    </p>
-
-    <h3>4. Constraining Outputs for Evaluation</h3>
-    <p>
-      Reliable benchmarking requires outputs in predictable formats. Several approaches:
-    </p>
-    <ul>
-      <li><strong>Multiple choice questions:</strong> Force selection from predefined options by comparing token
-        probabilities for "A", "B", "C", "D"</li>
-      <li><strong>Custom decoding:</strong> Constrain the output vocabulary or use grammar-based sampling to ensure
-        valid formats (e.g., only allowing "Yes"/"No")</li>
-      <li><strong>Few-shot ICL:</strong> Demonstrate the desired format in examples, teaching the model to respond
-        consistently</li>
-      <li><strong>Probability-based evaluation:</strong> Instead of generating text, directly measure P(correct_answer)
-        vs P(incorrect_answer)</li>
-    </ul>
-
-    <h3>5. LLM-as-Judge for Long-Form Outputs</h3>
-    <p>
-      Some capabilities—like writing quality, reasoning coherence, or helpfulness—can't be reduced to multiple choice.
-      LLM-as-judge uses a strong model (often GPT-4) to evaluate outputs:
-    </p>
-    <ul>
-      <li>Provide the judge with evaluation criteria and rubrics</li>
-      <li>Ask for both a score and justification</li>
-      <li>Use pairwise comparison rather than absolute scoring for better reliability</li>
-      <li>Be aware of biases: judges favor longer responses, their own outputs, and certain styles</li>
-    </ul>
-    <p>
-      MT-Bench demonstrated that LLM judges correlate well with human judgments for many tasks, but always validate on
-      a subset with human evaluation.
-    </p>
-
-    <h3>6. Evaluation Metrics Beyond Accuracy</h3>
-    <p>
-      Different tasks require different metrics:
-    </p>
-
-    <h4>Classification Metrics</h4>
-    <ul>
-      <li><strong>Accuracy:</strong> Proportion of correct predictions (good for balanced classes)</li>
-      <li><strong>Precision:</strong> Of predicted positives, what fraction are actually positive? (TP / (TP + FP))
+      <li><strong>Extract activations:</strong> Run both through the model, record activation vectors at each layer
       </li>
-      <li><strong>Recall:</strong> Of actual positives, what fraction did we find? (TP / (TP + FN))</li>
-      <li><strong>F1 Score:</strong> Harmonic mean of precision and recall: 2 × (precision × recall) / (precision +
-        recall)</li>
-    </ul>
+      <li><strong>Take difference:</strong> v_concept = mean(activations_with) - mean(activations_without)</li>
+      <li><strong>Result:</strong> A direction that points toward the concept</li>
+    </ol>
 
-    <h4>Generation Metrics</h4>
-    <ul>
-      <li><strong>Perplexity:</strong> Measures how "surprised" the model is by a sequence. Lower is better. Defined as
-        exp(average negative log probability of tokens)</li>
-      <li><strong>BLEU, ROUGE:</strong> Compare generated text to reference texts (useful for translation, summarization)
-      </li>
-    </ul>
-
-    <h3>7. Statistical Significance and Error Bars</h3>
     <p>
-      A model scoring 85% vs 83% on a benchmark might not be meaningfully different. We must quantify uncertainty:
-    </p>
-    <ul>
-      <li><strong>Standard error:</strong> For accuracy on n samples, SE = √(p(1-p)/n)</li>
-      <li><strong>Confidence intervals:</strong> 95% CI is approximately ± 2 × SE for large n</li>
-      <li><strong>Bootstrap resampling:</strong> Repeatedly sample (with replacement) from your test set to estimate
-        the distribution of scores</li>
-      <li><strong>Statistical tests:</strong> Use McNemar's test for comparing two models on the same examples</li>
-    </ul>
-    <p>
-      Rule of thumb: differences smaller than 2-3% on typical benchmark sizes often aren't statistically significant.
+      Alternatively, use SAE features from Neuronpedia as steering vectors directly.
     </p>
 
-    <h3>8. Memorization vs. Generalization</h3>
+    <h4>Applying a Steering Vector</h4>
     <p>
-      A fundamental question: Did the model learn the concept, or did it memorize training examples?
+      During model inference:
+    </p>
+    <ol>
+      <li>Run the model normally on your input</li>
+      <li>At target layer(s), intercept the activation vectors</li>
+      <li>Add the steering vector: a_new = a_original + α * v_steering</li>
+      <li>Continue processing with modified activations</li>
+    </ol>
+
+    <p>
+      The coefficient α controls strength: positive amplifies the concept, negative suppresses it.
     </p>
 
-    <h4>Training Data Contamination</h4>
-    <p>
-      If test examples appeared in training data, the model might simply recall them rather than demonstrate true
-      understanding. This is especially problematic because:
-    </p>
+    <h4>What You Can Steer</h4>
     <ul>
-      <li>Popular benchmarks leak into training corpora (scraped web data, code repositories)</li>
-      <li>Models trained on "the whole internet" likely saw many benchmark examples</li>
-      <li>Paraphrased or slightly modified examples may still trigger memorization</li>
-    </ul>
-
-    <h4>Detecting and Mitigating Contamination</h4>
-    <ul>
-      <li><strong>N-gram overlap:</strong> Search training data for test example substrings</li>
-      <li><strong>Membership inference:</strong> Compare perplexity on test vs similar synthetic examples</li>
-      <li><strong>Rephrased evaluation:</strong> Create novel rewordings of test questions</li>
-      <li><strong>Held-out test sets:</strong> Keep evaluation data truly private until final evaluation</li>
-    </ul>
-
-    <h4>Generalization Tests</h4>
-    <p>
-      Beyond contamination, test for genuine understanding:
-    </p>
-    <ul>
-      <li>Novel compositions of known concepts</li>
-      <li>Out-of-distribution examples</li>
-      <li>Counterfactual variations</li>
-      <li>Transfer to related but different tasks</li>
-    </ul>
-
-    <h3>9. HELM: Holistic Evaluation</h3>
-    <p>
-      The Holistic Evaluation of Language Models (HELM) benchmark exemplifies comprehensive evaluation:
-    </p>
-
-    <h4>Key Principles</h4>
-    <ul>
-      <li><strong>Broad coverage:</strong> 42+ scenarios across question answering, reasoning, generation,
-        classification, etc.</li>
-      <li><strong>Multi-metric:</strong> Evaluates accuracy, calibration, robustness, fairness, bias, toxicity, and
-        efficiency</li>
-      <li><strong>Standardized prompting:</strong> Consistent few-shot examples and formatting across models</li>
-      <li><strong>Transparency:</strong> All prompts, data, and evaluation code are public</li>
-    </ul>
-
-    <h4>Metrics Beyond Accuracy</h4>
-    <ul>
-      <li><strong>Calibration:</strong> Do predicted probabilities match actual correctness rates?</li>
-      <li><strong>Robustness:</strong> Performance under perturbations (typos, paraphrases, contrast sets)</li>
-      <li><strong>Fairness:</strong> Equal performance across demographic groups</li>
-      <li><strong>Efficiency:</strong> Inference cost, carbon footprint</li>
+      <li>Sentiment: make outputs more positive/negative</li>
+      <li>Truthfulness: increase honesty/accuracy</li>
+      <li>Topic: emphasize certain subjects</li>
+      <li>Style: formal vs casual language</li>
+      <li><strong>Your concept:</strong> Whatever you're studying for your project!</li>
     </ul>
 
     <h3>Putting It All Together</h3>
     <p>
-      Effective benchmarking requires:
+      The journey from neurons to steering:
     </p>
     <ol>
-      <li>Understanding model fundamentals (token probabilities, sampling)</li>
-      <li>Choosing appropriate prompting strategies for your concept</li>
-      <li>Designing tasks with evaluable outputs</li>
-      <li>Selecting metrics that match your research questions</li>
-      <li>Quantifying uncertainty and statistical significance</li>
-      <li>Ruling out memorization through contamination checks and generalization tests</li>
-      <li>Following established best practices (HELM) for reproducible, fair evaluation</li>
+      <li>Networks process information through layers of neurons</li>
+      <li>Training discovers effective weights, but neuron roles aren't explicit</li>
+      <li>Activation vectors are intermediate computational states</li>
+      <li>Concepts are represented as distributed patterns (distributed hypothesis)</li>
+      <li>Specifically, concepts are directions in activation space (linear hypothesis)</li>
+      <li>Multiple concepts pack into fewer dimensions via superposition</li>
+      <li>Transformers process sequences through attention and MLPs, modifying the residual stream</li>
+      <li>SAEs help us find interpretable feature directions despite superposition</li>
+      <li>We can extract and apply these directions to steer model behavior</li>
     </ol>
   </section>
 
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>
-      This week's exercise will give you hands-on experience with the core concepts:
+      This week's exercise provides hands-on experience with the core concepts:
     </p>
     <ul>
-      <li>Load a small language model (GPT-2 or similar)</li>
-      <li>Examine token probability distributions</li>
-      <li>Implement different sampling strategies</li>
-      <li>Test cloze, ICL, and instruction prompts</li>
-      <li>Calculate precision, recall, F1, and perplexity</li>
-      <li>Perform statistical significance testing</li>
+      <li>Load a transformer language model and examine its architecture</li>
+      <li>Extract and visualize activation vectors at different layers</li>
+      <li>Extract steering vectors using contrastive pairs</li>
+      <li>Apply steering vectors to control model behavior</li>
+      <li>Experiment with Neuronpedia to find feature directions</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
@@ -466,65 +577,78 @@
     <h2>Project Assignment</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Design Benchmark Prompts for Your Concept</h3>
+      <h3 style="margin-top: 0;">Extract and Apply Steering Vectors for Your Concept</h3>
 
       <p>
-        <strong>Goal:</strong> Create a preliminary benchmark to measure whether an LLM understands the concept your
-        team has chosen to investigate.
+        <strong>Goal:</strong> Find representation vectors for your concept and demonstrate that you can steer model
+        behavior with them.
       </p>
 
       <h4>Requirements:</h4>
       <ol>
-        <li><strong>Concept Selection:</strong> Briefly describe your chosen concept from your field (e.g., "legal
-          standing in tort law", "theory of mind in psychology", "proof by contradiction in mathematics")</li>
-
-        <li><strong>Prompt Suite:</strong> Design at least 10-15 test prompts that probe different aspects of your
-          concept, including:
+        <li><strong>Contrastive Dataset:</strong> Create 10-20 pairs of prompts where one exhibits your concept and one
+          doesn't
           <ul>
-            <li>At least one example using instruction-following</li>
-            <li>At least one cloze-style prompt</li>
-            <li>At least one few-shot ICL prompt</li>
-            <li>A mix of easy and challenging cases</li>
+            <li>Example for "legal reasoning": "Apply legal precedent to..." vs "Ignore legal precedent..."</li>
+            <li>Pairs should differ primarily in your target concept</li>
+            <li>Include diverse phrasings and contexts</li>
           </ul>
         </li>
 
-        <li><strong>Evaluation Strategy:</strong> For each prompt, specify:
+        <li><strong>Steering Vector Extraction:</strong>
           <ul>
-            <li>How you'll evaluate the response (MCQ, exact match, LLM-as-judge, etc.)</li>
-            <li>What metrics you'll use (accuracy, F1, perplexity, human ratings, etc.)</li>
-            <li>What would count as evidence of understanding vs. memorization</li>
+            <li>Extract activations from multiple layers (try early, middle, and late layers)</li>
+            <li>Compute mean difference vectors</li>
+            <li>Analyze which layers produce the strongest concept representations</li>
           </ul>
         </li>
 
-        <li><strong>Generalization Tests:</strong> Include at least 3 prompts specifically designed to test
-          generalization:
+        <li><strong>Steering Experiments:</strong> Demonstrate steering on at least 5 test examples
           <ul>
-            <li>Novel combinations or edge cases unlikely to be in training data</li>
-            <li>Counterfactual scenarios</li>
-            <li>Transfer to related but distinct concepts</li>
+            <li>Show original model output (no steering)</li>
+            <li>Show output with positive steering (amplify concept)</li>
+            <li>Show output with negative steering (suppress concept)</li>
+            <li>Vary steering strength (α) and report effects</li>
           </ul>
         </li>
 
-        <li><strong>Written Report:</strong> Submit a 1-2 page document containing:
+        <li><strong>Neuronpedia Exploration:</strong>
           <ul>
-            <li>Your concept description and why it's important to measure</li>
-            <li>Your complete prompt suite with expected responses</li>
-            <li>Your evaluation methodology</li>
-            <li>Discussion of potential memorization vs. generalization concerns</li>
-            <li>How you'll measure statistical significance (sample size, confidence intervals)</li>
+            <li>Search Neuronpedia for features related to your concept</li>
+            <li>Identify 3-5 relevant SAE features</li>
+            <li>Compare SAE feature steering with your contrastive steering vectors</li>
+            <li>Which works better? Why might that be?</li>
+          </ul>
+        </li>
+
+        <li><strong>Analysis:</strong> Address these questions in your writeup:
+          <ul>
+            <li>Which layer(s) encode your concept most strongly?</li>
+            <li>How does steering strength affect output quality vs concept presence?</li>
+            <li>Are there unintended side effects of steering?</li>
+            <li>Do the SAE features match your intuitions about the concept?</li>
+            <li>How would you evaluate whether steering is "successful"?</li>
           </ul>
         </li>
       </ol>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li>Written report (PDF)</li>
-        <li>Prompts in a structured format (JSON, CSV, or spreadsheet)</li>
-        <li>Optional: Initial test results on one or more models</li>
+        <li>Code notebook showing extraction and steering experiments</li>
+        <li>Written report (3-4 pages) including:
+          <ul>
+            <li>Your contrastive dataset</li>
+            <li>Layer-wise analysis of concept representations</li>
+            <li>Steering results with examples</li>
+            <li>Neuronpedia findings</li>
+            <li>Analysis and reflection</li>
+          </ul>
+        </li>
+        <li>Saved steering vectors (for use in future weeks)</li>
       </ul>
 
       <p>
-        <strong>Due:</strong> Before Week 2 class
+        <strong>Due:</strong> Before Week 3 class
       </p>
     </div>
   </section>
