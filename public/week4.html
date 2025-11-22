@@ -1055,98 +1055,79 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Causal Analysis of Your Concept</h3>
-
+      <p><strong>Due: Thursday of Week 4</strong></p>
       <p>
-        <strong>Goal:</strong> Use causal intervention techniques to identify which components of the model are
-        responsible for processing your concept.
+        Use activation patching and causal intervention techniques to localize where your concept is computed.
+        Move beyond correlation to establish causal relationships between components and concept processing.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>Counterfactual Dataset:</strong>
-          <ul>
-            <li>Design 15-25 minimal pairs for your concept</li>
-            <li>One version exhibits your concept, one doesn't</li>
-            <li>Keep all other variables constant</li>
-            <li>Validate that model behavior differs appropriately</li>
-          </ul>
-        </li>
-
-        <li><strong>Coarse Localization (AIE):</strong>
-          <ul>
-            <li>Use AIE to test each layer</li>
-            <li>Identify which layers are causally important</li>
-            <li>Test both attention and MLP components separately</li>
-            <li>Create visualization showing AIE across layers</li>
-          </ul>
-        </li>
-
-        <li><strong>Fine-Grained Attribution:</strong>
-          <ul>
-            <li>Apply gradient-based attribution within important layers</li>
-            <li>Identify top 10-20 most important activations</li>
-            <li>Validate with direct patching experiments</li>
-            <li>Do gradient predictions match patching results?</li>
-          </ul>
-        </li>
-
-        <li><strong>Component Analysis:</strong>
-          <ul>
-            <li>For top components, characterize what they do</li>
-            <li>Are they in attention heads or MLPs?</li>
-            <li>Which token positions are important?</li>
-            <li>Compare with ROME (MLPs) or entity tracking (attention) patterns</li>
-          </ul>
-        </li>
-
-        <li><strong>Function Vectors (if applicable):</strong>
-          <ul>
-            <li>If your concept involves a function, try extracting a function vector</li>
-            <li>Test if adding/subtracting it enables/disables the concept</li>
-            <li>Identify associated attention heads</li>
-          </ul>
-        </li>
-
-        <li><strong>Analysis and Interpretation:</strong>
-          <ul>
-            <li>Where is your concept processed? (layers, components, positions)</li>
-            <li>Is it localized like facts or distributed like bindings?</li>
-            <li>What causal pathways mediate your concept?</li>
-            <li>How do your findings compare to ROME/entity tracking?</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
+      <h4>Causal Intervention Experiments</h4>
       <ul>
-        <li>Jupyter notebook with all experiments and code</li>
-        <li>Written report (5-6 pages) including:
+        <li><strong>Prepare counterfactual examples:</strong>
           <ul>
-            <li>Counterfactual dataset with validation</li>
-            <li>AIE results and layer-wise analysis</li>
-            <li>Attribution findings with visualizations</li>
-            <li>Component characterization</li>
-            <li>Mechanistic interpretation of findings</li>
-            <li>Comparison with ROME/entity tracking patterns</li>
+            <li>Select 15-25 minimal pairs from your benchmark dataset</li>
+            <li>One version exhibits your concept, one doesn't (everything else constant)</li>
+            <li>Validate that model behavior differs as expected</li>
           </ul>
         </li>
-        <li>Visualizations:
+        <li><strong>Activation patching:</strong> Systematically swap activations between paired examples
           <ul>
-            <li>Heatmap of AIE across layers/components</li>
-            <li>Attribution scores for top activations</li>
-            <li>Patching effect curves</li>
+            <li>Test each layer: does patching activations from concept→no-concept change behavior?</li>
+            <li>Test both attention and MLP components separately</li>
+            <li>Test different token positions (subject, verb, final, etc.)</li>
+          </ul>
+        </li>
+        <li><strong>Identify critical layers and positions:</strong>
+          <ul>
+            <li>Which layers have the largest causal effect when patched?</li>
+            <li>Which token positions are critical?</li>
+            <li>Are attention or MLP layers more important?</li>
+          </ul>
+        </li>
+        <li><strong>Validate findings:</strong>
+          <ul>
+            <li>Run multiple trials to ensure effects are consistent</li>
+            <li>Test on held-out examples</li>
+            <li>Check that effects are concept-specific (not generic)</li>
           </ul>
         </li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 5 class
-      </p>
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Causal localization results:</strong>
+          <ul>
+            <li>Heatmap showing patching effects across layers × positions</li>
+            <li>Identification of critical layers (top 3-5 most important)</li>
+            <li>Identification of critical token positions</li>
+            <li>Comparison of attention vs MLP importance</li>
+          </ul>
+        </li>
+        <li><strong>Statistical validation:</strong>
+          <ul>
+            <li>Effect sizes and significance tests</li>
+            <li>Consistency checks across examples</li>
+            <li>Control experiments (random patching baselines)</li>
+          </ul>
+        </li>
+        <li><strong>Mechanistic interpretation:</strong>
+          <ul>
+            <li>Is your concept processed locally (specific layers) or distributed?</li>
+            <li>Where in the computation does the concept emerge?</li>
+            <li>Does the causal structure match your geometric analysis from Week 3?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with patching experiments and analysis</li>
+      </ul>
+
+      <p><em>
+        These causal findings will guide Week 5's probe training: you'll focus on the layers and positions
+        identified as causally important here.
+      </em></p>
     </div>
   </section>
 

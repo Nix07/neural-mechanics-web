@@ -905,6 +905,75 @@ def cka(X, Y):
     <li>RSA Toolbox (MATLAB): <a href="https://github.com/rsagroup/rsatoolbox" target="_blank">GitHub</a></li>
   </ul>
 
+  <section id="milestone">
+    <h2>Project Milestone</h2>
+
+    <div class="assignment-box">
+      <p><strong>Due: Thursday of Week 9</strong></p>
+      <p>
+        Compare your concept's representation across layers, models, or to human similarity judgments.
+        Use representation similarity analysis to validate that your findings generalize.
+      </p>
+
+      <h4>Representation Similarity Analysis</h4>
+      <ul>
+        <li><strong>Choose comparison targets:</strong>
+          <ul>
+            <li>Cross-layer: How does your concept representation change across layers in your model?</li>
+            <li>Cross-model: Is the representation similar in different models (e.g., GPT-2 vs Llama)?</li>
+            <li>Cross-architecture: Do different architectures represent your concept similarly?</li>
+            <li>Human similarity (optional): Do model representations correlate with human judgments?</li>
+          </ul>
+        </li>
+        <li><strong>Apply RSA methods:</strong>
+          <ul>
+            <li>Use CKA or RSA to compare representations</li>
+            <li>Create similarity matrices showing how representations relate</li>
+            <li>Test statistical significance of similarities</li>
+          </ul>
+        </li>
+        <li><strong>Analyze patterns:</strong>
+          <ul>
+            <li>Do later layers have more similar representations than early layers?</li>
+            <li>Do models trained differently still converge on similar representations?</li>
+            <li>Where do representations diverge?</li>
+          </ul>
+        </li>
+        <li><strong>Interpret findings:</strong>
+          <ul>
+            <li>Is your concept representation universal across models or model-specific?</li>
+            <li>Does the representation align with human understanding?</li>
+            <li>What does this tell you about the nature of your concept?</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Similarity analysis:</strong>
+          <ul>
+            <li>Similarity matrices (heatmaps) for your chosen comparisons</li>
+            <li>Statistical significance tests</li>
+            <li>Identification of most/least similar representation pairs</li>
+          </ul>
+        </li>
+        <li><strong>Interpretation:</strong>
+          <ul>
+            <li>What patterns emerge from the similarity analysis?</li>
+            <li>Do findings validate or challenge your circuit from Week 8?</li>
+            <li>Is your concept universally represented or model-specific?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with RSA/CKA implementation and analysis</li>
+      </ul>
+
+      <p><em>
+        If representations are similar across models, your findings likely reflect something fundamental about
+        the concept rather than idiosyncrasies of a specific model.
+      </em></p>
+    </div>
+  </section>
+
 </body>
 
 </html>

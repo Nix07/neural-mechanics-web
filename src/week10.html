@@ -995,6 +995,82 @@ model.save_pretrained("my_lora_adapter")
     <li><strong>MEMIT implementation:</strong> <a href="https://github.com/kmeng01/memit" target="_blank">GitHub</a></li>
   </ul>
 
+  <section id="milestone">
+    <h2>Project Milestone</h2>
+
+    <div class="assignment-box">
+      <p><strong>Due: Thursday of Week 10</strong></p>
+      <p>
+        Demonstrate actionable control over your concept: use model editing techniques to enhance, suppress,
+        or modify the concept. Show that your interpretability findings enable meaningful interventions.
+      </p>
+
+      <h4>Model Editing Demonstration</h4>
+      <ul>
+        <li><strong>Choose editing approach:</strong>
+          <ul>
+            <li>ROME/MEMIT: Direct weight editing at critical MLP layers (if your concept is localized)</li>
+            <li>LoRA: Fine-tuning to enhance/suppress concept (if distributed or complex)</li>
+            <li>Hybrid: Combine editing approaches</li>
+          </ul>
+        </li>
+        <li><strong>Design intervention:</strong>
+          <ul>
+            <li>What change do you want to make? (enhance, suppress, redirect concept)</li>
+            <li>Which components will you target? (use findings from Weeks 4, 8)</li>
+            <li>How will you validate success?</li>
+          </ul>
+        </li>
+        <li><strong>Implement and test:</strong>
+          <ul>
+            <li>Apply your chosen editing method</li>
+            <li>Test on benchmark: did the edit work as intended?</li>
+            <li>Test on held-out examples: does it generalize?</li>
+            <li>Test for side effects: are other capabilities preserved?</li>
+          </ul>
+        </li>
+        <li><strong>Compare with steering:</strong>
+          <ul>
+            <li>How does editing compare to activation steering (Week 1)?</li>
+            <li>Which provides better control? More persistent changes?</li>
+            <li>What are the trade-offs?</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Editing results:</strong>
+          <ul>
+            <li>Before/after comparison on benchmark</li>
+            <li>Quantitative metrics showing intervention effect</li>
+            <li>Examples demonstrating successful concept modification</li>
+          </ul>
+        </li>
+        <li><strong>Validation:</strong>
+          <ul>
+            <li>Generalization test: does edit work on new examples?</li>
+            <li>Side effects test: are other capabilities preserved?</li>
+            <li>Specificity test: is the edit concept-specific?</li>
+          </ul>
+        </li>
+        <li><strong>Analysis:</strong>
+          <ul>
+            <li>Why did this editing approach work (or not work)?</li>
+            <li>How do results connect to your mechanistic understanding (Week 8)?</li>
+            <li>What does this demonstrate about the nature of your concept?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with editing implementation and evaluation</li>
+      </ul>
+
+      <p><em>
+        Successful editing validates your interpretability work: if you truly understand where and how a concept
+        is computed, you should be able to modify it in predictable ways.
+      </em></p>
+    </div>
+  </section>
+
 </body>
 
 </html>

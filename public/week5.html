@@ -1220,92 +1220,92 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Probing and Masking Your Concept</h3>
-
+      <p><strong>Due: Thursday of Week 5</strong></p>
       <p>
-        <strong>Goal:</strong> Use probes and masks to identify where your concept is represented, then validate
-        findings with interventions.
+        Train linear probes to extract your concept from model activations. Analyze probe weights and decision boundaries
+        to understand how the concept is encoded, and test where the concept is linearly accessible.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>Probe Training:</strong>
-          <ul>
-            <li>Create balanced dataset for your concept (positive and negative examples)</li>
-            <li>Train linear probes at every layer</li>
-            <li>Plot probe accuracy vs layer to visualize information flow</li>
-            <li>Train MLP probes for comparison</li>
-          </ul>
-        </li>
-
-        <li><strong>Control Tasks:</strong>
-          <ul>
-            <li>Design selectivity control task (different concept, similar structure)</li>
-            <li>Test probes on control task to verify specificity</li>
-            <li>Random label baseline to test for overfitting</li>
-          </ul>
-        </li>
-
-        <li><strong>Learned Masks:</strong>
-          <ul>
-            <li>Train component masks with L1 regularization</li>
-            <li>Experiment with different λ values</li>
-            <li>Plot: performance vs sparsity tradeoff</li>
-            <li>Identify top components by mask weight</li>
-          </ul>
-        </li>
-
-        <li><strong>Validation with Interventions:</strong>
-          <ul>
-            <li>For top probe layers: test with activation patching</li>
-            <li>For top mask components: test with ablation</li>
-            <li>Compare probe/mask findings with intervention results</li>
-            <li>Investigate any disagreements</li>
-          </ul>
-        </li>
-
-        <li><strong>Analysis:</strong>
-          <ul>
-            <li>Where is your concept linearly accessible?</li>
-            <li>Where is it causally used?</li>
-            <li>Is representation linear or nonlinear?</li>
-            <li>Which components are truly necessary?</li>
-            <li>What do disagreements reveal about representation structure?</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
+      <h4>Probe Training and Analysis</h4>
       <ul>
-        <li>Jupyter notebook with all experiments and code</li>
-        <li>Written report (5-6 pages) including:
+        <li><strong>Prepare training data:</strong>
           <ul>
-            <li>Probe accuracy across layers (with visualizations)</li>
-            <li>Control task results and interpretation</li>
-            <li>Learned mask analysis (sparsity-performance tradeoff)</li>
-            <li>Validation results comparing probes/masks with interventions</li>
-            <li>Analysis of agreements and disagreements</li>
-            <li>Interpretation: what does this reveal about your concept?</li>
+            <li>Use your benchmark dataset (minimum 2000-5000 examples recommended)</li>
+            <li>Ensure balanced classes (equal positive and negative examples)</li>
+            <li>Split into train/validation/test sets (70/15/15 or similar)</li>
           </ul>
         </li>
-        <li>Visualizations:
+        <li><strong>Train probes across layers:</strong>
           <ul>
-            <li>Probe accuracy vs layer (line plot)</li>
-            <li>Linear vs MLP probe comparison</li>
-            <li>Mask weight distribution (histogram)</li>
-            <li>Sparsity-performance curve</li>
-            <li>Probe vs intervention comparison table</li>
+            <li>Train linear probes at every layer (or every N layers for large models)</li>
+            <li>Focus especially on layers identified as important in Week 4's causal analysis</li>
+            <li>Train on the same token positions you identified as critical in Week 4</li>
+          </ul>
+        </li>
+        <li><strong>Evaluate probe performance:</strong>
+          <ul>
+            <li>Report accuracy, precision, recall, F1 for each layer</li>
+            <li>Create layer-wise accuracy plot to visualize where concept is most accessible</li>
+            <li>Compare across different token positions</li>
+          </ul>
+        </li>
+        <li><strong>Analyze probe weights and decision boundaries:</strong>
+          <ul>
+            <li>Examine probe weight vectors: what directions do they learn?</li>
+            <li>Compare to steering vectors from Week 1: are they similar?</li>
+            <li>Visualize decision boundaries in PCA space (from Week 3)</li>
+            <li>Are decision boundaries clean and linear, or complex?</li>
+          </ul>
+        </li>
+        <li><strong>Control experiments:</strong>
+          <ul>
+            <li>Random label baseline: does probe learn structure or just memorize?</li>
+            <li>Compare linear vs nonlinear (MLP) probes: is concept linearly represented?</li>
+            <li>Selectivity test: does probe respond to related but distinct concepts?</li>
           </ul>
         </li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 7 class
-      </p>
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Probe performance results:</strong>
+          <ul>
+            <li>Layer-wise accuracy plot</li>
+            <li>Performance table (accuracy/F1) for key layers</li>
+            <li>Comparison across token positions</li>
+          </ul>
+        </li>
+        <li><strong>Probe analysis:</strong>
+          <ul>
+            <li>Weight vector analysis and comparison to steering vectors</li>
+            <li>Decision boundary visualizations</li>
+            <li>Linear vs nonlinear probe comparison</li>
+          </ul>
+        </li>
+        <li><strong>Control experiment results:</strong>
+          <ul>
+            <li>Random baseline performance</li>
+            <li>Selectivity test results</li>
+          </ul>
+        </li>
+        <li><strong>Interpretation:</strong>
+          <ul>
+            <li>Where is your concept most linearly accessible?</li>
+            <li>Does this match causal findings from Week 4?</li>
+            <li>Is the representation truly linear or does it require nonlinearity?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with probe training, evaluation, and analysis</li>
+      </ul>
+
+      <p><em>
+        Strong probe performance with clean linear decision boundaries suggests your concept has a simple geometric structure
+        that can be reliably extracted—ideal for building explanations and interventions.
+      </em></p>
     </div>
   </section>
 

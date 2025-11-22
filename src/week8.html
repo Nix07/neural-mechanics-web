@@ -776,104 +776,80 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Circuit Discovery for Your Concept</h3>
-
+      <p><strong>Due: Thursday of Week 8</strong></p>
       <p>
-        <strong>Goal:</strong> Identify and characterize the minimal circuit that implements your concept in the model.
+        Map the computational pathway for your concept: identify how features and components combine across layers
+        to compute your concept. Build a mechanistic explanation of the algorithm the model uses.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>Hypothesis Formation:</strong>
-          <ul>
-            <li>Based on Week 4's causal analysis, hypothesize which components form the circuit</li>
-            <li>Is your concept more like induction (attention) or facts (MLP)?</li>
-            <li>What composition patterns might be involved?</li>
-          </ul>
-        </li>
-
-        <li><strong>Path Patching Analysis:</strong>
-          <ul>
-            <li>Use path patching to test connections between candidate components</li>
-            <li>Create a heatmap showing which paths have high causal effects</li>
-            <li>Identify the strongest paths in your circuit</li>
-          </ul>
-        </li>
-
-        <li><strong>Composition Analysis:</strong>
-          <ul>
-            <li>For attention-based components, determine composition type (Q/K/V)</li>
-            <li>Path patch through each composition channel separately</li>
-            <li>Which type(s) dominate for your concept?</li>
-          </ul>
-        </li>
-
-        <li><strong>Circuit Minimality:</strong>
-          <ul>
-            <li>Test if each component is necessary (ablation)</li>
-            <li>Test if the circuit is sufficient (ablate everything else)</li>
-            <li>Remove any components that aren't critical</li>
-            <li>Document your minimal circuit with a diagram</li>
-          </ul>
-        </li>
-
-        <li><strong>Faithfulness Testing:</strong>
-          <ul>
-            <li>Test circuit on out-of-distribution examples</li>
-            <li>Create adversarial examples to probe failure modes</li>
-            <li>Does the circuit work consistently? When does it break?</li>
-          </ul>
-        </li>
-
-        <li><strong>Circuit Comparison:</strong>
-          <ul>
-            <li>Compare your circuit to induction/binding/concept-induction patterns</li>
-            <li>Which circuit type is most similar?</li>
-            <li>What's unique about your circuit?</li>
-          </ul>
-        </li>
-
-        <li><strong>Mechanistic Interpretation:</strong>
-          <ul>
-            <li>Explain <em>how</em> your circuit computes your concept</li>
-            <li>What does each component do?</li>
-            <li>Why does this architecture make sense for your concept?</li>
-            <li>Are there redundant circuits (like token vs concept routes)?</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
+      <h4>Circuit Mapping</h4>
       <ul>
-        <li>Jupyter notebook with all experiments and code</li>
-        <li>Written report (6-7 pages) including:
+        <li><strong>Synthesize previous findings:</strong>
           <ul>
-            <li>Circuit diagram with all components and connections</li>
-            <li>Path patching heatmaps</li>
-            <li>Composition analysis results (Q/K/V)</li>
-            <li>Minimality and faithfulness tests</li>
-            <li>Mechanistic explanation of circuit operation</li>
-            <li>Comparison with known circuit types</li>
-            <li>Failure mode analysis</li>
+            <li>Critical layers and components (from Week 4's causal analysis)</li>
+            <li>Relevant SAE features (from Week 7)</li>
+            <li>Token positions that matter (from Week 6's attribution)</li>
           </ul>
         </li>
-        <li>Visualizations:
+        <li><strong>Map information flow:</strong>
           <ul>
-            <li>Circuit diagram (components and connections)</li>
-            <li>Path patching effect matrix</li>
-            <li>Composition type breakdown</li>
-            <li>Ablation results showing necessity</li>
+            <li>How does information flow from input to output for your concept?</li>
+            <li>Which attention heads move information between positions?</li>
+            <li>Which MLP layers process and transform the concept representation?</li>
+            <li>How do SAE features connect and compose across layers?</li>
+          </ul>
+        </li>
+        <li><strong>Test hypotheses with path patching:</strong>
+          <ul>
+            <li>Hypothesize key computational paths based on previous findings</li>
+            <li>Use path patching to test specific connections</li>
+            <li>Identify the strongest causal paths in your circuit</li>
+          </ul>
+        </li>
+        <li><strong>Build mechanistic explanation:</strong>
+          <ul>
+            <li>What algorithm does the model use to compute your concept?</li>
+            <li>Is it more like induction (attention-based) or memory (MLP-based)?</li>
+            <li>Are there multiple redundant pathways?</li>
+            <li>Can you explain in mechanistic terms HOW the computation works?</li>
           </ul>
         </li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 6 class
-      </p>
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Circuit diagram:</strong>
+          <ul>
+            <li>Visual diagram showing key components, layers, and connections</li>
+            <li>Labels indicating what each component does</li>
+            <li>Indication of which paths are strongest/most important</li>
+          </ul>
+        </li>
+        <li><strong>Mechanistic explanation:</strong>
+          <ul>
+            <li>Step-by-step description of how the model computes your concept</li>
+            <li>Explanation of why this algorithm makes sense for your concept</li>
+            <li>Comparison to known circuit patterns (induction, fact recall, etc.)</li>
+          </ul>
+        </li>
+        <li><strong>Validation:</strong>
+          <ul>
+            <li>Path patching results supporting your proposed circuit</li>
+            <li>Evidence that identified components are necessary</li>
+            <li>Examples showing circuit in action</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with circuit analysis and path patching experiments</li>
+      </ul>
+
+      <p><em>
+        A good circuit explanation should let someone understand not just WHERE the concept is computed,
+        but HOW and WHY the model computes it that way.
+      </em></p>
     </div>
   </section>
 

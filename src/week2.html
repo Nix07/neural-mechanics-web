@@ -679,70 +679,71 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Design Benchmark Prompts for Your Concept</h3>
-
+      <p><strong>Due: Thursday of Week 2</strong></p>
       <p>
-        <strong>Goal:</strong> Create a preliminary benchmark to measure whether an LLM understands the concept your
-        team has chosen to investigate.
+        Now that you've identified a promising concept through steering, it's time to formalize it with a systematic benchmark
+        and test it across multiple models to find the best target for deep investigation.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>Concept Selection:</strong> Briefly describe your chosen concept from your field (e.g., "legal
-          standing in tort law", "theory of mind in psychology", "proof by contradiction in mathematics")</li>
-
-        <li><strong>Prompt Suite:</strong> Design at least 10-15 test prompts that probe different aspects of your
-          concept, including:
+      <h4>Part 1: Design Your Benchmark</h4>
+      <ul>
+        <li><strong>Operational definition:</strong> Translate your concept into measurable, concrete criteria (see dataset construction section above)</li>
+        <li><strong>Contrastive pairs:</strong> Create 50-100 minimal pairs that differ primarily in your concept
           <ul>
-            <li>At least one example using instruction-following</li>
-            <li>At least one cloze-style prompt</li>
-            <li>At least one few-shot ICL prompt</li>
-            <li>A mix of easy and challenging cases</li>
+            <li>Example (formality): "Could you help me?" vs "Help me"</li>
+            <li>Control for confounds (length, topic, sentiment, etc.)</li>
           </ul>
         </li>
-
-        <li><strong>Evaluation Strategy:</strong> For each prompt, specify:
+        <li><strong>Test set:</strong> Build a held-out test set of 500-1000 examples
           <ul>
-            <li>How you'll evaluate the response (MCQ, exact match, LLM-as-judge, etc.)</li>
-            <li>What metrics you'll use (accuracy, F1, perplexity, human ratings, etc.)</li>
-            <li>What would count as evidence of understanding vs. memorization</li>
+            <li>Use stratified sampling (see guidelines above)</li>
+            <li>Document data sources and collection methods</li>
+            <li>Ensure balanced classes</li>
           </ul>
         </li>
-
-        <li><strong>Generalization Tests:</strong> Include at least 3 prompts specifically designed to test
-          generalization:
+        <li><strong>Evaluation metric:</strong> Define how you'll measure concept understanding
           <ul>
-            <li>Novel combinations or edge cases unlikely to be in training data</li>
-            <li>Counterfactual scenarios</li>
-            <li>Transfer to related but distinct concepts</li>
+            <li>Probability differences, accuracy, linear separability, etc.</li>
+            <li>Statistical significance thresholds</li>
           </ul>
         </li>
+      </ul>
 
-        <li><strong>Written Report:</strong> Submit a 1-2 page document containing:
+      <h4>Part 2: Test Across Models</h4>
+      <ul>
+        <li><strong>Model selection:</strong> Test at least 3 models of varying sizes
           <ul>
-            <li>Your concept description and why it's important to measure</li>
-            <li>Your complete prompt suite with expected responses</li>
-            <li>Your evaluation methodology</li>
-            <li>Discussion of potential memorization vs. generalization concerns</li>
-            <li>How you'll measure statistical significance (sample size, confidence intervals)</li>
+            <li>Include at least one small model (e.g., GPT-2, Pythia-1B, Llama-7B)</li>
+            <li>Include at least one large model (e.g., GPT-3.5, Llama-70B)</li>
+            <li>Consider models from different families if relevant</li>
           </ul>
         </li>
-      </ol>
+        <li><strong>Identify smallest capable model:</strong> Find the smallest model that demonstrates robust understanding of your concept
+          <ul>
+            <li>This will be your primary target for deep investigation in Weeks 3-11</li>
+            <li>Smaller models = faster experiments, easier to interpret, more publishable insights</li>
+            <li>Document performance across all tested models</li>
+          </ul>
+        </li>
+      </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li>Written report (PDF)</li>
-        <li>Prompts in a structured format (JSON, CSV, or spreadsheet)</li>
-        <li>Optional: Initial test results on one or more models</li>
+        <li><strong>Dataset:</strong> Contrastive pairs (50-100) and test set (500-1000), documented with collection methodology</li>
+        <li><strong>Benchmark results:</strong> Performance table showing all tested models and metrics</li>
+        <li><strong>Model selection rationale:</strong> Which model did you choose for deep study and why?</li>
+        <li><strong>Initial findings:</strong> Does the concept exist across models? Any surprising patterns?</li>
+        <li><strong>Code:</strong> Benchmark evaluation code (notebook or script)</li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 2 class
-      </p>
+      <p><em>
+        Tip: Don't overthink the "perfect" dataset at this stage. You'll refine it throughout the semester.
+        Focus on getting a solid baseline that lets you move forward with confidence.
+      </em></p>
     </div>
   </section>
 

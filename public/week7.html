@@ -1264,95 +1264,80 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Discovering Features for Your Concept with SAEs</h3>
-
+      <p><strong>Due: Thursday of Week 7</strong></p>
       <p>
-        <strong>Goal:</strong> Use sparse autoencoders to discover features related to your concept, validate their
-        quality, and compare with previous methods.
+        Use sparse autoencoders (SAEs) to automatically discover features related to your concept.
+        Identify 5-10 relevant features, validate their quality, and analyze how they compose.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>SAE Training:</strong>
+      <h4>SAE Feature Discovery</h4>
+      <ul>
+        <li><strong>Obtain SAE features:</strong>
           <ul>
-            <li>Train SAEs on relevant layers (or use pre-trained from Neuronpedia)</li>
-            <li>Experiment with different dictionary sizes</li>
-            <li>Evaluate reconstruction quality and sparsity</li>
+            <li>Use pre-trained SAEs from Neuronpedia (recommended for speed)</li>
+            <li>Or train your own SAEs on critical layers identified in Weeks 3-4</li>
+            <li>Focus on layers where your concept showed strong signal</li>
           </ul>
         </li>
-
-        <li><strong>Feature Discovery:</strong>
+        <li><strong>Find concept-relevant features:</strong>
           <ul>
-            <li>Extract all features and their activations on your dataset</li>
-            <li>Use automated interpretation to label features</li>
-            <li>Identify 10-20 features most relevant to your concept</li>
+            <li>Run your benchmark dataset through the SAE</li>
+            <li>Identify features that activate differentially on concept vs non-concept examples</li>
+            <li>Aim to find 5-10 features most strongly associated with your concept</li>
           </ul>
         </li>
-
-        <li><strong>Feature Validation:</strong>
+        <li><strong>Interpret features:</strong>
           <ul>
-            <li>Test monosemanticity: examine diverse activating examples</li>
-            <li>Test consistency: paraphrases, negations, context variations</li>
-            <li>Test causality: steering with features, compare with patching results</li>
+            <li>Examine top activating examples for each feature</li>
+            <li>Use automated interpretation tools if available</li>
+            <li>Are features monosemantic (one clear meaning) or polysemantic?</li>
+            <li>Do they correspond to meaningful sub-aspects of your concept?</li>
           </ul>
         </li>
-
-        <li><strong>Comparison with Previous Methods:</strong>
-          <ul>
-            <li>Compare SAE features with steering vectors (Week 2)</li>
-            <li>Compare with probe-discovered directions (Week 6)</li>
-            <li>Do SAEs discover novel features not found by other methods?</li>
-          </ul>
-        </li>
-
-        <li><strong>Feature Interactions:</strong>
+        <li><strong>Analyze feature composition:</strong>
           <ul>
             <li>Do multiple features activate together for your concept?</li>
-            <li>Test feature combinations with steering</li>
-            <li>Explore feature splitting at different capacities</li>
-          </ul>
-        </li>
-
-        <li><strong>Open Questions Analysis:</strong>
-          <ul>
-            <li>Are all aspects of your concept captured by SAE features?</li>
-            <li>Which features are causally important vs merely present?</li>
-            <li>How do features relate to circuits from Week 5?</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
-      <ul>
-        <li>Jupyter notebook with all experiments and code</li>
-        <li>Written report (6-7 pages) including:
-          <ul>
-            <li>SAE training details and evaluation metrics</li>
-            <li>Top 10-20 features relevant to your concept (with interpretations)</li>
-            <li>Feature validation results (monosemanticity, consistency, causality)</li>
-            <li>Comparison with steering vectors and probe directions</li>
-            <li>Analysis of feature combinations and interactions</li>
-            <li>Discussion of completeness and open questions</li>
-          </ul>
-        </li>
-        <li>Visualizations:
-          <ul>
-            <li>Feature activation patterns on your dataset</li>
-            <li>SAE reconstruction quality and sparsity curves</li>
-            <li>Feature comparison matrix (SAEs vs steering vs probes)</li>
-            <li>Feature splitting across dictionary sizes</li>
-            <li>Causal validation results (steering effects)</li>
+            <li>Can you identify sub-types of your concept based on feature combinations?</li>
+            <li>Are there "core" features vs "peripheral" features?</li>
           </ul>
         </li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 8 class
-      </p>
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Feature inventory:</strong>
+          <ul>
+            <li>List of 5-10 concept-relevant SAE features</li>
+            <li>Interpretation of what each feature represents</li>
+            <li>Top activating examples for each feature</li>
+            <li>Activation statistics (how often each fires on your dataset)</li>
+          </ul>
+        </li>
+        <li><strong>Feature composition analysis:</strong>
+          <ul>
+            <li>Co-activation matrix showing which features fire together</li>
+            <li>Identification of feature combinations that define sub-types</li>
+            <li>Comparison: are these features similar to or different from steering/probe directions?</li>
+          </ul>
+        </li>
+        <li><strong>Quality assessment:</strong>
+          <ul>
+            <li>Are features monosemantic or polysemantic?</li>
+            <li>Do they capture meaningful distinctions about your concept?</li>
+            <li>Are there aspects of your concept NOT captured by any features?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with SAE analysis and feature discovery</li>
+      </ul>
+
+      <p><em>
+        SAEs can reveal compositional structure—your concept might be built from multiple interpretable sub-features
+        that combine in systematic ways.
+      </em></p>
     </div>
   </section>
 

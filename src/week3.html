@@ -720,90 +720,87 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
+  <section id="milestone">
+    <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <h3 style="margin-top: 0;">Visualize Your Concept's Geometric Structure</h3>
-
+      <p><strong>Due: Thursday of Week 3</strong></p>
       <p>
-        <strong>Goal:</strong> Use visualization techniques to understand how your concept is represented
-        geometrically in the model.
+        Now that you've selected your model and built a benchmark, dive deep into how the model represents your concept
+        internally. Use visualization techniques to examine geometric structure across layers and token positions.
       </p>
 
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>PCA Visualization:</strong>
+      <h4>Part 1: Logit Lens Analysis (Qualitative)</h4>
+      <ul>
+        <li><strong>Apply logit lens:</strong> Project activations to vocabulary space at each layer
           <ul>
-            <li>Collect activations for 50-100 examples (with and without your concept)</li>
-            <li>Apply PCA and create 2D visualization</li>
-            <li>Color points by whether they have your concept</li>
-            <li>Do examples cluster? Is there clear separation?</li>
-          </ul>
-        </li>
-
-        <li><strong>Concept Direction:</strong>
-          <ul>
-            <li>Compute mass mean-difference vector for your concept</li>
-            <li>Build a Euclidean classifier and report accuracy</li>
-            <li>Visualize the concept direction in your PCA plot</li>
-            <li>Compare across layers: which layer has the clearest geometric structure?</li>
-          </ul>
-        </li>
-
-        <li><strong>Semantic Arithmetic:</strong>
-          <ul>
-            <li>Test whether your concept supports vector arithmetic</li>
-            <li>Design 3-5 analogies (A:B :: C:?)</li>
-            <li>Compute vector arithmetic and find nearest neighbors</li>
-            <li>Does it work? Why or why not?</li>
-          </ul>
-        </li>
-
-        <li><strong>Logit Lens Analysis:</strong>
-          <ul>
-            <li>Apply logit lens across all layers</li>
             <li>Track how predictions evolve for concept-relevant prompts</li>
             <li>Which layer first shows strong signal for your concept?</li>
-            <li>Create visualization showing prediction evolution</li>
+            <li>Does the concept emerge gradually or suddenly?</li>
           </ul>
         </li>
-
-        <li><strong>Attention Analysis (Optional):</strong>
+        <li><strong>Analyze multiple token positions:</strong> Not just the final token
           <ul>
-            <li>If your concept relates to specific tokens or patterns, visualize attention</li>
-            <li>Find heads that attend to concept-relevant positions</li>
-            <li>Does attention structure differ for examples with vs. without your concept?</li>
+            <li>How does concept representation vary by position?</li>
+            <li>Where in the sequence does the model "realize" the concept?</li>
           </ul>
         </li>
-
-        <li><strong>Induction Testing (If Applicable):</strong>
+        <li><strong>Create visualizations:</strong> Show prediction evolution across layers
           <ul>
-            <li>If your concept involves pattern copying, test for induction</li>
-            <li>Is it token-level or concept-level induction?</li>
-            <li>Visualize relevant attention heads</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
-      <ul>
-        <li>Jupyter notebook with all visualizations and analysis</li>
-        <li>Written report (4-5 pages) including:
-          <ul>
-            <li>PCA plots with interpretation</li>
-            <li>Concept direction analysis and classifier performance</li>
-            <li>Semantic arithmetic experiments and results</li>
-            <li>Logit lens evolution plots</li>
-            <li>Layer-wise comparison of geometric structure</li>
-            <li>Insights about how your concept is represented</li>
+            <li>Heatmaps, line plots, or trajectory visualizations</li>
+            <li>Compare examples with vs. without your concept</li>
           </ul>
         </li>
       </ul>
 
-      <p>
-        <strong>Due:</strong> Before Week 4 class
-      </p>
+      <h4>Part 2: Geometric Structure Analysis</h4>
+      <ul>
+        <li><strong>Examine multiple layers:</strong> Don't just look at one layer
+          <ul>
+            <li>Apply PCA or t-SNE to activations from layers 0, 25%, 50%, 75%, 100%</li>
+            <li>Do concept examples cluster? Is there clear separation?</li>
+            <li>Which layer has the cleanest geometric structure?</li>
+          </ul>
+        </li>
+        <li><strong>Analyze multiple token positions:</strong> Final token, subject token, verb token, etc.
+          <ul>
+            <li>Does geometric structure vary by position?</li>
+            <li>Where is the concept most clearly encoded?</li>
+          </ul>
+        </li>
+        <li><strong>Test linear separability:</strong>
+          <ul>
+            <li>Train simple linear classifiers on different (layer, position) combinations</li>
+            <li>Report accuracy to quantify geometric structure quality</li>
+            <li>Create heatmap showing separability across layers × positions</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Logit lens visualizations:</strong> Prediction evolution across layers for 5-10 examples</li>
+        <li><strong>Geometric structure analysis:</strong>
+          <ul>
+            <li>PCA/t-SNE plots for multiple (layer, position) combinations</li>
+            <li>Heatmap of linear separability across layers and positions</li>
+            <li>Identification of optimal layer(s) and position(s) for your concept</li>
+          </ul>
+        </li>
+        <li><strong>Written summary:</strong> Key observations about how and where your concept is represented
+          <ul>
+            <li>At which layer does the concept emerge?</li>
+            <li>Is it localized to specific positions or distributed?</li>
+            <li>Is the representation linear/geometric or more complex?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with all analysis and visualizations</li>
+      </ul>
+
+      <p><em>
+        This analysis will guide your next steps: if you find a strong linear representation at specific layers/positions,
+        that's where you'll focus causal interventions (Week 4) and probe training (Week 5).
+      </em></p>
     </div>
   </section>
 

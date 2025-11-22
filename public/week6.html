@@ -1379,6 +1379,86 @@ assert drop_with_important_removed > drop_with_random_removed
     </li>
   </ul>
 
+  <section id="milestone">
+    <h2>Project Milestone</h2>
+
+    <div class="assignment-box">
+      <p><strong>Due: Thursday of Week 6</strong></p>
+      <p>
+        Apply attribution methods to identify which input tokens matter most for your concept.
+        Use sanity checks to validate that your attribution methods are meaningful and not artifacts.
+      </p>
+
+      <h4>Attribution Analysis</h4>
+      <ul>
+        <li><strong>Apply multiple attribution methods:</strong>
+          <ul>
+            <li>Gradient-based: Input gradients, integrated gradients, or gradient × input</li>
+            <li>Perturbation-based: Ablation or occlusion</li>
+            <li>Attention-based: Attention rollout or attention flow (with caution)</li>
+          </ul>
+        </li>
+        <li><strong>Identify important tokens:</strong>
+          <ul>
+            <li>Which input tokens have highest attribution scores for your concept?</li>
+            <li>Do different methods agree on important tokens?</li>
+            <li>Visualize attributions across multiple examples</li>
+          </ul>
+        </li>
+        <li><strong>Run sanity checks:</strong>
+          <ul>
+            <li>Random model baseline: do attributions disappear with random weights?</li>
+            <li>Random input baseline: do attributions change appropriately with random inputs?</li>
+            <li>Cascading randomization: test layers systematically</li>
+          </ul>
+        </li>
+        <li><strong>Validate with interventions:</strong>
+          <ul>
+            <li>Ablate high-attribution tokens: does model behavior change as predicted?</li>
+            <li>Ablate low-attribution tokens: behavior should remain stable</li>
+            <li>Compare attribution rankings with intervention effect sizes</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Attribution visualizations:</strong>
+          <ul>
+            <li>Heatmaps showing token attributions for 10-15 examples</li>
+            <li>Comparison across different attribution methods</li>
+            <li>Summary of which tokens are consistently important</li>
+          </ul>
+        </li>
+        <li><strong>Sanity check results:</strong>
+          <ul>
+            <li>Results from all sanity check tests</li>
+            <li>Assessment: do your attributions pass sanity checks?</li>
+          </ul>
+        </li>
+        <li><strong>Validation results:</strong>
+          <ul>
+            <li>Correlation between attribution scores and ablation effects</li>
+            <li>Examples where attribution predictions match/mismatch interventions</li>
+          </ul>
+        </li>
+        <li><strong>Interpretation:</strong>
+          <ul>
+            <li>Which tokens matter most for your concept?</li>
+            <li>Are attributions trustworthy for your concept?</li>
+            <li>What does this reveal about how models process your concept?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with attribution methods, sanity checks, and validation</li>
+      </ul>
+
+      <p><em>
+        Attribution methods can be unreliable—always validate with sanity checks and interventions before
+        drawing conclusions about which inputs matter.
+      </em></p>
+    </div>
+  </section>
+
 </body>
 
 </html>
