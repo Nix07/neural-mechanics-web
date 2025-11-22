@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Week 9: Human Validation Studies + Knowledge Gap</title>
+  <title>Week 9: Representation Similarity Analysis</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
@@ -140,769 +140,769 @@
 </head>
 
 <body>
-  <h1>Week 9: Human Validation Studies + Knowledge Gap</h1>
+  <h1>Week 9: Representation Similarity Analysis</h1>
 
   <div class="objectives">
     <h3>Learning Objectives</h3>
     <ul>
-      <li>Understand the human-AI knowledge gap and why it matters</li>
-      <li>Distinguish active vs passive knowledge transfer from superhuman AI</li>
-      <li>Apply teachability and novelty criteria to evaluate discovered concepts</li>
-      <li>Design human studies to validate interpretability findings</li>
-      <li>Implement concept discovery methods (convex optimization)</li>
-      <li>Measure human improvement from AI exposure</li>
-      <li>Build concept taxonomies and organize your findings</li>
-      <li>Validate your project's interpretability claims</li>
-      <li>Assess knowledge transfer potential of your concept</li>
+      <li>Understand why comparing representations across layers, models, or modalities matters</li>
+      <li>Master key similarity metrics: RSA, CKA, CCA, and Procrustes</li>
+      <li>Compare concept representations to human semantic spaces</li>
+      <li>Identify which layers encode specific concepts</li>
+      <li>Validate interpretability findings through cross-model consistency</li>
+      <li>Apply RSA methods to your research project</li>
+      <li>Understand the limitations and failure modes of similarity metrics</li>
     </ul>
   </div>
 
-  <h2>1. The Human-AI Knowledge Gap</h2>
+  <h2>1. Why Compare Representations?</h2>
 
-  <h3>What Is the Knowledge Gap?</h3>
+  <h3>The Comparison Problem</h3>
   <p>
-    Modern AI systems achieve <strong>superhuman performance</strong> on many tasks: AlphaZero dominates chess champions,
-    AlphaGo defeated the world's best Go players, and large language models process text at scales no human can match.
+    Throughout this course, you've analyzed individual models in isolation. But critical questions require
+    <strong>comparison</strong>:
   </p>
 
-  <p>
-    But a fundamental question remains: <em>Do these AI systems know something we don't?</em>
-  </p>
+  <ul>
+    <li><strong>Which layer</strong> encodes your concept? (Layer comparison)</li>
+    <li><strong>Is your finding</strong> model-specific or universal? (Cross-model comparison)</li>
+    <li><strong>How does</strong> the model's representation relate to human understanding? (Model-to-human comparison)
+    </li>
+    <li><strong>Did fine-tuning</strong> change the representation space? (Before-after comparison)</li>
+    <li><strong>Are two concepts</strong> encoded similarly? (Concept-to-concept comparison)</li>
+  </ul>
 
   <div class="key-insight">
-    <p><strong>The Knowledge Gap Problem:</strong></p>
+    <p><strong>The Challenge:</strong></p>
     <p>
-      AI systems learn from vast amounts of self-play or data, exploring strategy spaces far beyond human experience.
-      They may discover <strong>novel concepts, strategies, or patterns</strong> that humans haven't recognized. If
-      these discoveries remain hidden inside neural networks, we lose the opportunity to:
+      Neural network layers have different dimensionalities, use different coordinate systems, and may permute their
+      axes arbitrarily. You can't just subtract vectors or compute correlations.
     </p>
-    <ul>
-      <li>Improve human expertise in the domain</li>
-      <li>Validate that AI reasoning aligns with human values</li>
-      <li>Understand failure modes and limitations</li>
-      <li>Transfer insights across domains</li>
-    </ul>
-  </div>
-
-  <h3>Two Modes of Learning from Superhuman AI</h3>
-
-  <p>
-    This week explores two complementary approaches to bridging the knowledge gap:
-  </p>
-
-  <table>
-    <tr>
-      <th>Aspect</th>
-      <th>Passive Learning (Shin et al.)</th>
-      <th>Active Teaching (Schut et al.)</th>
-    </tr>
-    <tr>
-      <td><strong>Mechanism</strong></td>
-      <td>Humans observe AI play and spontaneously adopt novel strategies</td>
-      <td>Explicitly extract concepts from AI, filter, and teach humans</td>
-    </tr>
-    <tr>
-      <td><strong>Scale</strong></td>
-      <td>Population-level (all players improve)</td>
-      <td>Individual-level (train specific experts)</td>
-    </tr>
-    <tr>
-      <td><strong>Evidence</strong></td>
-      <td>5.8M Go moves over 71 years</td>
-      <td>4 grandmasters, controlled study</td>
-    </tr>
-    <tr>
-      <td><strong>Control</strong></td>
-      <td>Observational (AI exists in environment)</td>
-      <td>Interventional (deliberate concept transfer)</td>
-    </tr>
-    <tr>
-      <td><strong>Novelty role</strong></td>
-      <td>Novel moves correlate with improvement</td>
-      <td>Novelty is a filter criterion</td>
-    </tr>
-  </table>
-
-  <h2>2. Passive Learning: The Go Revolution (Shin et al., 2023)</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Superhuman Artificial Intelligence Can Improve Human Decision Making by Increasing Novelty"</h4>
-    <p><strong>Authors:</strong> Minkyu Shin, Jin Kim, Bas van Opheusden, Tom Griffiths</p>
-    <p><strong>Published:</strong> PNAS, 2023</p>
-    <p><strong>Key contribution:</strong> Quantitative evidence that superhuman AI improves human decision-making at scale
+    <p>
+      <strong>Representation Similarity Analysis (RSA)</strong> provides geometry-aware methods to compare
+      representational spaces despite these differences.
     </p>
   </div>
 
-  <h3>The Natural Experiment</h3>
-
-  <p>
-    In 2016, <strong>AlphaGo defeated Lee Sedol</strong>, the world champion Go player. This marked a turning point:
-    AI became superhuman in a game with more possible board states than atoms in the universe.
-  </p>
-
-  <p>
-    Shin et al. asked: <em>Did human players improve after witnessing superhuman AI?</em>
-  </p>
-
-  <h3>Methodology</h3>
+  <h3>Use Cases for Your Project</h3>
 
   <div class="example-box">
-    <p><strong>Data:</strong></p>
-    <ul>
-      <li><strong>5.8 million moves</strong> by professional Go players</li>
-      <li><strong>71 years</strong> of gameplay (1950-2021)</li>
-      <li><strong>Before vs After AlphaGo</strong> comparison</li>
-    </ul>
-
-    <p><strong>Evaluation:</strong></p>
-    <ul>
-      <li>Used a <strong>superhuman AI</strong> to evaluate move quality</li>
-      <li>Compared win rates of actual moves vs AI-suggested alternatives</li>
-      <li>Generated <strong>58 billion counterfactual game patterns</strong></li>
-    </ul>
-
-    <p><strong>Novelty metric:</strong></p>
-    <ul>
-      <li>Classified moves as <em>novel</em> (never seen before in professional play) or <em>traditional</em></li>
-      <li>Tracked novelty rates and quality over time</li>
-    </ul>
-  </div>
-
-  <h3>Key Findings</h3>
-
-  <div class="key-insight">
-    <p><strong>1. Humans improved significantly after AlphaGo</strong></p>
+    <p><strong>Example 1: Finding Where Concepts Live</strong></p>
     <p>
-      Human decision quality increased measurably after 2016. Players made moves closer to what superhuman AI would
-      choose.
-    </p>
-
-    <p><strong>2. Novel moves drove improvement</strong></p>
-    <ul>
-      <li>Novel moves occurred <strong>more frequently</strong> after AlphaGo</li>
-      <li>Novel moves became associated with <strong>higher decision quality</strong></li>
-      <li>Before AlphaGo: novelty ≠ better; After AlphaGo: novelty = better</li>
-    </ul>
-
-    <p><strong>3. Breaking from tradition works</strong></p>
-    <p>
-      Superhuman AI prompted players to <strong>explore beyond traditional strategies</strong>. This wasn't just
-      imitation—players discovered their own novel approaches, inspired by AI's creativity.
-    </p>
-  </div>
-
-  <h3>Example: Move 37</h3>
-
-  <div class="example-box">
-    <p><strong>The most famous move in AI history:</strong></p>
-    <p>
-      In Game 2 of the AlphaGo vs Lee Sedol match, AlphaGo played <strong>Move 37</strong>—placing a stone on the 5th
-      line from the edge. Human commentators were shocked: "I thought it was a mistake."
+      <strong>Question:</strong> Which transformer layer encodes musical key?
     </p>
     <p>
-      This move violated centuries of Go wisdom. Yet it was <strong>exceptionally strong</strong>. Move 37 demonstrated
-      that AI had explored beyond human knowledge.
+      <strong>Method:</strong> Compare each layer's representations to a "ground truth" label space (major vs minor
+      keys) using CKA.
     </p>
     <p>
-      After witnessing this, professional players began experimenting with similar unconventional moves, many of which
-      proved effective.
+      <strong>Result:</strong> CKA peaks at layer 18, suggesting key is primarily encoded there.
     </p>
-  </div>
-
-  <h3>Implications</h3>
-
-  <ul>
-    <li><strong>Superhuman AI can teach without explicit instruction:</strong> Simply existing in the environment
-      inspires humans to explore</li>
-    <li><strong>Novelty is learnable:</strong> Humans can recognize and adopt AI-discovered innovations</li>
-    <li><strong>Traditional knowledge isn't optimal:</strong> Conventions may persist due to lack of exploration, not
-      superiority</li>
-    <li><strong>Population-level effects:</strong> Impact extends beyond direct AI users to entire communities</li>
-  </ul>
-
-  <h2>3. Active Teaching: Extracting Chess Concepts (Schut et al., 2023/2025)</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer in AlphaZero"</h4>
-    <p><strong>Authors:</strong> Lisa Schut, Nenad Tomasev, Tom McGrath, Demis Hassabis, Ulrich Paquet, Been Kim</p>
-    <p><strong>Published:</strong> arXiv 2023, PNAS 2025</p>
-    <p><strong>Key contribution:</strong> Systematic method to extract, filter, and teach novel concepts from superhuman
-      AI</p>
-  </div>
-
-  <h3>The Challenge</h3>
-
-  <p>
-    Unlike Shin et al.'s observational study, Schut et al. sought to <strong>actively extract</strong> knowledge from
-    AlphaZero and transfer it to human experts through deliberate training.
-  </p>
-
-  <p><strong>Key questions:</strong></p>
-  <ul>
-    <li>What concepts has AlphaZero learned that humans haven't?</li>
-    <li>Can we extract these concepts in human-understandable form?</li>
-    <li>Are they teachable to even the world's best players?</li>
-  </ul>
-
-  <h3>Methodology: Four-Stage Pipeline</h3>
-
-  <h4>Stage 1: Concept Discovery</h4>
-
-  <p>
-    Use <strong>convex optimization</strong> to find concept vectors in AlphaZero's latent space.
-  </p>
-
-  <div class="example-box">
-    <p><strong>How it works:</strong></p>
-    <ol>
-      <li>Collect chess positions where a concept might be relevant</li>
-      <li>Extract AlphaZero's internal representations (activations) for these positions</li>
-      <li>Find a <strong>direction in activation space</strong> that separates concept-present from concept-absent
-        positions</li>
-      <li>This direction is the <strong>Concept Activation Vector (CAV)</strong></li>
-    </ol>
-
-    <p><strong>Technical detail:</strong></p>
-    <p>
-      Train a linear classifier to distinguish concept examples from random counterexamples. The vector orthogonal to
-      the decision boundary is the CAV.
-    </p>
-  </div>
-
-  <h4>Stage 2: Filtering by Teachability</h4>
-
-  <p>
-    Not all extracted concepts are learnable by humans or other agents. <strong>Teachability test:</strong>
-  </p>
-
-  <div class="info-box">
-    <p><strong>Definition:</strong> A concept is <em>teachable</em> if another AI agent (student) can learn it from
-      examples.</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Generate prototype positions that strongly activate the concept vector</li>
-      <li>Train a student AI on these prototypes</li>
-      <li>Test if the student can generalize the concept to new positions</li>
-      <li>Measure improvement: Does the student now select the same moves as AlphaZero?</li>
-    </ol>
-
-    <p><strong>Why this matters:</strong> If even an AI student can't learn the concept, a human likely can't either.</p>
-  </div>
-
-  <h4>Stage 3: Filtering by Novelty</h4>
-
-  <p>
-    A teachable concept might still be something humans already know. <strong>Novelty test:</strong>
-  </p>
-
-  <div class="info-box">
-    <p><strong>Definition:</strong> A concept is <em>novel</em> if it's not present in human chess games.</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Collect a large database of human chess games</li>
-      <li>Test if the concept vector activates on human games</li>
-      <li>Low activation → concept is novel to humans</li>
-      <li>High activation → concept already exists in human play</li>
-    </ol>
-
-    <p><strong>Why this matters:</strong> We want to teach humans something <em>new</em>, not rediscover known
-      principles.</p>
-  </div>
-
-  <h4>Stage 4: Human Validation Study</h4>
-
-  <p>
-    The ultimate test: Can <strong>world chess champions</strong> learn these concepts?
-  </p>
-
-  <div class="example-box">
-    <p><strong>Study design:</strong></p>
-
-    <p><strong>Participants:</strong> 4 top chess grandmasters (all former or current world champions)</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li><strong>Pre-test:</strong> Grandmasters solve concept prototype positions (no instruction)</li>
-      <li><strong>Learning phase:</strong> Grandmasters study the positions with explanations</li>
-      <li><strong>Post-test:</strong> Grandmasters solve new positions involving the same concepts</li>
-    </ol>
-
-    <p><strong>Measurement:</strong> Improvement from pre-test to post-test</p>
-  </div>
-
-  <h3>Key Findings</h3>
-
-  <div class="key-insight">
-    <p><strong>All four grandmasters improved after the learning phase.</strong></p>
-
-    <p>
-      This demonstrates that:
-    </p>
-    <ul>
-      <li>AlphaZero encodes knowledge <strong>beyond existing human understanding</strong></li>
-      <li>This knowledge is <strong>not beyond human grasp</strong>—it can be learned</li>
-      <li>Even elite experts can learn from AI</li>
-    </ul>
-
-    <p><strong>Types of concepts discovered:</strong></p>
-    <ul>
-      <li><strong>Quiet moves to provoke long-term weaknesses</strong> (counterintuitive to classical principles)</li>
-      <li><strong>Strategic queen sacrifices</strong> in unexpected contexts</li>
-      <li><strong>Positional imbalances</strong> that traditional evaluation undervalues</li>
-    </ul>
-  </div>
-
-  <h3>Example Concept</h3>
-
-  <div class="example-box">
-    <p><strong>Concept: "Provoke Weakness Through Quiet Moves"</strong></p>
-
-    <p><strong>Classical chess principle:</strong> Active, forcing moves (checks, captures) are strong.</p>
-
-    <p><strong>AlphaZero's insight:</strong> Sometimes a quiet, non-forcing move creates <em>zugzwang</em>—opponent must
-      worsen their position.</p>
-
-    <p><strong>Why it's novel:</strong> Human games rarely show this pattern (low activation on human database).</p>
-
-    <p><strong>Why it's teachable:</strong> Student AI improved 15% on test positions after training.</p>
-
-    <p><strong>Human validation:</strong> Grandmasters improved from 40% to 65% accuracy on these positions after
-      studying examples.</p>
-  </div>
-
-  <h2>4. Comparing the Two Approaches</h2>
-
-  <div class="comparison-box">
-    <table>
-      <tr>
-        <th>Dimension</th>
-        <th>Shin et al. (Passive)</th>
-        <th>Schut et al. (Active)</th>
-      </tr>
-      <tr>
-        <td><strong>Research Question</strong></td>
-        <td>Do humans improve from AI exposure?</td>
-        <td>Can we extract and teach AI concepts?</td>
-      </tr>
-      <tr>
-        <td><strong>Scale</strong></td>
-        <td>Population (thousands of players)</td>
-        <td>Individual (4 grandmasters)</td>
-      </tr>
-      <tr>
-        <td><strong>Evidence Type</strong></td>
-        <td>Observational (71 years)</td>
-        <td>Experimental (controlled study)</td>
-      </tr>
-      <tr>
-        <td><strong>Novelty Role</strong></td>
-        <td>Outcome (novel moves = better)</td>
-        <td>Filter (select novel concepts)</td>
-      </tr>
-      <tr>
-        <td><strong>Teaching Method</strong></td>
-        <td>Implicit (watch AI play)</td>
-        <td>Explicit (study concept prototypes)</td>
-      </tr>
-      <tr>
-        <td><strong>Interpretability</strong></td>
-        <td>Black box (don't know what changed)</td>
-        <td>White box (extract specific concepts)</td>
-      </tr>
-      <tr>
-        <td><strong>Measurement</strong></td>
-        <td>Move quality via AI evaluation</td>
-        <td>Accuracy on concept test positions</td>
-      </tr>
-      <tr>
-        <td><strong>Strength</strong></td>
-        <td>Ecological validity (real-world effect)</td>
-        <td>Causal clarity (know what's taught)</td>
-      </tr>
-    </table>
-  </div>
-
-  <h3>Complementary Insights</h3>
-
-  <p>
-    Together, these papers show that superhuman AI can improve humans through:
-  </p>
-  <ul>
-    <li><strong>Inspiration (Shin):</strong> Seeing AI play prompts exploration of novel strategies</li>
-    <li><strong>Instruction (Schut):</strong> Explicitly teaching extracted concepts</li>
-  </ul>
-
-  <p>
-    Both require <strong>novelty</strong>—humans learn by going beyond traditional knowledge.
-  </p>
-
-  <h2>5. Designing Human Studies for Interpretability</h2>
-
-  <p>
-    How do you validate that your interpretability findings are meaningful? Human studies provide the gold standard.
-  </p>
-
-  <h3>Three Types of Evaluation (Doshi-Velez & Kim, 2017)</h3>
-
-  <table>
-    <tr>
-      <th>Type</th>
-      <th>When to Use</th>
-      <th>Example</th>
-    </tr>
-    <tr>
-      <td><strong>Application-Grounded</strong></td>
-      <td>Real-world task with domain experts</td>
-      <td>Schut's grandmaster study</td>
-    </tr>
-    <tr>
-      <td><strong>Human-Grounded</strong></td>
-      <td>Simplified task with lay users</td>
-      <td>Show concept examples, ask "Does this make sense?"</td>
-    </tr>
-    <tr>
-      <td><strong>Functionally-Grounded</strong></td>
-      <td>No humans, use proxy metrics</td>
-      <td>Teachability test (AI student learns)</td>
-    </tr>
-  </table>
-
-  <h3>Key Considerations for Study Design</h3>
-
-  <div class="info-box">
-    <p><strong>1. Who are your participants?</strong></p>
-    <ul>
-      <li><strong>Domain experts</strong> (like grandmasters): High validity, but expensive and small sample</li>
-      <li><strong>Lay users:</strong> Larger sample, but may lack necessary background</li>
-      <li><strong>Trade-off:</strong> Schut used 4 experts; Shin used population-level data</li>
-    </ul>
-
-    <p><strong>2. What do you measure?</strong></p>
-    <ul>
-      <li><strong>Performance:</strong> Can they solve tasks better? (Schut: accuracy on test positions)</li>
-      <li><strong>Understanding:</strong> Can they explain the concept? (Free-response questions)</li>
-      <li><strong>Trust:</strong> Do they believe the explanation? (Likert scales)</li>
-      <li><strong>Warning:</strong> Trust ≠ utility (Bansal et al., Week 10)</li>
-    </ul>
-
-    <p><strong>3. Control conditions?</strong></p>
-    <ul>
-      <li><strong>Pre-post design:</strong> Measure before and after learning (Schut)</li>
-      <li><strong>Comparison group:</strong> Concept group vs baseline explanation</li>
-      <li><strong>Temporal controls:</strong> Before vs after AI release (Shin)</li>
-    </ul>
-
-    <p><strong>4. Avoiding pitfalls (from Week 10):</strong></p>
-    <ul>
-      <li>Don't cherry-pick examples that support your hypothesis</li>
-      <li>Use multiple evaluation metrics (accuracy, confidence, explanation quality)</li>
-      <li>Test robustness: Do concepts transfer to new contexts?</li>
-      <li>Report negative results: Which concepts weren't learnable?</li>
-    </ul>
-  </div>
-
-  <h2>6. Building a Concept Atlas</h2>
-
-  <p>
-    As you discover concepts in your project, you need to <strong>organize them systematically</strong>. A concept
-    atlas maps the landscape of what your model knows.
-  </p>
-
-  <h3>Why Build an Atlas?</h3>
-
-  <ul>
-    <li><strong>Locate your concept:</strong> How does your project concept relate to known concepts?</li>
-    <li><strong>Avoid redundancy:</strong> Is your "novel" concept actually a rediscovery?</li>
-    <li><strong>Find relationships:</strong> Do concepts compose, interfere, or prerequisite each other?</li>
-    <li><strong>Assess coverage:</strong> What fraction of model behavior do identified concepts explain?</li>
-  </ul>
-
-  <h3>Organizing Dimensions</h3>
-
-  <div class="example-box">
-    <p><strong>1. Abstraction Level</strong></p>
-    <ul>
-      <li><strong>Low-level:</strong> "Edges," "colors," "individual words"</li>
-      <li><strong>Mid-level:</strong> "Object parts," "syntactic roles," "local patterns"</li>
-      <li><strong>High-level:</strong> "Objects," "semantic concepts," "strategic plans"</li>
-    </ul>
-
-    <p><strong>2. Domain Specificity</strong></p>
-    <ul>
-      <li><strong>Universal:</strong> Position, number, negation (across tasks)</li>
-      <li><strong>Domain-specific:</strong> "Zugzwang" (chess), "ko threat" (Go)</li>
-    </ul>
-
-    <p><strong>3. Complexity</strong></p>
-    <ul>
-      <li><strong>Atomic:</strong> Single feature</li>
-      <li><strong>Compositional:</strong> Combination of concepts (e.g., "quiet move that provokes weakness")</li>
-    </ul>
-
-    <p><strong>4. Novelty (from Schut)</strong></p>
-    <ul>
-      <li><strong>Known:</strong> Present in human data</li>
-      <li><strong>Novel:</strong> Absent from human data</li>
-    </ul>
-
-    <p><strong>5. Teachability (from Schut)</strong></p>
-    <ul>
-      <li><strong>Teachable:</strong> Student AI or humans can learn</li>
-      <li><strong>Unteachable:</strong> Too complex or ill-defined</li>
-    </ul>
-  </div>
-
-  <h3>Building Your Project Atlas</h3>
-
-  <div class="info-box">
-    <p><strong>Step 1: Inventory</strong></p>
-    <p>List all concepts you've encountered in Weeks 1-10:</p>
-    <ul>
-      <li>From Week 5 (circuits): Which operations did you find?</li>
-      <li>From Week 6 (probes): What information is encoded where?</li>
-      <li>From Week 7 (SAEs): What features did the autoencoder discover?</li>
-      <li>From Week 9 (attribution): Which inputs matter for your concept?</li>
-    </ul>
-
-    <p><strong>Step 2: Characterize</strong></p>
-    <p>For each concept, assess:</p>
-    <ul>
-      <li>Abstraction level</li>
-      <li>Domain specificity</li>
-      <li>Novelty (is it in your training data?)</li>
-      <li>Teachability (could a human learn it?)</li>
-    </ul>
-
-    <p><strong>Step 3: Map Relationships</strong></p>
-    <ul>
-      <li><strong>Prerequisite:</strong> Does concept A require understanding concept B?</li>
-      <li><strong>Composition:</strong> Is concept C = A + B?</li>
-      <li><strong>Interference:</strong> Do A and B conflict?</li>
-    </ul>
-
-    <p><strong>Step 4: Assess Coverage</strong></p>
-    <ul>
-      <li>What fraction of model behavior do your concepts explain?</li>
-      <li>Where are the gaps?</li>
-    </ul>
-  </div>
-
-  <h2>7. Applying to Your Research Project</h2>
-
-  <h3>Validating Your Interpretability Claims</h3>
-
-  <p>
-    By Week 11, you should have discovered something about how your model represents your concept. Now validate it:
-  </p>
-
-  <div class="info-box">
-    <p><strong>Checklist for Rigorous Validation:</strong></p>
-
-    <p><strong>✓ Sanity Checks (Week 10)</strong></p>
-    <ul>
-      <li>Did you run model/data randomization tests?</li>
-      <li>Is your interpretation robust to methodological choices?</li>
-    </ul>
-
-    <p><strong>✓ Multiple Methods (Weeks 5-9)</strong></p>
-    <ul>
-      <li>Did circuits, probes, SAEs, and attribution agree?</li>
-      <li>If not, why? (Disagreement can be informative)</li>
-    </ul>
-
-    <p><strong>✓ Causal Validation (Week 8)</strong></p>
-    <ul>
-      <li>Did IIA confirm that your identified components are causal?</li>
-      <li>Can you intervene to change the concept?</li>
-    </ul>
-
-    <p><strong>✓ Novelty Assessment (Schut)</strong></p>
-    <ul>
-      <li>Is your concept in the training data?</li>
-      <li>If yes: rediscovery (still valid!)</li>
-      <li>If no: potential superhuman insight</li>
-    </ul>
-
-    <p><strong>✓ Teachability Assessment (Schut)</strong></p>
-    <ul>
-      <li>Can you explain the concept to a colleague?</li>
-      <li>Can they use it to improve their understanding?</li>
-      <li>If you trained a simple model on concept examples, does it generalize?</li>
-    </ul>
-
-    <p><strong>✓ Human Study (if feasible)</strong></p>
-    <ul>
-      <li>Even a small study (n=3-5) is valuable</li>
-      <li>Pre-post design or comparison with baseline</li>
-      <li>Measure performance, not just trust</li>
-    </ul>
-  </div>
-
-  <h3>Knowledge Transfer Potential</h3>
-
-  <p>
-    Ask: <strong>Could a domain expert learn from your finding?</strong>
-  </p>
-
-  <div class="example-box">
-    <p><strong>Example: Musical Key Representation</strong></p>
-
-    <p><strong>Finding:</strong> LLM uses specific attention heads to track musical key.</p>
-
-    <p><strong>Novelty check:</strong> Is key tracking in music theory textbooks? (Yes → not novel)</p>
-
-    <p><strong>Teachability check:</strong> Could a musician learn which contexts activate key tracking? (Possibly)</p>
-
-    <p><strong>Knowledge transfer value:</strong> Moderate—validates human understanding but doesn't extend it.</p>
 
     <hr>
 
-    <p><strong>Example: Protein Stability Representations</strong></p>
-
-    <p><strong>Finding:</strong> LLM predicts protein mutations that improve stability using a novel attention pattern.
+    <p><strong>Example 2: Validating Cross-Model Consistency</strong></p>
+    <p>
+      <strong>Question:</strong> Is the "politeness" representation specific to GPT-4 or universal across LLMs?
+    </p>
+    <p>
+      <strong>Method:</strong> Extract politeness concept vectors from GPT-4 and Llama-3, compare using Procrustes
+      alignment.
+    </p>
+    <p>
+      <strong>Result:</strong> High similarity (r=0.82) suggests concept is universal, not model artifact.
     </p>
 
-    <p><strong>Novelty check:</strong> Pattern not present in biochemistry literature? (Novel)</p>
+    <hr>
 
-    <p><strong>Teachability check:</strong> Can a biologist learn to recognize this pattern? (Test needed)</p>
-
-    <p><strong>Knowledge transfer value:</strong> High—could guide wet-lab experiments.</p>
+    <p><strong>Example 3: Comparing to Human Judgments</strong></p>
+    <p>
+      <strong>Question:</strong> Does the model's protein similarity match biochemist judgments?
+    </p>
+    <p>
+      <strong>Method:</strong> Collect human similarity ratings for protein pairs, compare to model embedding
+      distances using RSA.
+    </p>
+    <p>
+      <strong>Result:</strong> Spearman ρ=0.71 indicates moderate alignment with human understanding.
+    </p>
   </div>
 
-  <h2>8. Limitations and Open Questions</h2>
+  <h2>2. Representational Similarity Analysis (RSA)</h2>
 
-  <h3>Limitations of Current Approaches</h3>
+  <div class="paper-card">
+    <h4>Paper: "Representational Similarity Analysis"</h4>
+    <p><strong>Authors:</strong> Nikolaus Kriegeskorte, Marieke Mur, Peter Bandettini</p>
+    <p><strong>Published:</strong> Frontiers in Systems Neuroscience, 2008</p>
+    <p><strong>Key contribution:</strong> Framework for comparing representations across different systems (brains,
+      models, measurements)</p>
+  </div>
+
+  <h3>Core Idea</h3>
+
+  <p>
+    Instead of comparing representations directly, <strong>compare their similarity structures</strong>.
+  </p>
 
   <div class="info-box">
-    <p><strong>From Shin et al.:</strong></p>
+    <p><strong>RSA Procedure:</strong></p>
+    <ol>
+      <li><strong>Build Representational Dissimilarity Matrix (RDM)</strong> for each system
+        <ul>
+          <li>For \(n\) stimuli/examples, compute pairwise distances</li>
+          <li>Result: \(n \times n\) matrix where RDM[i,j] = distance between representations of stimulus i and j</li>
+        </ul>
+      </li>
+      <li><strong>Compare RDMs</strong> using correlation (Spearman ρ or Pearson r)
+        <ul>
+          <li>Flatten RDMs into vectors (upper triangular entries)</li>
+          <li>Compute correlation between vectors</li>
+        </ul>
+      </li>
+      <li><strong>Interpret:</strong> High correlation → similar representational geometry</li>
+    </ol>
+  </div>
+
+  <h3>Mathematical Formulation</h3>
+
+  <p>
+    Given representations \(X \in \mathbb{R}^{n \times d_1}\) (e.g., layer 10) and \(Y \in \mathbb{R}^{n \times d_2}\)
+    (e.g., layer 20):
+  </p>
+
+  <p>
+    1. <strong>Compute RDMs:</strong>
+  </p>
+  <p style="text-align: center;">
+    \(\text{RDM}_X[i,j] = \|x_i - x_j\|_2\)
+  </p>
+  <p style="text-align: center;">
+    \(\text{RDM}_Y[i,j] = \|y_i - y_j\|_2\)
+  </p>
+
+  <p>
+    2. <strong>Flatten to vectors:</strong> Extract upper triangular entries (excluding diagonal)
+  </p>
+
+  <p>
+    3. <strong>Compute similarity:</strong>
+  </p>
+  <p style="text-align: center;">
+    \(\rho = \text{Spearman}(\text{vec}(\text{RDM}_X), \text{vec}(\text{RDM}_Y))\)
+  </p>
+
+  <h3>Strengths and Limitations</h3>
+
+  <div class="comparison-box">
+    <p><strong>✓ Strengths:</strong></p>
     <ul>
-      <li>Can't identify <em>which</em> concepts humans learned (black box improvement)</li>
-      <li>Correlation, not causation (did AlphaGo cause the improvement or just coincide?)</li>
-      <li>Domain-specific (Go); generalizes to other domains?</li>
+      <li><strong>Dimension-agnostic:</strong> Works for representations of any dimensionality</li>
+      <li><strong>Scale-invariant:</strong> Uses rank correlation (Spearman), robust to rescaling</li>
+      <li><strong>Interpretable:</strong> Directly tests if two systems organize stimuli similarly</li>
+      <li><strong>Flexible distance metrics:</strong> Can use cosine, Euclidean, correlation distance</li>
     </ul>
 
-    <p><strong>From Schut et al.:</strong></p>
+    <p><strong>✗ Limitations:</strong></p>
     <ul>
-      <li>Linear concept assumption (CAVs are linear directions)</li>
-      <li>Small sample (4 grandmasters, but they're world champions)</li>
-      <li>Chess-specific; method complexity for other domains?</li>
-      <li>Doesn't extract <em>all</em> concepts, just some filtered subset</li>
+      <li><strong>Sensitive to stimulus selection:</strong> Results depend heavily on which examples you include</li>
+      <li><strong>Doesn't find alignment:</strong> Only measures similarity, doesn't transform one space to another</li>
+      <li><strong>Computationally expensive:</strong> \(O(n^2)\) pairwise comparisons</li>
+      <li><strong>No significance testing:</strong> Hard to know if ρ=0.6 is "good"</li>
     </ul>
   </div>
 
-  <h3>Open Research Questions</h3>
+  <h2>3. Centered Kernel Alignment (CKA)</h2>
 
+  <div class="paper-card">
+    <h4>Paper: "Similarity of Neural Network Representations Revisited"</h4>
+    <p><strong>Authors:</strong> Simon Kornblith, Mohammad Norouzi, Honglak Lee, Geoffrey Hinton</p>
+    <p><strong>Published:</strong> ICML 2019</p>
+    <p><strong>Key contribution:</strong> CKA is invariant to invertible linear transformations, making it superior to
+      earlier metrics</p>
+  </div>
+
+  <h3>Why CKA?</h3>
+
+  <p>
+    Early similarity metrics (like CCA) had problems:
+  </p>
   <ul>
-    <li><strong>Completeness:</strong> How do we know we've found all the important concepts?</li>
-    <li><strong>Compositionality:</strong> How do simple concepts combine into complex strategies?</li>
-    <li><strong>Transfer across models:</strong> Are concepts universal or model-specific?</li>
-    <li><strong>Long-term retention:</strong> Do humans retain AI-taught concepts over months/years?</li>
-    <li><strong>Misalignment detection:</strong> What if AI discovers <em>harmful</em> concepts?</li>
-    <li><strong>Scaling:</strong> Can these methods work for domains more complex than chess/Go?</li>
+    <li>Sensitive to small dimensional subspaces</li>
+    <li>Affected by random permutations</li>
+    <li>Failed to detect trivial differences (e.g., layer width changes)</li>
   </ul>
 
-  <h2>9. Best Practices for Your Paper</h2>
+  <p>
+    <strong>CKA addresses these issues</strong> by comparing representations via kernel functions, focusing on the
+    geometry of the data cloud rather than individual coordinates.
+  </p>
+
+  <h3>Mathematical Formulation</h3>
+
+  <p>
+    Given representations \(X \in \mathbb{R}^{n \times d_1}\) and \(Y \in \mathbb{R}^{n \times d_2}\):
+  </p>
+
+  <p>
+    1. <strong>Compute Gram matrices:</strong>
+  </p>
+  <p style="text-align: center;">
+    \(K = XX^T\) (similarity between examples in X-space)
+  </p>
+  <p style="text-align: center;">
+    \(L = YY^T\) (similarity between examples in Y-space)
+  </p>
+
+  <p>
+    2. <strong>Center the matrices:</strong>
+  </p>
+  <p style="text-align: center;">
+    \(\bar{K} = HKH\), where \(H = I - \frac{1}{n}\mathbf{1}\mathbf{1}^T\)
+  </p>
+
+  <p>
+    3. <strong>Compute CKA:</strong>
+  </p>
+  <p style="text-align: center;">
+    \(\text{CKA}(X, Y) = \frac{\|\bar{K} \odot \bar{L}\|_F}{\|\bar{K}\|_F \|\bar{L}\|_F}\)
+  </p>
+
+  <p>
+    Where \(\odot\) is element-wise multiplication and \(\|\cdot\|_F\) is Frobenius norm.
+  </p>
+
+  <h3>Key Properties</h3>
 
   <div class="info-box">
-    <h3>Making Rigorous Claims</h3>
-
-    <p><strong>✓ DO:</strong></p>
     <ul>
-      <li>Use multiple validation methods (circuits + probes + SAEs + IIA)</li>
-      <li>Report which concepts were teachable and which weren't</li>
-      <li>Assess novelty (compare with training data or domain literature)</li>
-      <li>Design human studies, even small ones</li>
-      <li>Show when your interpretation fails (edge cases)</li>
-      <li>Compare your concepts to known domain knowledge</li>
-    </ul>
-
-    <p><strong>✗ DON'T:</strong></p>
-    <ul>
-      <li>Claim "superhuman" insight without novelty evidence</li>
-      <li>Cherry-pick examples that support your interpretation</li>
-      <li>Rely on single method (e.g., only probes)</li>
-      <li>Assume teachability without testing</li>
-      <li>Over-generalize from one model or task</li>
-      <li>Ignore Week 10's skepticism lessons</li>
+      <li><strong>Range:</strong> CKA ∈ [0, 1], where 1 = identical geometry, 0 = orthogonal</li>
+      <li><strong>Invariant to:</strong> Invertible linear transformations, isotropic scaling, orthogonal rotations</li>
+      <li><strong>Not invariant to:</strong> Nonlinear transformations, permutations of features (which is good—these
+        change meaning)</li>
+      <li><strong>Interpretable:</strong> Measures what fraction of variance is shared between representations</li>
     </ul>
   </div>
 
-  <h2>10. Summary and Integration</h2>
+  <h3>Practical Usage</h3>
+
+  <div class="example-box">
+    <p><strong>Example: Finding Where Concepts Emerge</strong></p>
+
+    <p><strong>Task:</strong> Identify which layer encodes sentiment in movie reviews</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Create "ground truth" representation: one-hot encoding of sentiment labels (positive/negative)</li>
+      <li>For each transformer layer, extract representations for 1000 reviews</li>
+      <li>Compute CKA between layer representation and ground truth</li>
+      <li>Plot CKA vs layer depth</li>
+    </ol>
+
+    <p><strong>Interpretation:</strong></p>
+    <ul>
+      <li>CKA increases with depth → concept emerges gradually</li>
+      <li>Peak at layer 15 → sentiment is most explicit here</li>
+      <li>CKA drops in final layers → sentiment abstracted away for generation</li>
+    </ul>
+  </div>
+
+  <h2>4. Canonical Correlation Analysis (CCA) and Variants</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "SVCCA: Singular Vector Canonical Correlation Analysis for Deep Learning Dynamics and Interpretability"
+    </h4>
+    <p><strong>Authors:</strong> Maithra Raghu, Justin Gilmer, Jason Yosinski, Jascha Sohl-Dickstein</p>
+    <p><strong>Published:</strong> NeurIPS 2017</p>
+    <p><strong>Key contribution:</strong> Combines SVD with CCA to handle high-dimensional, noisy representations</p>
+  </div>
+
+  <h3>Canonical Correlation Analysis (CCA)</h3>
+
+  <p>
+    CCA finds linear transformations of \(X\) and \(Y\) that maximize correlation.
+  </p>
+
+  <p>
+    <strong>Goal:</strong> Find weight matrices \(W_X\) and \(W_Y\) such that:
+  </p>
+  <p style="text-align: center;">
+    \(\text{corr}(XW_X, YW_Y)\) is maximized
+  </p>
+
+  <p>
+    <strong>Output:</strong> Canonical correlation coefficients \(\rho_1, \rho_2, \ldots, \rho_k\) where \(k =
+    \min(d_1, d_2)\)
+  </p>
+
+  <p>
+    <strong>Interpretation:</strong> Mean of \(\rho_i\) indicates how well representations align after optimal rotation.
+  </p>
+
+  <h3>Singular Vector CCA (SVCCA)</h3>
+
+  <p>
+    Problem with vanilla CCA: Sensitive to noise in high dimensions.
+  </p>
+
+  <div class="info-box">
+    <p><strong>SVCCA Solution:</strong></p>
+    <ol>
+      <li><strong>SVD preprocessing:</strong> For \(X\) and \(Y\), keep only top-\(k\) singular vectors (e.g., 99%
+        variance)</li>
+      <li><strong>Apply CCA:</strong> Run CCA on dimensionality-reduced representations</li>
+      <li><strong>Aggregate:</strong> Mean canonical correlation = similarity score</li>
+    </ol>
+
+    <p><strong>Why this helps:</strong> Removes noisy dimensions that CCA might spuriously align</p>
+  </div>
+
+  <h3>When to Use CCA vs CKA</h3>
+
+  <table>
+    <tr>
+      <th>Metric</th>
+      <th>When to Use</th>
+      <th>Pros</th>
+      <th>Cons</th>
+    </tr>
+    <tr>
+      <td><strong>CCA</strong></td>
+      <td>When you want to find explicit alignment between spaces</td>
+      <td>Provides transformation matrices; interpretable components</td>
+      <td>Sensitive to noise; biased toward small subspaces</td>
+    </tr>
+    <tr>
+      <td><strong>SVCCA</strong></td>
+      <td>High-dimensional, noisy representations</td>
+      <td>Robust to noise; good for training dynamics</td>
+      <td>Arbitrary SVD cutoff; loses information</td>
+    </tr>
+    <tr>
+      <td><strong>CKA</strong></td>
+      <td>Comparing overall geometry; different dimensionalities</td>
+      <td>Invariant to rotations; no hyperparameters; robust</td>
+      <td>Doesn't provide alignment; harder to interpret "why"</td>
+    </tr>
+    <tr>
+      <td><strong>RSA</strong></td>
+      <td>Comparing to human data; neuroscience applications</td>
+      <td>Intuitive; flexible distance metrics</td>
+      <td>Sensitive to stimuli; computationally expensive</td>
+    </tr>
+  </table>
+
+  <h2>5. Procrustes Analysis</h2>
+
+  <h3>The Alignment Problem</h3>
+
+  <p>
+    Sometimes you want more than similarity—you want to <strong>align</strong> two representation spaces.
+  </p>
+
+  <p>
+    <strong>Use case:</strong> Compare concept vectors across models (e.g., "honesty" in GPT-4 vs Llama).
+  </p>
+
+  <h3>Procrustes Method</h3>
+
+  <div class="info-box">
+    <p><strong>Goal:</strong> Find rotation matrix \(R\) that best aligns \(X\) to \(Y\)</p>
+
+    <p><strong>Minimize:</strong></p>
+    <p style="text-align: center;">
+      \(\|XR - Y\|_F^2\)
+    </p>
+
+    <p><strong>Solution (via SVD):</strong></p>
+    <ol>
+      <li>Compute \(M = Y^T X\)</li>
+      <li>SVD: \(M = U \Sigma V^T\)</li>
+      <li>Optimal rotation: \(R = VU^T\)</li>
+    </ol>
+
+    <p><strong>Similarity score:</strong> Procrustes distance = \(\|XR - Y\|_F\) (lower = more similar)</p>
+  </div>
+
+  <h3>Application: Cross-Model Concept Comparison</h3>
+
+  <div class="example-box">
+    <p><strong>Research Question:</strong> Is the "factual recall" mechanism universal across LLMs?</p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Extract factual recall concept vector from GPT-4 (using steering or probing)</li>
+      <li>Extract factual recall concept vector from Llama-3</li>
+      <li>Use Procrustes to align the two spaces</li>
+      <li>Measure distance between aligned vectors</li>
+    </ol>
+
+    <p><strong>Result interpretation:</strong></p>
+    <ul>
+      <li>Small distance → concept is universal (same mechanism)</li>
+      <li>Large distance → model-specific implementation</li>
+    </ul>
+  </div>
+
+  <h2>6. Comparing Representations to Human Judgments</h2>
+
+  <h3>Why Compare to Humans?</h3>
+
+  <p>
+    For domains like semantics, aesthetics, or morality, <strong>human similarity judgments</strong> are the ground
+    truth.
+  </p>
+
+  <p>
+    <strong>Question:</strong> Does the model's conceptual space match human understanding?
+  </p>
+
+  <h3>Method 1: Direct RSA</h3>
+
+  <div class="example-box">
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li><strong>Collect human data:</strong> Ask humans to rate similarity of concept pairs (e.g., "How similar are
+        'cat' and 'dog'?" on 1-7 scale)</li>
+      <li><strong>Build human RDM:</strong> Matrix of human similarity judgments</li>
+      <li><strong>Build model RDM:</strong> Pairwise distances in model's embedding space</li>
+      <li><strong>Compare:</strong> Spearman correlation between RDMs</li>
+    </ol>
+
+    <p><strong>Interpretation:</strong></p>
+    <ul>
+      <li>High correlation (ρ > 0.7) → model's geometry matches human conceptual space</li>
+      <li>Low correlation (ρ < 0.3) → model uses different organizing principles</li>
+    </ul>
+  </div>
+
+  <h3>Method 2: Behavioral Alignment Tasks</h3>
+
+  <p>
+    Instead of explicit ratings, use <strong>behavioral tasks</strong>:
+  </p>
+
+  <ul>
+    <li><strong>Odd-one-out:</strong> "Which doesn't belong: cat, dog, car?" (measures clustering)</li>
+    <li><strong>Categorization:</strong> Free sorting into groups</li>
+    <li><strong>Triplet comparisons:</strong> "Is A more similar to B or C?"</li>
+  </ul>
+
+  <p>
+    These tasks reveal implicit similarity structure, which you can compare to model representations via RSA or CKA.
+  </p>
+
+  <h2>7. Identifying Where Concepts Are Encoded</h2>
+
+  <h3>Layer-wise Analysis</h3>
+
+  <p>
+    A common research question: <strong>Which layer encodes concept X?</strong>
+  </p>
+
+  <div class="info-box">
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Define concept operationally (e.g., sentiment = positive/negative labels)</li>
+      <li>Create dataset with concept labels</li>
+      <li>For each transformer layer, extract representations</li>
+      <li>Compute CKA (or probe accuracy) between layer and concept labels</li>
+      <li>Plot metric vs layer depth</li>
+    </ol>
+
+    <p><strong>Common patterns:</strong></p>
+    <ul>
+      <li><strong>Early layers:</strong> Syntax, surface form</li>
+      <li><strong>Middle layers:</strong> Semantics, concepts, entities</li>
+      <li><strong>Late layers:</strong> Task-specific features, pragmatics</li>
+    </ul>
+  </div>
+
+  <h3>Example: Semantic Role Encoding</h3>
+
+  <div class="example-box">
+    <p><strong>Question:</strong> Where does BERT encode semantic roles (agent, patient, theme)?</p>
+
+    <p><strong>Dataset:</strong> 500 sentences annotated with semantic roles</p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>For each layer (0-12), extract token representations for role-bearing words</li>
+      <li>Compute CKA between layer representations and one-hot role labels</li>
+    </ol>
+
+    <p><strong>Findings:</strong></p>
+    <ul>
+      <li>CKA peaks at layer 8 (middle layer)</li>
+      <li>Early layers (1-3): Low CKA (surface syntax dominates)</li>
+      <li>Late layers (10-12): CKA decreases (semantic roles abstracted for MLM task)</li>
+    </ul>
+
+    <p><strong>Implication:</strong> For semantic role probing, use layer 8 representations.</p>
+  </div>
+
+  <h2>8. Validation Through Cross-Model Consistency</h2>
+
+  <h3>The Generalization Problem</h3>
+
+  <p>
+    You found a concept vector in GPT-4. But is it a <strong>general principle</strong> or a <strong>model
+      artifact</strong>?
+  </p>
+
+  <div class="key-insight">
+    <p><strong>Validation strategy:</strong> Test if the concept exists in multiple models.</p>
+    <ul>
+      <li>If consistent across models → likely a fundamental concept</li>
+      <li>If model-specific → may be due to architecture or training data quirks</li>
+    </ul>
+  </div>
+
+  <h3>Cross-Model Comparison Protocol</h3>
+
+  <div class="example-box">
+    <p><strong>Research question:</strong> Is "political bias" encoded similarly in different LLMs?</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Extract concept vector from GPT-4 using contrastive activation addition</li>
+      <li>Extract concept vector from Llama-3, Claude, Gemini using same method</li>
+      <li>Align representation spaces using Procrustes</li>
+      <li>Measure pairwise distances between concept vectors</li>
+      <li>Compute CKA between models' representations of political texts</li>
+    </ol>
+
+    <p><strong>Strong evidence of universality:</strong></p>
+    <ul>
+      <li>High CKA (> 0.8) between model representations</li>
+      <li>Concept vectors align after Procrustes (cosine similarity > 0.7)</li>
+      <li>Interventions using cross-model concept vectors transfer successfully</li>
+    </ul>
+  </div>
+
+  <h2>9. Limitations and Pitfalls</h2>
+
+  <h3>Common Mistakes</h3>
+
+  <div class="info-box">
+    <p><strong>1. Ignoring data distribution</strong></p>
+    <ul>
+      <li><strong>Problem:</strong> CKA is sensitive to example selection</li>
+      <li><strong>Example:</strong> Using 90% negative, 10% positive examples inflates similarity to negative-only
+        space</li>
+      <li><strong>Solution:</strong> Balance datasets; report results across multiple samplings</li>
+    </ul>
+
+    <p><strong>2. Misinterpreting magnitude</strong></p>
+    <ul>
+      <li><strong>Problem:</strong> "CKA=0.6" has no absolute meaning—depends on task</li>
+      <li><strong>Solution:</strong> Compare to baselines (random, different-layer, different-model)</li>
+    </ul>
+
+    <p><strong>3. Confusing similarity with functionality</strong></p>
+    <ul>
+      <li><strong>Problem:</strong> Similar representations don't imply same behavior</li>
+      <li><strong>Example:</strong> Two models have high CKA but different downstream accuracy</li>
+      <li><strong>Solution:</strong> Validate with behavioral metrics (probing, task performance)</li>
+    </ul>
+
+    <p><strong>4. Over-relying on linear metrics</strong></p>
+    <ul>
+      <li><strong>Problem:</strong> CCA, CKA assume linear or kernel-linear geometry</li>
+      <li><strong>Failure case:</strong> Concepts encoded nonlinearly may show low CKA despite functional equivalence
+      </li>
+      <li><strong>Solution:</strong> Combine with nonlinear probes (Week 5) and causal interventions (Week 4)</li>
+    </ul>
+  </div>
+
+  <h3>When RSA Fails</h3>
+
+  <div class="example-box">
+    <p><strong>Case study: Adversarial similarity</strong></p>
+
+    <p>
+      Two models could have high CKA on normal examples but completely different representations on adversarial
+      perturbations.
+    </p>
+
+    <p><strong>Lesson:</strong> Test similarity across diverse data distributions, including edge cases.</p>
+
+    <hr>
+
+    <p><strong>Case study: Degenerate solutions</strong></p>
+
+    <p>
+      A model might encode a concept redundantly in multiple subspaces. CKA might show low similarity to each
+      individual subspace, missing the overall encoding.
+    </p>
+
+    <p><strong>Lesson:</strong> Use multiple metrics (RSA, CKA, probing accuracy) and interpret jointly.</p>
+  </div>
+
+  <h2>10. Practical Implementation</h2>
+
+  <h3>Code Example: CKA Computation</h3>
+
+  <div class="example-box">
+    <p><strong>Python implementation:</strong></p>
+    <pre><code>import numpy as np
+
+def center_gram(K):
+    """Center a Gram matrix."""
+    n = K.shape[0]
+    H = np.eye(n) - np.ones((n, n)) / n
+    return H @ K @ H
+
+def cka(X, Y):
+    """Compute CKA between two representation matrices."""
+    # Gram matrices
+    K = X @ X.T
+    L = Y @ Y.T
+
+    # Center
+    K_c = center_gram(K)
+    L_c = center_gram(L)
+
+    # CKA formula
+    numerator = np.linalg.norm(K_c * L_c, 'fro') ** 2
+    denominator = np.linalg.norm(K_c, 'fro') * np.linalg.norm(L_c, 'fro')
+
+    return numerator / denominator
+
+# Example usage
+# X: (n_examples, d1) - layer 10 representations
+# Y: (n_examples, d2) - layer 20 representations
+# similarity = cka(X, Y)  # returns value in [0, 1]
+</code></pre>
+  </div>
+
+  <h2>11. Applying RSA to Your Project</h2>
+
+  <h3>Integration with Previous Weeks</h3>
+
+  <p>
+    RSA complements methods from earlier weeks:
+  </p>
+
+  <table>
+    <tr>
+      <th>Week</th>
+      <th>Method</th>
+      <th>How RSA Helps</th>
+    </tr>
+    <tr>
+      <td><strong>Week 4</strong></td>
+      <td>Causal Mediation</td>
+      <td>Identify which layer to patch by finding where concept is encoded (CKA peak)</td>
+    </tr>
+    <tr>
+      <td><strong>Week 5</strong></td>
+      <td>Probes</td>
+      <td>Validate probe findings: Does CKA agree with probe accuracy?</td>
+    </tr>
+    <tr>
+      <td><strong>Week 6</strong></td>
+      <td>Attribution</td>
+      <td>Check if attribution patterns are consistent across models (cross-model CKA)</td>
+    </tr>
+    <tr>
+      <td><strong>Week 7</strong></td>
+      <td>SAEs</td>
+      <td>Compare SAE-discovered features to human semantic spaces (RSA)</td>
+    </tr>
+    <tr>
+      <td><strong>Week 8</strong></td>
+      <td>Circuits</td>
+      <td>Test if circuit components are universal (Procrustes alignment of circuit vectors)</td>
+    </tr>
+  </table>
+
+  <h3>Project Workflow</h3>
+
+  <div class="info-box">
+    <p><strong>Step 1: Locate Your Concept</strong></p>
+    <ul>
+      <li>Compute CKA between each layer and your concept labels</li>
+      <li>Identify peak layer → focus subsequent analysis here</li>
+    </ul>
+
+    <p><strong>Step 2: Validate Across Models</strong></p>
+    <ul>
+      <li>Extract concept from GPT-4, Llama, Claude</li>
+      <li>Use Procrustes to align, measure distance</li>
+      <li>High consistency → stronger evidence</li>
+    </ul>
+
+    <p><strong>Step 3: Compare to Human Understanding</strong></p>
+    <ul>
+      <li>Collect human similarity judgments (even n=20 is useful)</li>
+      <li>Compute RSA between model RDM and human RDM</li>
+      <li>Interpret alignment or divergence</li>
+    </ul>
+
+    <p><strong>Step 4: Report Robustness</strong></p>
+    <ul>
+      <li>Test across multiple datasets</li>
+      <li>Vary hyperparameters (SVD cutoffs, distance metrics)</li>
+      <li>Report mean and variance of similarity metrics</li>
+    </ul>
+  </div>
+
+  <h2>12. Summary</h2>
 
   <h3>Key Takeaways</h3>
 
   <ul>
-    <li><strong>The knowledge gap is real:</strong> AI systems learn beyond human knowledge (Shin: novelty improves
-      humans; Schut: extractable novel concepts)</li>
-    <li><strong>Two pathways:</strong> Passive (observation) and active (explicit teaching) knowledge transfer</li>
-    <li><strong>Novelty + teachability:</strong> Framework for filtering valuable concepts</li>
-    <li><strong>Human studies matter:</strong> Validate interpretability claims with human performance</li>
-    <li><strong>Concept atlases:</strong> Organize findings systematically</li>
-    <li><strong>Integration:</strong> Combine methods from Weeks 1-10 for rigorous validation</li>
+    <li><strong>RSA compares representational geometry</strong> despite differences in dimensionality and coordinate
+      systems</li>
+    <li><strong>CKA is robust and invariant</strong> to linear transformations—preferred for layer/model comparison</li>
+    <li><strong>CCA/SVCCA find explicit alignments</strong> useful when you need transformation matrices</li>
+    <li><strong>Procrustes aligns spaces</strong> for direct concept vector comparison across models</li>
+    <li><strong>Compare to human judgments</strong> to validate that model concepts match human understanding</li>
+    <li><strong>Use RSA to identify where concepts live</strong> and whether findings generalize</li>
+    <li><strong>Combine with other methods</strong>—RSA is most powerful when validating causal/probe/SAE findings</li>
   </ul>
 
-  <h3>Your Research Workflow</h3>
+  <h3>Best Practices</h3>
 
-  <ol>
-    <li><strong>Weeks 1-9:</strong> Discover concepts using multiple methods</li>
-    <li><strong>Week 10:</strong> Apply skepticism—run sanity checks</li>
-    <li><strong>Week 9:</strong>
-      <ul>
-        <li>Assess novelty (is it in training data?)</li>
-        <li>Assess teachability (can humans/students learn it?)</li>
-        <li>Design human study (even small)</li>
-        <li>Build concept atlas (organize findings)</li>
-        <li>Validate with multiple methods</li>
-      </ul>
-    </li>
-    <li><strong>Week 12:</strong> Present findings with rigorous evidence</li>
-  </ol>
-
-  <h3>Looking Ahead</h3>
-
-  <p>
-    The field of interpretability is moving toward <strong>actionable insights</strong>—not just understanding what
-    models do, but using that understanding to improve human knowledge, align AI systems, and enable human-AI
-    collaboration.
-  </p>
-
-  <p>
-    Your project contributes to this by characterizing how LLMs represent non-CS concepts—a crucial step toward AI
-    systems that can truly collaborate with domain experts across all fields.
-  </p>
+  <div class="info-box">
+    <ul>
+      <li>Always use multiple metrics (RSA, CKA, probing accuracy) and check for agreement</li>
+      <li>Report baselines (random layers, different tasks) to interpret magnitude</li>
+      <li>Test robustness across data distributions and hyperparameters</li>
+      <li>Don't confuse representational similarity with functional equivalence—validate behaviorally</li>
+      <li>Use cross-model consistency as evidence of generalization</li>
+    </ul>
+  </div>
 
   <h2>References & Resources</h2>
 
   <h3>Core Papers</h3>
   <ul>
-    <li><strong>Shin et al. (2023):</strong> "Superhuman Artificial Intelligence Can Improve Human Decision Making by
-      Increasing Novelty." <em>PNAS</em>, 120(12), e2214840120. <a
-        href="https://www.pnas.org/doi/full/10.1073/pnas.2214840120" target="_blank">Link</a></li>
-    <li><strong>Schut et al. (2023/2025):</strong> "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer
-      in AlphaZero." <em>PNAS</em>, 122, e2406675122. <a href="https://arxiv.org/abs/2310.16410"
-        target="_blank">arXiv:2310.16410</a></li>
+    <li><strong>Kriegeskorte et al. (2008):</strong> "Representational similarity analysis - connecting the branches of
+      systems neuroscience." <em>Frontiers in Systems Neuroscience</em>. <a
+        href="https://www.frontiersin.org/articles/10.3389/neuro.06.004.2008/full" target="_blank">Link</a></li>
+    <li><strong>Kornblith et al. (2019):</strong> "Similarity of Neural Network Representations Revisited." <em>ICML</em>.
+      <a href="https://arxiv.org/abs/1905.00414" target="_blank">arXiv:1905.00414</a>
+    </li>
+    <li><strong>Raghu et al. (2017):</strong> "SVCCA: Singular Vector Canonical Correlation Analysis for Deep Learning
+      Dynamics and Interpretability." <em>NeurIPS</em>. <a href="https://arxiv.org/abs/1706.05806"
+        target="_blank">arXiv:1706.05806</a></li>
   </ul>
 
   <h3>Related Work</h3>
   <ul>
-    <li><strong>AlphaGo:</strong> Silver et al. (2016). "Mastering the game of Go with deep neural networks and tree
-      search." <em>Nature</em>, 529, 484-489.</li>
-    <li><strong>AlphaZero:</strong> Silver et al. (2018). "A general reinforcement learning algorithm that masters
-      chess, shogi, and Go through self-play." <em>Science</em>, 362(6419), 1140-1144.</li>
-    <li><strong>TCAV:</strong> Kim et al. (2018). "Interpretability Beyond Feature Attribution: Quantitative Testing
-      with Concept Activation Vectors." <em>ICML</em>. (If moved from Week 6)</li>
-    <li><strong>Doshi-Velez & Kim (2017):</strong> "Towards A Rigorous Science of Interpretable Machine Learning." <a
-        href="https://arxiv.org/abs/1702.08608" target="_blank">arXiv:1702.08608</a></li>
+    <li><strong>Morcos et al. (2018):</strong> "Insights on representational similarity in neural networks with canonical
+      correlation." <em>NeurIPS</em>.</li>
+    <li><strong>Ding et al. (2021):</strong> "Grounding Representation Similarity with Statistical Testing." <em>NeurIPS</em>.</li>
+    <li><strong>Klabunde et al. (2023):</strong> "Similarity of Neural Networks with Gradients." <em>ICLR</em>.</li>
+    <li><strong>Gale et al. (2022):</strong> "Geometry of Polysemanticity." <em>arXiv</em>.</li>
   </ul>
 
-  <h3>Supplementary Reading</h3>
+  <h3>Tutorials and Code</h3>
   <ul>
-    <li>Atanasova et al. (2020). "A Diagnostic Study of Explainability Techniques for Text Classification."
-      <em>EMNLP</em>.</li>
-    <li>Bansal et al. (2021). "Does the Whole Exceed its Parts?" <em>CHI</em>. (From Week 10)</li>
-    <li>AlphaStar case study: DeepMind blog on discovering novel StarCraft strategies</li>
+    <li>Google Brain CKA implementation: <a href="https://github.com/google-research/google-research/tree/master/representation_similarity" target="_blank">GitHub</a></li>
+    <li>PyTorch CKA library: <code>pip install torch-cka</code></li>
+    <li>RSA Toolbox (MATLAB): <a href="https://github.com/rsagroup/rsatoolbox" target="_blank">GitHub</a></li>
   </ul>
 
 </body>

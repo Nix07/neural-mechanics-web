@@ -3,49 +3,42 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 10: Skepticism and Interpretability Illusions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 10: Model Editing</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body);"></script>
   <style>
     body {
-      font-family: Georgia, serif;
+      font-family: 'Georgia', serif;
+      line-height: 1.6;
       max-width: 900px;
       margin: 40px auto;
       padding: 0 20px;
-      line-height: 1.7;
-      background-color: #fafafa;
       color: #333;
     }
 
     h1 {
-      font-size: 2em;
-      margin-bottom: 10px;
-      color: #111;
-      border-bottom: 2px solid #444;
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
       padding-bottom: 10px;
     }
 
     h2 {
-      font-size: 1.5em;
-      margin-top: 40px;
-      margin-bottom: 15px;
-      color: #222;
-      border-bottom: 1px solid #999;
-      padding-bottom: 6px;
+      color: #34495e;
+      margin-top: 30px;
+      border-bottom: 2px solid #bdc3c7;
+      padding-bottom: 5px;
     }
 
     h3 {
-      font-size: 1.2em;
-      margin-top: 25px;
-      margin-bottom: 10px;
-      color: #333;
-    }
-
-    p {
-      margin-bottom: 12px;
-      text-align: justify;
+      color: #555;
+      margin-top: 20px;
     }
 
     a {
-      color: #0055a4;
+      color: #3498db;
       text-decoration: none;
     }
 
@@ -53,31 +46,70 @@
       text-decoration: underline;
     }
 
+    .info-box {
+      background-color: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .key-insight {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .example-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .comparison-box {
+      background-color: #f0f7ff;
+      border: 1px solid #3498db;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .paper-card {
+      background-color: #fff;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .paper-card h4 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .warning-box {
+      background-color: #ffe8e8;
+      border-left: 4px solid #d32f2f;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    ul,
+    ol {
+      margin: 10px 0;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
     code {
       background-color: #f4f4f4;
       padding: 2px 6px;
       border-radius: 3px;
       font-family: 'Courier New', monospace;
-      font-size: 0.9em;
-    }
-
-    pre {
-      background-color: #f4f4f4;
-      padding: 15px;
-      border-left: 4px solid #0055a4;
-      overflow-x: auto;
-      border-radius: 3px;
-      font-size: 0.9em;
-    }
-
-    ul,
-    ol {
-      margin: 15px 0;
-      padding-left: 30px;
-    }
-
-    li {
-      margin-bottom: 8px;
     }
 
     table {
@@ -88,902 +120,880 @@
 
     th,
     td {
-      border: 1px solid #ccc;
-      padding: 10px;
+      border: 1px solid #ddd;
+      padding: 12px;
       text-align: left;
     }
 
     th {
-      background-color: #f0f0f0;
+      background-color: #f2f2f2;
       font-weight: bold;
     }
 
-    .warning-box {
-      background-color: #fff3cd;
-      border-left: 4px solid #ffc107;
+    .objectives {
+      background-color: #f0f7ff;
       padding: 15px;
+      border-radius: 5px;
       margin: 20px 0;
     }
 
-    .tip-box {
-      background-color: #d1ecf1;
-      border-left: 4px solid #17a2b8;
-      padding: 15px;
-      margin: 20px 0;
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
     }
 
-    .example-box {
-      background-color: #f8f9fa;
-      border-left: 4px solid #6c757d;
+    pre {
+      background-color: #f5f5f5;
       padding: 15px;
-      margin: 20px 0;
-    }
-
-    footer {
-      margin-top: 60px;
-      padding-top: 20px;
-      border-top: 1px solid #ccc;
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
+      border-radius: 5px;
+      overflow-x: auto;
     }
   </style>
 </head>
 
 <body>
-  <h1>Week 10: Skepticism and Interpretability Illusions</h1>
+  <h1>Week 10: Model Editing</h1>
 
-  <p><strong>Learning Objectives:</strong></p>
-  <ul>
-    <li>Understand common failure modes and illusions in interpretability research</li>
-    <li>Apply sanity checks to validate interpretation methods</li>
-    <li>Recognize when attention weights and saliency maps are misleading</li>
-    <li>Evaluate the robustness of circuit analysis and feature discovery methods</li>
-    <li>Design experiments that avoid confirmation bias and manipulation</li>
-    <li>Critically assess whether explanations actually help humans</li>
-  </ul>
-
-  <h2>1. Introduction: The Need for Skepticism</h2>
-
-  <p>
-    Interpretability research promises to open the "black box" of neural networks and reveal what they're really doing
-    inside. But what if our interpretation methods are themselves misleading? What if they show us patterns that aren't
-    really there, or miss the patterns that matter?
-  </p>
-
-  <p>
-    This week takes a critical look at interpretability methods. We'll examine research showing that many popular
-    techniques don't actually work as advertised. The goal isn't to discourage interpretability research—it's to make
-    it more rigorous. By understanding what can go wrong, we can design better validation strategies and avoid fooling
-    ourselves.
-  </p>
-
-  <div class="warning-box">
-    <strong>Key Message:</strong> Interpretability methods can be convincing even when they're wrong. Visual
-    plausibility is not evidence of correctness. Always validate your interpretations with rigorous tests.
-  </div>
-
-  <h2>2. Sanity Checks for Saliency Maps (Adebayo et al., 2018)</h2>
-
-  <h3>The Problem</h3>
-
-  <p>
-    Saliency maps are one of the most popular interpretability techniques. They highlight which input features (e.g.,
-    pixels in an image, tokens in text) most influenced a model's prediction. The visualizations look compelling—they
-    often highlight seemingly meaningful regions. But do they actually reflect the model's reasoning?
-  </p>
-
-  <p>
-    <strong>Adebayo et al. (2018)</strong> proposed simple <em>sanity checks</em> to test whether saliency methods are
-    sensitive to the model and data they're supposed to explain:
-  </p>
-
-  <ol>
-    <li><strong>Model Parameter Randomization Test:</strong> Randomly re-initialize the model's weights. A good
-      explanation method should produce completely different explanations for a random model vs. a trained model.</li>
-    <li><strong>Data Randomization Test:</strong> Train the model on data with random labels. Explanations should look
-      different for a model that learned meaningful patterns vs. one that memorized noise.</li>
-  </ol>
-
-  <h3>Key Findings</h3>
-
-  <p>
-    Several popular saliency methods <strong>fail these sanity checks</strong>:
-  </p>
-
-  <ul>
-    <li><strong>Guided Backpropagation</strong> and <strong>Guided GradCAM</strong> produce similar-looking
-      visualizations for trained and random models</li>
-    <li>These methods appear to be mostly doing <em>edge detection</em>—highlighting image gradients regardless of what
-      the model learned</li>
-    <li>Only gradient-based methods (simple gradients, Integrated Gradients) consistently pass the sanity checks</li>
-  </ul>
-
-  <div class="example-box">
-    <strong>Analogy:</strong> Imagine you ask someone to explain their chess move, and they give a detailed explanation
-    that sounds plausible. But when you give the same person a random board position they've never seen, they give an
-    equally detailed explanation using the same reasoning patterns. This suggests their explanations aren't actually
-    based on understanding the position—they're just pattern-matching to what explanations should sound like.
-  </div>
-
-  <h3>Implications for LLM Interpretability</h3>
-
-  <p>
-    The same issues apply to text models:
-  </p>
-
-  <ul>
-    <li>Does your attribution method produce different results for a trained vs. random model?</li>
-    <li>If you fine-tune a model on random labels, do the explanations change appropriately?</li>
-    <li>Are you seeing meaningful linguistic patterns, or just highlighting frequent words?</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Adebayo, J., Gilmer, J., Muelly, M., Goodfellow, I., Hardt, M., & Kim, B. (2018).
-    <em>Sanity checks for saliency maps</em>. NeurIPS. <a
-      href="https://arxiv.org/abs/1810.03292">arxiv:1810.03292</a>
-  </p>
-
-  <h2>3. Attention Is Not Explanation (Jain & Wallace, 2019)</h2>
-
-  <h3>The Intuition (and the Problem)</h3>
-
-  <p>
-    Attention mechanisms are ubiquitous in modern NLP. The attention weights seem to show which input tokens the model
-    is "focusing on" when making a prediction. Many papers visualize attention weights and use them to explain model
-    behavior. But should we?
-  </p>
-
-  <p>
-    <strong>Jain & Wallace (2019)</strong> tested whether attention weights actually explain predictions:
-  </p>
-
-  <ol>
-    <li><strong>Correlation with Feature Importance:</strong> They compared attention weights with gradient-based
-      measures of feature importance. Result: <em>often uncorrelated</em>.</li>
-    <li><strong>Counterfactual Test:</strong> They manually constructed different attention distributions that yield
-      <em>identical predictions</em>. If multiple attention patterns produce the same output, which one is the "true"
-      explanation?
-    </li>
-    <li><strong>Adversarial Attention:</strong> They optimized attention weights to be maximally different while
-      keeping predictions unchanged.</li>
-  </ol>
-
-  <h3>Key Findings</h3>
-
-  <ul>
-    <li>Attention weights and gradient-based importance measures frequently disagree</li>
-    <li>You can often find multiple, contradictory attention distributions that produce the same output</li>
-    <li>High attention weight ≠ high importance for the prediction</li>
-  </ul>
-
-  <div class="warning-box">
-    <strong>Important Nuance:</strong> The paper title is provocative, but the claim is specific. Attention <em>can</em>
-    be useful for understanding information flow. It's just not a reliable measure of which inputs are important for
-    predictions. A follow-up paper (Wiegreffe & Pinter, 2019) titled "Attention is not not Explanation" argues that
-    attention can still provide valuable insights when interpreted carefully.
-  </div>
-
-  <h3>Implications for Your Project</h3>
-
-  <ul>
-    <li>Don't rely solely on attention visualizations to explain model behavior</li>
-    <li>If you use attention weights, validate with gradient-based or perturbation-based methods</li>
-    <li>Consider using attention flow or attention rollout (Week 9) which aggregate attention across layers</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Jain, S., & Wallace, B. C. (2019). <em>Attention is not Explanation</em>. NAACL. <a
-      href="https://arxiv.org/abs/1902.10186">arxiv:1902.10186</a></p>
-
-  <h2>4. Benchmarking Interpretability: The ROAR Test (Hooker et al., 2019)</h2>
-
-  <h3>The Challenge</h3>
-
-  <p>
-    We have many methods for computing feature importance: gradients, Integrated Gradients, LIME, SHAP, attention, etc.
-    But how do we know if they're actually identifying the important features? Visual inspection is subjective and prone
-    to confirmation bias.
-  </p>
-
-  <p>
-    <strong>Hooker et al. (2019)</strong> proposed <strong>ROAR (RemOve And Retrain)</strong>: a quantitative benchmark
-    for feature importance methods.
-  </p>
-
-  <h3>The ROAR Protocol</h3>
-
-  <ol>
-    <li>Train a model to convergence</li>
-    <li>Use an interpretability method to identify the most important input features</li>
-    <li><strong>Remove those features</strong> from the training data (e.g., set to zero or blur)</li>
-    <li><strong>Retrain</strong> the model from scratch without those features</li>
-    <li>Measure the drop in accuracy</li>
-  </ol>
-
-  <p>
-    <strong>Logic:</strong> If a method correctly identifies important features, removing them should hurt performance
-    more than removing random features or features identified by a worse method.
-  </p>
-
-  <h3>Shocking Results</h3>
-
-  <ul>
-    <li>Many popular interpretability methods perform <strong>no better than random</strong> feature selection</li>
-    <li>Even after removing 90% of ImageNet pixels (chosen by feature importance methods), models can still train to
-      ~64% accuracy</li>
-    <li>Only ensemble methods like <strong>VarGrad</strong> and <strong>SmoothGrad-Squared</strong> consistently
-      outperform random baselines</li>
-  </ul>
-
-  <div class="warning-box">
-    <strong>Implication:</strong> Just because a feature importance method produces a plausible-looking heatmap doesn't
-    mean it's identifying features that actually matter for the model's decision.
-  </div>
-
-  <h3>Adapting ROAR for LLMs</h3>
-
-  <p>
-    For text models, you can adapt ROAR:
-  </p>
-
-  <ul>
-    <li>Identify important tokens according to your attribution method</li>
-    <li>Remove or mask those tokens from training data</li>
-    <li>Retrain (or fine-tune) and measure performance degradation</li>
-    <li>Compare against random token removal</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Hooker, S., Erhan, D., Kindermans, P. J., & Kim, B. (2019). <em>A Benchmark for
-      Interpretability Methods in Deep Neural Networks</em>. NeurIPS. <a
-      href="https://arxiv.org/abs/1806.10758">arxiv:1806.10758</a></p>
-
-  <h2>5. Circuit Faithfulness Metrics Are Not Robust (Miller et al., 2024)</h2>
-
-  <h3>The Promise of Mechanistic Interpretability</h3>
-
-  <p>
-    Circuit analysis (Week 5) aims to identify minimal subgraphs of a model that implement specific computations. To
-    validate a circuit, researchers measure its <em>faithfulness</em>: how well does the circuit replicate the full
-    model's behavior?
-  </p>
-
-  <p>
-    Common faithfulness metrics:
-  </p>
-
-  <ul>
-    <li>Ablate all components <em>outside</em> the circuit → performance should drop</li>
-    <li>Ablate all components <em>inside</em> the circuit → performance should be preserved (compared to full model)
-    </li>
-  </ul>
-
-  <h3>The Problem</h3>
-
-  <p>
-    <strong>Miller, Chughtai, & Saunders (2024)</strong> showed that faithfulness scores are <strong>highly sensitive to
-      ablation methodology</strong>:
-  </p>
-
-  <ul>
-    <li>Zero ablation vs. mean ablation vs. resampling ablation give very different results</li>
-    <li>The choice of ablation method can flip conclusions about which circuits are faithful</li>
-    <li>Different ablation methods effectively test different hypotheses about what the circuit is doing</li>
-  </ul>
-
-  <h3>Key Insight</h3>
-
-  <p>
-    Faithfulness metrics measure <strong>both</strong>:
-  </p>
-
-  <ol>
-    <li>The actual computational role of circuit components</li>
-    <li>The experimenter's methodological choices</li>
-  </ol>
-
-  <p>
-    This means you can't simply report "our circuit achieves 85% faithfulness" without specifying the ablation method,
-    baseline, and many other details. Different choices may reveal genuinely different algorithms the model uses in
-    different contexts.
-  </p>
-
-  <div class="tip-box">
-    <strong>Best Practice:</strong> When validating circuits:
+  <div class="objectives">
+    <h3>Learning Objectives</h3>
     <ul>
-      <li>Test multiple ablation methods (zero, mean, resample from distribution)</li>
-      <li>Report how sensitive your conclusions are to these choices</li>
-      <li>Consider what hypothesis each ablation method is actually testing</li>
-      <li>Use causal scrubbing (Week 8) for more principled validation</li>
+      <li>Understand the spectrum from activation interventions to weight modifications</li>
+      <li>Learn surgical editing methods: ROME and MEMIT for factual updates</li>
+      <li>Master parameter-efficient fine-tuning with LoRA</li>
+      <li>Compare weight-space vs. activation-space interventions</li>
+      <li>Apply interpretability findings to modify model behavior through weights</li>
+      <li>Validate that your interpretability work is actionable and causal</li>
+      <li>Understand limitations and safety considerations for model editing</li>
     </ul>
   </div>
 
-  <h3>Implications</h3>
+  <h2>1. From Understanding to Control</h2>
 
-  <ul>
-    <li>Circuit analysis requires more methodological rigor than often practiced</li>
-    <li>Ablation choice is not a minor implementation detail—it's a core part of the scientific claim</li>
-    <li>Replication studies must exactly match ablation protocols to be valid comparisons</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Miller, J., Chughtai, B., & Saunders, W. (2024). <em>Transformer Circuit Faithfulness
-      Metrics are not Robust</em>. COLM. <a href="https://arxiv.org/abs/2407.08734">arxiv:2407.08734</a></p>
-
-  <h2>6. The BERT Interpretability Illusion (Bolukbasi et al., 2021)</h2>
-
-  <h3>The Intuition Behind Neuron Analysis</h3>
+  <h3>Why Model Editing?</h3>
 
   <p>
-    A common interpretability approach is to examine individual neurons (or linear combinations of neurons) and ask:
-    "What concept does this neuron encode?" Researchers probe neurons with many inputs, find the ones that activate
-    the neuron most strongly, and conclude the neuron represents some simple concept like "names" or "negation" or
-    "sports."
+    Weeks 1-9 taught you to <strong>analyze</strong> neural networks: find features, trace circuits, and discover concepts. But interpretability research should be <strong>actionable</strong>.
   </p>
 
-  <p>
-    This approach seems straightforward and has produced many published interpretations. But what if these seemingly
-    clean, simple interpretations are <em>illusory</em>?
-  </p>
-
-  <h3>The Experiment</h3>
-
-  <p>
-    <strong>Bolukbasi et al. (2021)</strong> systematically investigated whether individual neurons in BERT truly
-    encode simple, interpretable concepts. They tested neurons that appeared to encode specific semantic categories:
-  </p>
-
-  <ul>
-    <li>Does a neuron that activates on "sports" text actually represent the concept of sports?</li>
-    <li>Or is it encoding something far more complex that just happens to correlate with sports in typical text?</li>
-  </ul>
-
-  <p>
-    Their method:
-  </p>
-
-  <ol>
-    <li>Identify neurons that appear to encode specific concepts based on activation patterns</li>
-    <li>Test these neurons on <strong>counterfactual examples</strong>: minimally modified sentences that change the
-      concept while preserving linguistic structure</li>
-    <li>Test on <strong>multiple datasets</strong> beyond the training distribution</li>
-  </ol>
-
-  <h3>The Illusion Revealed</h3>
-
-  <p>
-    Key findings:
-  </p>
-
-  <ul>
-    <li>Neurons that appear to encode simple concepts on standard datasets <strong>fail to generalize</strong> to
-      counterfactual or out-of-distribution examples</li>
-    <li>The same neuron can appear to encode <em>different</em> concepts depending on which dataset you probe it with
-    </li>
-    <li>What looks like a "sports neuron" is actually encoding something far more complex—perhaps a mixture of
-      syntactic patterns, word frequency effects, and semantic relationships that <em>happen to correlate with
-        sports</em> in the training data</li>
-  </ul>
-
-  <div class="warning-box">
-    <strong>The Core Insight:</strong> The interpretability illusion arises because common text corpora represent only
-    <em>narrow slices</em> of possible English sentences. A neuron that activates on "typical sports text" doesn't
-    necessarily understand sports—it may be responding to confounded properties (word choice, sentence structure,
-    topic co-occurrence) that happen to appear together in real-world sports writing.
+  <div class="key-insight">
+    <p><strong>The Action Test:</strong></p>
+    <p>
+      If you truly understand how a model represents concept X:
+    </p>
+    <ul>
+      <li>You should be able to <strong>modify</strong> that representation</li>
+      <li>The modification should <strong>change behavior</strong> predictably</li>
+      <li>Side effects should be <strong>minimal and understandable</strong></li>
+    </ul>
+    <p>
+      Model editing turns interpretability insights into concrete interventions by <strong>changing model weights</strong>.
+    </p>
   </div>
 
-  <h3>Root Causes</h3>
+  <h3>The Intervention Spectrum</h3>
+
+  <table>
+    <tr>
+      <th>Method</th>
+      <th>What Changes</th>
+      <th>Persistence</th>
+      <th>Scope</th>
+      <th>Cost</th>
+    </tr>
+    <tr>
+      <td><strong>Prompting</strong></td>
+      <td>Input only</td>
+      <td>Single inference</td>
+      <td>Narrow (one generation)</td>
+      <td>Free</td>
+    </tr>
+    <tr>
+      <td><strong>Steering (Week 2)</strong></td>
+      <td>Activations</td>
+      <td>Per-inference</td>
+      <td>Moderate (affects reasoning)</td>
+      <td>Low (add vectors)</td>
+    </tr>
+    <tr>
+      <td><strong>Model Editing (ROME/MEMIT)</strong></td>
+      <td>Specific weights</td>
+      <td>Permanent</td>
+      <td>Narrow (targeted facts)</td>
+      <td>Medium (compute edit)</td>
+    </tr>
+    <tr>
+      <td><strong>Fine-tuning (LoRA)</strong></td>
+      <td>Many weights</td>
+      <td>Permanent</td>
+      <td>Broad (task/domain)</td>
+      <td>High (training)</td>
+    </tr>
+    <tr>
+      <td><strong>Full retraining</strong></td>
+      <td>All weights</td>
+      <td>Permanent</td>
+      <td>Complete</td>
+      <td>Very high</td>
+    </tr>
+  </table>
 
   <p>
-    Why does this illusion occur? Bolukbasi et al. identify two main factors:
+    This week focuses on the middle ground: <strong>surgical edits</strong> (ROME/MEMIT) and <strong>efficient fine-tuning</strong> (LoRA).
   </p>
 
-  <ol>
-    <li><strong>Geometric properties of embedding spaces:</strong> BERT's representation space has specific geometric
-      structure where certain directions spuriously appear to correspond to simple concepts</li>
-    <li><strong>Dataset bias:</strong> Training corpora don't uniformly sample the space of possible sentences.
-      Correlations in the data (e.g., "sports" co-occurring with certain syntactic structures) create apparent
-      monosemantic neurons that are actually polysemantic</li>
-  </ol>
+  <h2>2. Locating Knowledge in Weights</h2>
 
-  <h3>Implications for Interpretability Research</h3>
+  <h3>Where Are Facts Stored?</h3>
 
   <p>
-    This paper provides a <strong>taxonomy of concept directions</strong>:
+    Before editing, we need to know <strong>where</strong> to edit. Research shows factual knowledge in transformers is stored in <strong>MLP layers</strong>, particularly in middle-to-late layers.
   </p>
 
-  <ul>
-    <li><strong>Local concepts:</strong> Only meaningful in a small region of representation space</li>
-    <li><strong>Global concepts:</strong> Meaningful across the entire representation space</li>
-    <li><strong>Dataset-level concepts:</strong> Only meaningful within the distribution of the training/test data</li>
-  </ul>
-
-  <p>
-    Most neurons that appear to encode simple concepts are actually <strong>dataset-level</strong> or
-    <strong>local</strong>, not global. They work on typical examples but fail on edge cases, counterfactuals, or
-    out-of-distribution inputs.
-  </p>
-
-  <h3>Methodological Recommendations</h3>
-
-  <ul>
-    <li><strong>Test on multiple datasets:</strong> A concept interpretation that only holds on one dataset is
-      suspect</li>
-    <li><strong>Use counterfactual examples:</strong> Minimally edit inputs to isolate the concept you think the
-      neuron encodes</li>
-    <li><strong>Check for confounds:</strong> Could the neuron be responding to correlated properties (word frequency,
-      syntax, position) rather than the semantic concept?</li>
-    <li><strong>Be skeptical of monosemanticity claims:</strong> Just because you can label a neuron doesn't mean it
-      actually encodes that label as a pure concept</li>
-  </ul>
-
-  <h3>Connection to Other Work</h3>
-
-  <p>
-    The BERT illusion connects to several themes in Week 10:
-  </p>
-
-  <ul>
-    <li>Like Adebayo's sanity checks, it shows <strong>visual plausibility ≠ correctness</strong></li>
-    <li>Like the SAE illusions (Section 7), it demonstrates that <strong>apparent monosemanticity can be
-        fragile</strong></li>
-    <li>It reinforces the need for <strong>multi-dataset validation</strong> (echoing Atanasova's diagnostic
-      properties)</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Bolukbasi, T., Pearce, A., Yuan, A., Coenen, A., Reif, E., Viégas, F. B., &
-    Wattenberg, M. (2021). <em>An Interpretability Illusion for BERT</em>. arXiv. <a
-      href="https://arxiv.org/abs/2104.07143">arxiv:2104.07143</a></p>
-
-  <h2>7. Interpretability Illusions with Sparse Autoencoders (2025)</h2>
-
-  <h3>The SAE Promise</h3>
-
-  <p>
-    Sparse autoencoders (Week 7) decompose neural network activations into interpretable, monosemantic features. The
-    technique has produced impressive results: Anthropic found SAE features for specific concepts like "Golden Gate
-    Bridge" that activate consistently across contexts.
-  </p>
-
-  <p>
-    This seems like a breakthrough for interpretability—we can finally label what individual directions in activation
-    space represent!
-  </p>
-
-  <h3>The Illusion</h3>
-
-  <p>
-    A 2025 paper titled <strong>"Interpretability Illusions with Sparse Autoencoders"</strong> tested the
-    <em>robustness</em> of SAE-based concept representations:
-  </p>
-
-  <ul>
-    <li>Can adversarial perturbations to the input manipulate which SAE features activate?</li>
-    <li>Do these perturbations need to change the model's actual output behavior?</li>
-  </ul>
-
-  <h3>Key Findings</h3>
-
-  <ul>
-    <li><strong>Tiny adversarial perturbations</strong> can drastically change SAE feature activations</li>
-    <li>These perturbations often have <strong>negligible effect on model outputs</strong></li>
-    <li>This means you can "fool" the interpretation without changing what the model does</li>
-    <li>The concept labels we assign to SAE features may be more fragile than they appear</li>
-  </ul>
-
-  <div class="warning-box">
-    <strong>Critical Question:</strong> If an SAE feature for "Golden Gate Bridge" can be activated by inputs that have
-    nothing to do with the Golden Gate Bridge (via adversarial perturbation), what does that feature really represent?
+  <div class="paper-card">
+    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
+    <p><strong>Published:</strong> NeurIPS 2022</p>
+    <p><strong>Key contribution:</strong> Causal tracing reveals that facts are stored in mid-layer MLPs; introduces ROME for surgical editing</p>
   </div>
 
-  <h3>Proposed Solution</h3>
+  <h3>Causal Tracing for Knowledge Localization</h3>
 
-  <p>
-    The paper argues that <strong>robustness must be a fundamental criterion</strong> for evaluating concept
-    representations:
-  </p>
+  <div class="info-box">
+    <p><strong>Method:</strong> Corrupt activations at different layers, measure impact on factual recall</p>
 
-  <ul>
-    <li>Concept labels should be stable under small input perturbations</li>
-    <li>Adversarial robustness tests should be standard practice</li>
-    <li>Current SAE interpretations may need additional validation</li>
-  </ul>
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li><strong>Clean run:</strong> "The Eiffel Tower is located in" → "Paris" (baseline)</li>
+      <li><strong>Corrupted run:</strong> Add noise to subject token ("Eiffel Tower") embedding → fails to recall "Paris"</li>
+      <li><strong>Restoration test:</strong> Restore activations at layer L → if recall recovers, knowledge flows through layer L</li>
+      <li><strong>Sweep:</strong> Test all layers to find where restoration is most effective</li>
+    </ol>
 
-  <h3>Implications for Your Project</h3>
-
-  <ul>
-    <li>If you use SAEs, test robustness: do small input changes cause large shifts in feature activations?</li>
-    <li>Consider the difference between <em>activating on concept-related inputs</em> (weak criterion) and
-      <em>robustly representing a concept</em> (strong criterion)
-    </li>
-    <li>Complement SAE analysis with causal interventions (Week 2) to verify features play the role you think they do
-    </li>
-  </ul>
-
-  <p><strong>Reference:</strong> <em>Interpretability Illusions with Sparse Autoencoders: Evaluating Robustness of
-      Concept Representations</em>. (2025). <a href="https://arxiv.org/abs/2505.16004">arxiv:2505.16004</a></p>
-
-  <h2>8. Do Explanations Actually Help Humans? (Bansal et al., 2021)</h2>
-
-  <h3>The Assumed Goal</h3>
-
-  <p>
-    Much interpretability research implicitly assumes: <em>if we give humans explanations of AI decisions, human-AI
-      teams will make better decisions</em>. But is this true?
-  </p>
-
-  <p>
-    <strong>Bansal et al. (2021)</strong> conducted controlled human studies to test whether AI explanations lead to
-    <em>complementary team performance</em>—where the human-AI team outperforms either the human or AI alone.
-  </p>
-
-  <h3>Study Design</h3>
-
-  <ul>
-    <li>Tasks: Text classification, recidivism prediction, financial fraud detection</li>
-    <li>Conditions: AI recommendations <em>with</em> vs. <em>without</em> feature importance explanations</li>
-    <li>Participants made decisions with AI assistance</li>
-  </ul>
-
-  <h3>Surprising Results</h3>
-
-  <ul>
-    <li><strong>Explanations did not improve team performance</strong> over AI recommendations alone</li>
-    <li>Explanations <strong>increased human reliance on AI recommendations</strong>—but <em>indiscriminately</em></li>
-    <li>Humans were more likely to accept AI suggestions <strong>regardless of whether they were correct or
-        incorrect</strong></li>
-    <li>Explanations did not help humans identify when the AI was wrong</li>
-  </ul>
-
-  <div class="warning-box">
-    <strong>The Paradox:</strong> Explanations made humans <em>trust</em> the AI more, but didn't help them
-    <em>appropriately calibrate</em> that trust. This led to worse outcomes when the AI made mistakes.
+    <p><strong>Finding:</strong> Mid-layer MLPs (layers 8-20 in GPT-2-XL) are critical for factual recall.</p>
   </div>
 
-  <h3>Why This Happens</h3>
-
-  <p>
-    Possible mechanisms:
-  </p>
+  <h3>Key Insights from Localization</h3>
 
   <ul>
-    <li><strong>Cognitive offloading:</strong> Explanations provide social proof that the AI "has reasons," reducing
-      critical evaluation</li>
-    <li><strong>Confirmation bias:</strong> Explanations that match human intuitions are persuasive even when wrong
-    </li>
-    <li><strong>Complexity:</strong> Feature importance explanations may be too abstract to guide decision-making</li>
+    <li><strong>Early layers:</strong> Process syntax and surface form (not factual content)</li>
+    <li><strong>Mid layers:</strong> Store factual associations (subject → object mappings)</li>
+    <li><strong>Late layers:</strong> Refine predictions and adapt to context</li>
+    <li><strong>MLPs specifically:</strong> Attention retrieves context; MLPs store knowledge</li>
   </ul>
 
-  <h3>Implications</h3>
+  <h2>3. ROME: Rank-One Model Editing</h2>
 
-  <ul>
-    <li>Interpretability for human-AI collaboration is harder than interpretability for AI developers</li>
-    <li>We need to test whether explanations <em>actually help people make better decisions</em>, not just whether they
-      make intuitive sense</li>
-    <li>The bar for useful explanations is high: they need to help humans catch AI errors, not just rationalize AI
-      recommendations</li>
-  </ul>
-
-  <p><strong>Reference:</strong> Bansal, G., Wu, T., Zhou, J., Fok, R., Nushi, B., Kamar, E., Ribeiro, M. T., & Weld,
-    D. (2021). <em>Does the Whole Exceed its Parts? The Effect of AI Explanations on Complementary Team
-      Performance</em>. CHI. <a href="https://arxiv.org/abs/2006.14779">arxiv:2006.14779</a></p>
-
-  <h2>9. Adversarial Manipulation of Explanations</h2>
-
-  <h3>The Threat Model</h3>
-
-  <p>
-    What if someone deliberately designs a model to appear interpretable while hiding its true behavior? This isn't
-    paranoia—research has shown explanation methods can be <em>adversarially manipulated</em>.
-  </p>
-
-  <h3>Attack Examples</h3>
-
-  <ol>
-    <li><strong>Fooling Saliency Methods:</strong> Fine-tune a model with a regularization term that makes saliency
-      maps look innocuous, while preserving the model's (potentially biased) predictions.</li>
-    <li><strong>Manipulating LIME/SHAP:</strong> Exploit inadequate perturbation sampling to make explanations point to
-      irrelevant features.</li>
-    <li><strong>Deceptive Attention:</strong> Train attention weights to highlight "safe" tokens while the model
-      actually relies on other features.</li>
-  </ol>
-
-  <div class="warning-box">
-    <strong>Scenario:</strong> A company deploys a hiring model. Auditors check the model using LIME, which shows it
-    relies on job-relevant features. But the model was adversarially trained to fool LIME while actually discriminating
-    based on protected attributes encoded in subtle correlations.
+  <div class="paper-card">
+    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
+    <p><strong>Published:</strong> NeurIPS 2022</p>
+    <p><strong>Key contribution:</strong> Surgical fact editing via rank-one weight updates to MLP layers</p>
   </div>
 
-  <h3>Defense Strategies</h3>
-
-  <ul>
-    <li>Use <strong>multiple, diverse</strong> interpretability methods (harder to fool all simultaneously)</li>
-    <li>Apply <strong>sanity checks</strong> (Section 2) to detect manipulation</li>
-    <li>Validate explanations with <strong>causal interventions</strong> (Week 2, 4, 8)</li>
-    <li>Combine interpretability with <strong>behavioral testing</strong> (Week 1)</li>
-  </ul>
-
-  <h2>10. Diagnostic Properties for Explainability (Atanasova et al., 2020)</h2>
-
-  <h3>The Framework</h3>
+  <h3>The Editing Problem</h3>
 
   <p>
-    Given the many pitfalls, how should we evaluate interpretability methods? <strong>Atanasova et al. (2020)</strong>
-    proposed a comprehensive set of <em>diagnostic properties</em> that good explainability techniques should satisfy:
+    <strong>Goal:</strong> Change a specific fact without affecting other knowledge.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Example:</strong></p>
+    <ul>
+      <li><strong>Current fact:</strong> "The Space Needle is located in Seattle"</li>
+      <li><strong>Desired update:</strong> "The Space Needle is located in Paris"</li>
+      <li><strong>Constraint:</strong> Don't break other facts ("Eiffel Tower is in Paris", "Seattle is in Washington")</li>
+    </ul>
+  </div>
+
+  <h3>How ROME Works</h3>
+
+  <div class="info-box">
+    <p><strong>Core idea:</strong> Modify MLP weights to map subject representation → new object</p>
+
+    <p><strong>Mathematical formulation:</strong></p>
+    <ol>
+      <li><strong>Identify critical layer:</strong> Use causal tracing to find layer \(L\) where fact is stored</li>
+      <li><strong>Extract subject representation:</strong> \(h = \text{MLP}_L(\text{subject\_activation})\)</li>
+      <li><strong>Define target:</strong> \(h^* = \) representation that predicts new object</li>
+      <li><strong>Compute rank-one update:</strong>
+        <p style="text-align: center;">
+          \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T k}\)
+        </p>
+        where \(k\) is the input to the MLP (subject activation).
+      </li>
+      <li><strong>Update weights:</strong> \(W_{\text{new}} = W_{\text{old}} + \Delta W\)</li>
+    </ol>
+
+    <p><strong>Why rank-one?</strong> Minimal change to weights → minimal side effects</p>
+  </div>
+
+  <h3>ROME Algorithm Step-by-Step</h3>
+
+  <div class="example-box">
+    <p><strong>Example: Editing "The Space Needle is in Seattle" → "The Space Needle is in Paris"</strong></p>
+
+    <p><strong>Step 1: Locate the fact</strong></p>
+    <ul>
+      <li>Run causal tracing on "The Space Needle is in [MASK]"</li>
+      <li>Find critical layer (e.g., layer 17 MLP)</li>
+    </ul>
+
+    <p><strong>Step 2: Gather statistics</strong></p>
+    <ul>
+      <li>Pass 1000 examples through the model</li>
+      <li>Collect covariance matrix \(C\) of MLP inputs at layer 17</li>
+      <li>This captures "typical" activation patterns</li>
+    </ul>
+
+    <p><strong>Step 3: Compute edit direction</strong></p>
+    <ul>
+      <li>Get current output: \(h = \text{MLP}_{17}(\text{subject})\) → predicts "Seattle"</li>
+      <li>Get target output: \(h^*\) = representation that predicts "Paris"</li>
+      <li>Compute: \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T C^{-1} k}\)</li>
+    </ul>
+
+    <p><strong>Step 4: Apply edit</strong></p>
+    <ul>
+      <li>Update layer 17 MLP weights: \(W_{17} \leftarrow W_{17} + \Delta W\)</li>
+      <li>No other layers changed</li>
+    </ul>
+
+    <p><strong>Step 5: Validate</strong></p>
+    <ul>
+      <li><strong>Efficacy:</strong> "The Space Needle is in" → "Paris" ✓</li>
+      <li><strong>Paraphrase:</strong> "Where is the Space Needle?" → "Paris" ✓</li>
+      <li><strong>Specificity:</strong> "The Eiffel Tower is in" → "Paris" (unchanged) ✓</li>
+    </ul>
+  </div>
+
+  <h3>ROME Evaluation Metrics</h3>
+
+  <table>
+    <tr>
+      <th>Metric</th>
+      <th>What It Measures</th>
+      <th>Ideal Value</th>
+    </tr>
+    <tr>
+      <td><strong>Efficacy Score (ES)</strong></td>
+      <td>Does the model now produce the new fact?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Paraphrase Score (PS)</strong></td>
+      <td>Does it generalize to reworded prompts?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Specificity Score (SS)</strong></td>
+      <td>Are unrelated facts unchanged?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Fluency Score</strong></td>
+      <td>Are generated texts still coherent?</td>
+      <td>No degradation</td>
+    </tr>
+  </table>
+
+  <h3>Limitations of ROME</h3>
+
+  <div class="warning-box">
+    <p><strong>Challenges:</strong></p>
+    <ul>
+      <li><strong>Single-edit only:</strong> ROME is designed for one fact at a time</li>
+      <li><strong>Fact dependencies:</strong> Changing "Seattle's location" may require updating "Washington's cities"</li>
+      <li><strong>Reasoning brittleness:</strong> May succeed on direct recall but fail on multi-hop reasoning</li>
+      <li><strong>Layer selection:</strong> Choosing wrong layer leads to poor generalization</li>
+    </ul>
+  </div>
+
+  <h2>4. MEMIT: Mass Editing Memory in a Transformer</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "Mass-Editing Memory in a Transformer"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, Arnab Sen Sharma, Alex Andonian, Yonatan Belinkov, David Bau</p>
+    <p><strong>Published:</strong> ICLR 2023</p>
+    <p><strong>Key contribution:</strong> Scale ROME to thousands of simultaneous edits without catastrophic interference</p>
+  </div>
+
+  <h3>The Scaling Problem</h3>
+
+  <p>
+    ROME works for single facts, but what if you need to update <strong>thousands</strong>?
+  </p>
+
+  <ul>
+    <li>Sequential ROME edits interfere with each other</li>
+    <li>Later edits can overwrite earlier ones</li>
+    <li>Cumulative rank-one updates degrade model performance</li>
+  </ul>
+
+  <p>
+    <strong>MEMIT solves this</strong> by computing a joint edit that updates many facts simultaneously.
+  </p>
+
+  <h3>How MEMIT Works</h3>
+
+  <div class="info-box">
+    <p><strong>Key insight:</strong> Instead of \(n\) sequential rank-one edits, compute one rank-\(n\) edit.</p>
+
+    <p><strong>Mathematical formulation:</strong></p>
+    <ol>
+      <li><strong>Collect all edits:</strong> \(\{(k_1, v_1^*), (k_2, v_2^*), \ldots, (k_n, v_n^*)\}\)
+        <ul>
+          <li>\(k_i\) = input activation for fact \(i\)</li>
+          <li>\(v_i^*\) = target output for fact \(i\)</li>
+        </ul>
+      </li>
+      <li><strong>Batch update:</strong>
+        <p style="text-align: center;">
+          \(\Delta W = (V^* - V) K^T (K K^T)^{-1}\)
+        </p>
+        where \(K = [k_1, k_2, \ldots, k_n]\) and \(V^* = [v_1^*, v_2^*, \ldots, v_n^*]\)
+      </li>
+      <li><strong>Apply across layers:</strong> MEMIT edits <em>multiple</em> MLP layers (e.g., layers 5, 8, 11) for robustness</li>
+    </ol>
+
+    <p><strong>Advantage:</strong> Edits don't interfere—each fact gets its own "slot" in the update matrix.</p>
+  </div>
+
+  <h3>MEMIT vs ROME</h3>
+
+  <table>
+    <tr>
+      <th>Aspect</th>
+      <th>ROME</th>
+      <th>MEMIT</th>
+    </tr>
+    <tr>
+      <td><strong>Scale</strong></td>
+      <td>Single edit</td>
+      <td>Thousands of edits</td>
+    </tr>
+    <tr>
+      <td><strong>Rank</strong></td>
+      <td>Rank-1 update</td>
+      <td>Rank-\(n\) update</td>
+    </tr>
+    <tr>
+      <td><strong>Layers edited</strong></td>
+      <td>Single layer</td>
+      <td>Multiple layers</td>
+    </tr>
+    <tr>
+      <td><strong>Edit time</strong></td>
+      <td>~1 second</td>
+      <td>~10 seconds (for 10k facts)</td>
+    </tr>
+    <tr>
+      <td><strong>Generalization</strong></td>
+      <td>Good for paraphrases</td>
+      <td>Better for reasoning (multi-layer)</td>
+    </tr>
+    <tr>
+      <td><strong>When to use</strong></td>
+      <td>Quick single-fact correction</td>
+      <td>Large-scale knowledge updates</td>
+    </tr>
+  </table>
+
+  <h3>Example: Updating Historical Facts</h3>
+
+  <div class="example-box">
+    <p><strong>Scenario:</strong> A textbook from 2020 needs 500 fact updates for 2025 edition.</p>
+
+    <p><strong>Facts to update:</strong></p>
+    <ul>
+      <li>"The president of the USA is Donald Trump" → "Joe Biden"</li>
+      <li>"The capital of Kazakhstan is Astana" → "Nur-Sultan"</li>
+      <li>"The tallest building is Burj Khalifa" → "Jeddah Tower"</li>
+      <li>... (497 more)</li>
+    </ul>
+
+    <p><strong>MEMIT process:</strong></p>
+    <ol>
+      <li>Collect all 500 (subject, new_object) pairs</li>
+      <li>Run causal tracing to identify target layers (e.g., layers 8, 12, 16)</li>
+      <li>Compute joint update matrix for all facts</li>
+      <li>Apply to all three layers</li>
+      <li>Validate: 95% efficacy, 88% paraphrase, 97% specificity</li>
+    </ol>
+
+    <p><strong>Result:</strong> Model now answers with updated facts while preserving other knowledge.</p>
+  </div>
+
+  <h2>5. Parameter-Efficient Fine-Tuning: LoRA</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "LoRA: Low-Rank Adaptation of Large Language Models"</h4>
+    <p><strong>Authors:</strong> Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen</p>
+    <p><strong>Published:</strong> ICLR 2022</p>
+    <p><strong>Key contribution:</strong> Fine-tune large models by adding trainable low-rank matrices, freezing original weights</p>
+  </div>
+
+  <h3>The Fine-Tuning Problem</h3>
+
+  <p>
+    Traditional fine-tuning updates <strong>all weights</strong>, which is:
+  </p>
+  <ul>
+    <li><strong>Expensive:</strong> Requires storing full model gradients</li>
+    <li><strong>Storage-heavy:</strong> Each fine-tuned version = full model copy</li>
+    <li><strong>Risky:</strong> Can catastrophically forget pre-training knowledge</li>
+  </ul>
+
+  <p>
+    <strong>LoRA</strong> makes fine-tuning efficient by only updating a small set of parameters.
+  </p>
+
+  <h3>How LoRA Works</h3>
+
+  <div class="info-box">
+    <p><strong>Core idea:</strong> Represent weight updates as low-rank decomposition</p>
+
+    <p><strong>For a weight matrix \(W \in \mathbb{R}^{d \times k}\):</strong></p>
+    <ol>
+      <li><strong>Freeze original:</strong> \(W\) remains unchanged during training</li>
+      <li><strong>Add low-rank update:</strong> \(W' = W + BA\)
+        <ul>
+          <li>\(B \in \mathbb{R}^{d \times r}\), \(A \in \mathbb{R}^{r \times k}\)</li>
+          <li>\(r \ll \min(d, k)\) (e.g., \(r = 8\) for \(d = 4096\))</li>
+        </ul>
+      </li>
+      <li><strong>Train only \(A\) and \(B\):</strong> Original weights \(W\) are frozen</li>
+      <li><strong>Merge at inference:</strong> \(y = (W + BA)x\)</li>
+    </ol>
+
+    <p><strong>Parameter reduction:</strong> Instead of \(d \times k\), train only \(r(d + k)\)</p>
+    <p>
+      For \(d = k = 4096\) and \(r = 8\): \(4096 \times 4096 = 16M\) parameters → \(8(4096 + 4096) = 65K\) parameters (250× reduction!)
+    </p>
+  </div>
+
+  <h3>LoRA Architecture</h3>
+
+  <div class="example-box">
+    <p><strong>Applied to transformer attention:</strong></p>
+
+    <p><strong>Original:</strong></p>
+    <p style="text-align: center;">
+      \(Q = W_Q x, \quad K = W_K x, \quad V = W_V x\)
+    </p>
+
+    <p><strong>With LoRA:</strong></p>
+    <p style="text-align: center;">
+      \(Q = (W_Q + B_Q A_Q) x\)
+    </p>
+    <p style="text-align: center;">
+      \(K = (W_K + B_K A_K) x\)
+    </p>
+    <p style="text-align: center;">
+      \(V = (W_V + B_V A_V) x\)
+    </p>
+
+    <p><strong>Training:</strong> Only \(\{B_Q, A_Q, B_K, A_K, B_V, A_V\}\) are updated (< 1% of total parameters)</p>
+  </div>
+
+  <h3>Why Low-Rank Works</h3>
+
+  <div class="key-insight">
+    <p><strong>Intrinsic dimensionality hypothesis:</strong></p>
+    <p>
+      Fine-tuning for a specific task doesn't require changing the model's full representational capacity. The "adaptation" lives in a low-dimensional subspace.
+    </p>
+
+    <p><strong>Evidence:</strong></p>
+    <ul>
+      <li>Empirically, \(r = 4\) to \(r = 16\) matches full fine-tuning performance</li>
+      <li>Higher \(r\) doesn't always improve results (suggests true intrinsic dimension is low)</li>
+      <li>LoRA updates capture task-specific changes, leaving general knowledge intact</li>
+    </ul>
+  </div>
+
+  <h3>LoRA Hyperparameters</h3>
+
+  <table>
+    <tr>
+      <th>Parameter</th>
+      <th>Typical Values</th>
+      <th>Effect</th>
+    </tr>
+    <tr>
+      <td><strong>Rank \(r\)</strong></td>
+      <td>4, 8, 16, 32</td>
+      <td>Higher = more capacity, but diminishing returns after 16</td>
+    </tr>
+    <tr>
+      <td><strong>α (scaling)</strong></td>
+      <td>16, 32</td>
+      <td>LoRA update scaled by \(\alpha / r\); controls learning rate</td>
+    </tr>
+    <tr>
+      <td><strong>Target modules</strong></td>
+      <td>\(W_Q, W_V\) or all attention</td>
+      <td>Which weight matrices get LoRA adapters</td>
+    </tr>
+    <tr>
+      <td><strong>Dropout</strong></td>
+      <td>0.05, 0.1</td>
+      <td>Regularization for LoRA layers</td>
+    </tr>
+  </table>
+
+  <h2>6. Comparing Weight-Space vs Activation-Space Interventions</h2>
+
+  <h3>The Complementary Roles</h3>
+
+  <table>
+    <tr>
+      <th>Aspect</th>
+      <th>Activation Interventions (Week 2)</th>
+      <th>Weight Edits (ROME/MEMIT)</th>
+      <th>Fine-Tuning (LoRA)</th>
+    </tr>
+    <tr>
+      <td><strong>What changes</strong></td>
+      <td>Per-inference activations</td>
+      <td>Specific weight entries</td>
+      <td>Weight subspace</td>
+    </tr>
+    <tr>
+      <td><strong>Persistence</strong></td>
+      <td>Temporary</td>
+      <td>Permanent</td>
+      <td>Permanent</td>
+    </tr>
+    <tr>
+      <td><strong>Scope</strong></td>
+      <td>Affects all downstream layers</td>
+      <td>Narrow (specific facts)</td>
+      <td>Broad (task/domain)</td>
+    </tr>
+    <tr>
+      <td><strong>Reversibility</strong></td>
+      <td>Fully reversible</td>
+      <td>Irreversible (unless backed up)</td>
+      <td>Reversible (swap LoRA weights)</td>
+    </tr>
+    <tr>
+      <td><strong>Use case</strong></td>
+      <td>Explore effects, steering behavior</td>
+      <td>Fact corrections, updates</td>
+      <td>Domain adaptation, task learning</td>
+    </tr>
+    <tr>
+      <td><strong>Cost</strong></td>
+      <td>Low (vector addition)</td>
+      <td>Medium (matrix inversion)</td>
+      <td>High (training loop)</td>
+    </tr>
+  </table>
+
+  <h3>When to Use Which?</h3>
+
+  <div class="comparison-box">
+    <p><strong>Use activation steering when:</strong></p>
+    <ul>
+      <li>You want temporary, reversible changes</li>
+      <li>You're exploring "what if" scenarios</li>
+      <li>You need dynamic control (different steering per input)</li>
+    </ul>
+
+    <p><strong>Use ROME/MEMIT when:</strong></p>
+    <ul>
+      <li>You have specific factual errors to fix</li>
+      <li>You need permanent updates without retraining</li>
+      <li>You want surgical precision (don't affect other knowledge)</li>
+    </ul>
+
+    <p><strong>Use LoRA when:</strong></p>
+    <ul>
+      <li>You're adapting to a new domain or task</li>
+      <li>You have training data and supervision</li>
+      <li>You want broad behavioral changes (not just facts)</li>
+      <li>You need multiple task-specific versions (LoRA adapters are modular)</li>
+    </ul>
+  </div>
+
+  <h2>7. Validating Interpretability with Edits</h2>
+
+  <h3>The Actionability Test</h3>
+
+  <p>
+    You've discovered a concept using probes, SAEs, or circuits (Weeks 5-8). How do you know it's real?
+  </p>
+
+  <div class="key-insight">
+    <p><strong>Validation strategy: Edit the concept and measure behavioral change.</strong></p>
+
+    <p><strong>Strong evidence:</strong></p>
+    <ul>
+      <li>Editing the identified components changes behavior</li>
+      <li>Changes are specific to the concept (not general degradation)</li>
+      <li>Magnitude of behavior change correlates with edit magnitude</li>
+    </ul>
+
+    <p>
+      If your interpretability finding is correct, <strong>modifying it should predictably alter the model</strong>.
+    </p>
+  </div>
+
+  <h3>Example Workflow: Validating a Politeness Concept</h3>
+
+  <div class="example-box">
+    <p><strong>Research claim:</strong> "GPT-4 encodes politeness in layer 18, MLP neurons 234-267"</p>
+
+    <p><strong>Validation via editing:</strong></p>
+    <ol>
+      <li><strong>Extract concept vector:</strong> Use steering or probes (Weeks 2, 5) to find politeness direction \(v_{\text{polite}}\)</li>
+      <li><strong>Edit weights:</strong> Use ROME to modify layer 18 MLP to amplify \(v_{\text{polite}}\)</li>
+      <li><strong>Test specificity:</strong>
+        <ul>
+          <li><strong>Politeness test:</strong> "Please pass the salt" → "Would you be so kind as to pass the salt?" (more polite) ✓</li>
+          <li><strong>Factual test:</strong> "The capital of France is" → "Paris" (unchanged) ✓</li>
+          <li><strong>Sentiment test:</strong> "I love this product" → still positive (not corrupted) ✓</li>
+        </ul>
+      </li>
+      <li><strong>Dose-response:</strong> Vary edit magnitude, measure politeness increase</li>
+    </ol>
+
+    <p><strong>Strong evidence:</strong> Editing neurons 234-267 changes politeness specifically, not other attributes.</p>
+  </div>
+
+  <h2>8. Applying Edits to Your Research Project</h2>
+
+  <h3>Integration with Weeks 1-9</h3>
+
+  <p>
+    Model editing closes the loop on interpretability research:
   </p>
 
   <table>
     <tr>
-      <th>Property</th>
-      <th>Description</th>
+      <th>Week</th>
+      <th>Discovery Method</th>
+      <th>Editing Application</th>
     </tr>
     <tr>
-      <td><strong>Faithfulness</strong></td>
-      <td>Explanations accurately reflect the model's actual decision process</td>
+      <td><strong>Week 4</strong></td>
+      <td>Causal tracing</td>
+      <td>Use traced layers as ROME/MEMIT targets</td>
     </tr>
     <tr>
-      <td><strong>Sensitivity</strong></td>
-      <td>Explanations change when the model's decision changes</td>
+      <td><strong>Week 5</strong></td>
+      <td>Probes</td>
+      <td>Modify probe-identified subspace via LoRA</td>
     </tr>
     <tr>
-      <td><strong>Coherence</strong></td>
-      <td>Explanations are consistent across similar inputs</td>
+      <td><strong>Week 7</strong></td>
+      <td>SAE features</td>
+      <td>Ablate or amplify specific features, measure behavior</td>
     </tr>
     <tr>
-      <td><strong>Completeness</strong></td>
-      <td>All important features are highlighted</td>
+      <td><strong>Week 8</strong></td>
+      <td>Circuits</td>
+      <td>Edit circuit components, validate causal role</td>
     </tr>
     <tr>
-      <td><strong>Compactness</strong></td>
-      <td>Explanations are concise (few features highlighted)</td>
-    </tr>
-    <tr>
-      <td><strong>Contrastiveness</strong></td>
-      <td>Explanations show why this prediction rather than alternatives</td>
+      <td><strong>Week 9</strong></td>
+      <td>RSA comparison</td>
+      <td>Fine-tune with LoRA, check if concept structure persists (CKA)</td>
     </tr>
   </table>
 
-  <h3>Key Findings from Systematic Evaluation</h3>
+  <h3>Project Workflow: From Discovery to Validation</h3>
 
-  <p>
-    The authors tested gradient-based, attention-based, and erasure-based methods across multiple NLP tasks:
-  </p>
+  <div class="info-box">
+    <p><strong>Step 1: Discover concept (Weeks 5-8)</strong></p>
+    <ul>
+      <li>Use probes, SAEs, or circuits to identify where/how concept X is encoded</li>
+    </ul>
 
-  <ul>
-    <li><strong>Gradient-based methods</strong> (especially Integrated Gradients) perform best overall</li>
-    <li><strong>Attention-based methods</strong> score poorly on faithfulness and sensitivity</li>
-    <li><strong>Erasure methods</strong> (like LIME) are computationally expensive and sometimes unstable</li>
-    <li>No single method excels on all properties—there are trade-offs</li>
-  </ul>
+    <p><strong>Step 2: Locate precisely (Week 4, 9)</strong></p>
+    <ul>
+      <li>Causal tracing: Which layers are critical?</li>
+      <li>CKA: Which layer most aligns with concept?</li>
+    </ul>
 
-  <h3>Using the Framework</h3>
+    <p><strong>Step 3: Design intervention (Week 10)</strong></p>
+    <ul>
+      <li>Surgical edit (ROME): If concept is factual</li>
+      <li>LoRA fine-tuning: If concept is behavioral/distributional</li>
+    </ul>
 
-  <p>
-    For your project:
-  </p>
+    <p><strong>Step 4: Validate (Week 10)</strong></p>
+    <ul>
+      <li><strong>Efficacy:</strong> Does edit change target behavior?</li>
+      <li><strong>Specificity:</strong> Are other behaviors unchanged?</li>
+      <li><strong>Dose-response:</strong> Does larger edit → larger effect?</li>
+    </ul>
 
-  <ol>
-    <li>Choose 2-3 diagnostic properties most relevant to your research question</li>
-    <li>Design quantitative tests for those properties</li>
-    <li>Report results for your interpretation method</li>
-    <li>Acknowledge limitations and trade-offs</li>
-  </ol>
-
-  <p><strong>Reference:</strong> Atanasova, P., Simonsen, J. G., Lioma, C., & Augenstein, I. (2020). <em>A Diagnostic
-      Study of Explainability Techniques for Text Classification</em>. EMNLP. <a
-      href="https://arxiv.org/abs/2009.13295">arxiv:2009.13295</a></p>
-
-  <h2>11. Best Practices for Skeptical Interpretability Research</h2>
-
-  <h3>Validation Checklist</h3>
-
-  <p>
-    Before trusting an interpretation:
-  </p>
-
-  <ol>
-    <li><strong>Sanity Checks (Adebayo):</strong>
-      <ul>
-        <li>Does the interpretation change for a random model?</li>
-        <li>Does it change for random labels?</li>
-      </ul>
-    </li>
-    <li><strong>Method Diversity:</strong>
-      <ul>
-        <li>Do multiple independent methods agree?</li>
-        <li>If not, why do they disagree?</li>
-      </ul>
-    </li>
-    <li><strong>Causal Validation:</strong>
-      <ul>
-        <li>Does intervening on interpreted features change outputs as predicted?</li>
-        <li>Can you use the interpretation to steer the model?</li>
-      </ul>
-    </li>
-    <li><strong>Robustness Tests:</strong>
-      <ul>
-        <li>Are interpretations stable under small input perturbations?</li>
-        <li>Do they hold across different prompts/contexts?</li>
-      </ul>
-    </li>
-    <li><strong>Quantitative Benchmarks:</strong>
-      <ul>
-        <li>ROAR test: does removing "important" features hurt performance?</li>
-        <li>Compare against random and theoretical baselines</li>
-      </ul>
-    </li>
-  </ol>
-
-  <h3>Reporting Standards</h3>
-
-  <p>
-    When publishing interpretability research:
-  </p>
-
-  <ul>
-    <li><strong>Ablation details:</strong> Specify exactly how you ablate (zero, mean, resample, which distribution)
-    </li>
-    <li><strong>Baseline comparisons:</strong> Show results vs. random and simpler methods</li>
-    <li><strong>Negative results:</strong> Report when interpretations fail or are ambiguous</li>
-    <li><strong>Methodological sensitivity:</strong> Test how conclusions change with different hyperparameters</li>
-    <li><strong>Limitations section:</strong> Explicitly discuss what your method cannot tell you</li>
-  </ul>
-
-  <h3>Cognitive Biases to Watch For</h3>
-
-  <table>
-    <tr>
-      <th>Bias</th>
-      <th>Description</th>
-      <th>Mitigation</th>
-    </tr>
-    <tr>
-      <td><strong>Confirmation Bias</strong></td>
-      <td>Interpreting ambiguous results as supporting your hypothesis</td>
-      <td>Pre-register predictions; test falsifiable hypotheses</td>
-    </tr>
-    <tr>
-      <td><strong>Apophenia</strong></td>
-      <td>Seeing meaningful patterns in random noise</td>
-      <td>Compare against random baselines; use statistical tests</td>
-    </tr>
-    <tr>
-      <td><strong>Hindsight Bias</strong></td>
-      <td>Explanations seem obvious in retrospect</td>
-      <td>Make predictions before looking at model internals</td>
-    </tr>
-    <tr>
-      <td><strong>Availability Heuristic</strong></td>
-      <td>Focusing on salient/memorable examples</td>
-      <td>Systematic sampling; quantitative aggregation</td>
-    </tr>
-  </table>
-
-  <h2>12. Integration with Your Research Project</h2>
-
-  <h3>Applying Skepticism to Your Concept</h3>
-
-  <p>
-    Use this week's lessons to strengthen your project:
-  </p>
-
-  <ol>
-    <li><strong>Sanity Check Your Method:</strong>
-      <ul>
-        <li>If using saliency/attribution (Week 9): test on random model</li>
-        <li>If using probes (Week 6): test on random labels</li>
-        <li>If using SAEs (Week 7): test adversarial robustness</li>
-        <li>If using circuits (Week 5): test multiple ablation methods</li>
-      </ul>
-    </li>
-    <li><strong>Method Triangulation:</strong>
-      <ul>
-        <li>Validate concept with 3+ independent techniques</li>
-        <li>Steering (Week 2), probing (Week 6), causal tracing (Week 4), attribution (Week 9)</li>
-        <li>Report where methods agree and disagree</li>
-      </ul>
-    </li>
-    <li><strong>Quantitative Benchmarks:</strong>
-      <ul>
-        <li>Behavioral tests (Week 1): does intervening on concept change behavior as predicted?</li>
-        <li>ROAR-style tests: does ablating "concept neurons" hurt relevant tasks more than irrelevant ones?</li>
-      </ul>
-    </li>
-    <li><strong>Human Validation:</strong>
-      <ul>
-        <li>Can you teach the concept to humans? (Week 11)</li>
-        <li>Do domain experts agree with your interpretation?</li>
-        <li>Design discriminative tests, not just confirmatory examples</li>
-      </ul>
-    </li>
-  </ol>
-
-  <h3>Red Team Your Own Work</h3>
-
-  <p>
-    Before submitting your paper:
-  </p>
-
-  <ul>
-    <li><strong>Devil's Advocate:</strong> Write down the strongest argument against your interpretation. Can you
-      refute it with evidence?</li>
-    <li><strong>Alternative Explanations:</strong> List other phenomena that could produce the same observations. Can
-      you rule them out?</li>
-    <li><strong>Failure Modes:</strong> Find examples where your method gives weird/wrong results. Characterize when it
-      fails.</li>
-    <li><strong>Simplest Explanation:</strong> Could a simpler mechanism (e.g., word frequency, recency bias) explain
-      your results?</li>
-  </ul>
-
-  <h2>13. Summary and Key Takeaways</h2>
-
-  <h3>The Illusions</h3>
-
-  <ol>
-    <li><strong>Saliency illusions:</strong> Convincing visualizations that don't reflect model reasoning (Adebayo)
-    </li>
-    <li><strong>Attention illusions:</strong> Attention weights that look meaningful but aren't (Jain & Wallace)</li>
-    <li><strong>Importance illusions:</strong> Feature rankings no better than random (Hooker)</li>
-    <li><strong>Circuit illusions:</strong> Faithfulness scores that reflect methodology more than mechanisms (Miller)
-    </li>
-    <li><strong>Neuron illusions:</strong> Individual neurons that appear monosemantic but only on narrow data distributions (Bolukbasi)</li>
-    <li><strong>Concept illusions:</strong> SAE features that are adversarially fragile (2025)</li>
-    <li><strong>Utility illusions:</strong> Explanations that increase trust without improving decisions (Bansal)</li>
-  </ol>
-
-  <h3>The Antidotes</h3>
-
-  <ul>
-    <li><strong>Sanity checks:</strong> Test on random models and random data</li>
-    <li><strong>Causal validation:</strong> Intervene and measure effects</li>
-    <li><strong>Method diversity:</strong> Require agreement from independent techniques</li>
-    <li><strong>Quantitative benchmarks:</strong> Compare against random baselines</li>
-    <li><strong>Adversarial testing:</strong> Try to break your interpretations</li>
-    <li><strong>Human studies:</strong> Test whether interpretations actually help</li>
-  </ul>
-
-  <h3>The Mindset</h3>
-
-  <p>
-    Skepticism isn't cynicism. The goal is <em>better interpretability research</em>, not no interpretability research.
-    By understanding failure modes and applying rigorous validation, we can build interpretability methods that are
-    actually trustworthy.
-  </p>
-
-  <div class="tip-box">
-    <strong>Remember:</strong> Every interpretability claim is a scientific hypothesis that needs evidence. Visual
-    plausibility is not evidence. Intuitive appeal is not evidence. Only rigorous, quantitative validation—especially
-    validation that could have <em>falsified</em> your hypothesis—counts as evidence.
+    <p><strong>Step 5: Report (Paper)</strong></p>
+    <ul>
+      <li>"We identified concept X in layer L using method M. Editing layer L changes behavior Y but not Z, validating our interpretation."</li>
+    </ul>
   </div>
 
-  <h3>Connection to Week 11</h3>
+  <h2>9. Limitations and Safety Considerations</h2>
 
-  <p>
-    Next week, we'll move from skepticism to validation. We'll explore how to locate your concept in the broader
-    landscape of model knowledge, design sanity tests specific to your research question, and evaluate whether you've
-    truly extracted something novel that bridges the human-AI knowledge gap.
-  </p>
+  <h3>What Can Go Wrong</h3>
 
-  <h3>Further Reading</h3>
+  <div class="warning-box">
+    <p><strong>1. Unintended side effects</strong></p>
+    <ul>
+      <li>Editing one fact may corrupt related facts</li>
+      <li>Example: Changing "Paris is in France" might affect "France's capital is Paris"</li>
+      <li><strong>Mitigation:</strong> Test broad specificity, check related facts</li>
+    </ul>
+
+    <p><strong>2. Reasoning brittleness</strong></p>
+    <ul>
+      <li>Model may recall edited fact but fail multi-hop reasoning</li>
+      <li>Example: "Space Needle is in Paris" but "Is Space Needle in Europe?" → "No"</li>
+      <li><strong>Mitigation:</strong> MEMIT across multiple layers improves consistency</li>
+    </ul>
+
+    <p><strong>3. Over-editing degradation</strong></p>
+    <ul>
+      <li>Too many edits (>10k for MEMIT) degrade fluency</li>
+      <li><strong>Mitigation:</strong> Monitor perplexity on held-out text</li>
+    </ul>
+
+    <p><strong>4. Malicious edits</strong></p>
+    <ul>
+      <li>Bad actors could inject false facts or biases</li>
+      <li><strong>Mitigation:</strong> Access control, edit provenance tracking</li>
+    </ul>
+  </div>
+
+  <h3>Ethical Considerations</h3>
 
   <ul>
-    <li>Lipton, Z. (2018). <em>The Mythos of Model Interpretability</em>. Queue, 16(3). [Philosophical foundations]</li>
-    <li>Rudin, C. (2019). <em>Stop Explaining Black Box Machine Learning Models</em>. Nature Machine Intelligence. [Case
-      for inherently interpretable models]</li>
-    <li>Jacovi, A., & Goldberg, Y. (2020). <em>Towards Faithfully Interpretable NLP Systems</em>. ACL. [Faithfulness
-      definitions]</li>
-    <li>Geiger, A., et al. (2021). <em>Causal Abstractions of Neural Networks</em>. NeurIPS. [Formal framework for
-      interpretation validity]</li>
+    <li><strong>Fact verification:</strong> Ensure edits are factually correct</li>
+    <li><strong>Bias injection:</strong> Editing can amplify or introduce biases</li>
+    <li><strong>Transparency:</strong> Edited models should disclose modifications</li>
+    <li><strong>Reversibility:</strong> Keep backups; document all edits</li>
   </ul>
 
-  <h2>Exercise Notebook</h2>
+  <h2>10. Practical Implementation</h2>
 
-  <p>
-    <a href="week10_exercise.ipynb">Week 10 Exercises: Validation and Sanity Checks</a> - Hands-on practice
-    implementing sanity checks, ROAR benchmarks, adversarial robustness tests, and multi-method validation for your
-    interpretability techniques.
-  </p>
+  <h3>Code Example: ROME Edit</h3>
 
-  <footer>
-    <p>&copy; 2026 Neural Mechanics Course | <a href="index.html">Back to Course Home</a></p>
-  </footer>
+  <div class="example-box">
+    <p><strong>Using EasyEdit library:</strong></p>
+    <pre><code>from easyeditor import BaseEditor, ROMEHyperParams
+
+# Initialize editor
+hparams = ROMEHyperParams.from_hparams('hparams/ROME/gpt2-xl')
+editor = BaseEditor.from_hparams(hparams)
+
+# Define edit
+request = {
+    "prompt": "The Space Needle is located in",
+    "target_new": "Paris",
+    "subject": "Space Needle"
+}
+
+# Apply edit
+edited_model, _ = editor.edit(
+    model=original_model,
+    prompts=[request['prompt']],
+    target_new=[request['target_new']],
+    subject=[request['subject']]
+)
+
+# Validate
+print(edited_model.generate("The Space Needle is in"))
+# Output: "Paris"
+</code></pre>
+  </div>
+
+  <h3>Code Example: LoRA Fine-Tuning</h3>
+
+  <div class="example-box">
+    <p><strong>Using Hugging Face PEFT:</strong></p>
+    <pre><code>from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM
+
+# Load base model
+model = AutoModelForCausalLM.from_pretrained("gpt2-xl")
+
+# Configure LoRA
+lora_config = LoraConfig(
+    r=8,                      # rank
+    lora_alpha=16,            # scaling
+    target_modules=["c_attn"], # which layers to adapt
+    lora_dropout=0.05,
+    bias="none"
+)
+
+# Apply LoRA
+model = get_peft_model(model, lora_config)
+
+# Only 0.1% of parameters are trainable
+model.print_trainable_parameters()
+# Output: "trainable params: 294,912 || all params: 1,557,611,200 || trainable%: 0.019"
+
+# Train as usual (only LoRA weights update)
+# ...
+
+# Save LoRA weights (tiny file, ~2MB instead of 6GB)
+model.save_pretrained("my_lora_adapter")
+</code></pre>
+  </div>
+
+  <h2>11. Summary</h2>
+
+  <h3>Key Takeaways</h3>
+
+  <ul>
+    <li><strong>Model editing validates interpretability:</strong> If you understand a concept, you should be able to modify it</li>
+    <li><strong>ROME/MEMIT for surgical edits:</strong> Update specific facts in MLP weights with minimal side effects</li>
+    <li><strong>LoRA for efficient fine-tuning:</strong> Adapt models to new tasks using low-rank weight updates</li>
+    <li><strong>Weight vs activation interventions:</strong> Permanent vs temporary, narrow vs broad scope</li>
+    <li><strong>Causal validation:</strong> Editing identified components should produce predictable behavioral changes</li>
+    <li><strong>Safety matters:</strong> Edits can have unintended consequences; test specificity thoroughly</li>
+  </ul>
+
+  <h3>Best Practices</h3>
+
+  <div class="info-box">
+    <ul>
+      <li>Always validate edits on three dimensions: efficacy, paraphrase, specificity</li>
+      <li>Test dose-response: Does edit magnitude correlate with behavior change?</li>
+      <li>Check reasoning, not just recall: Multi-hop questions reveal brittleness</li>
+      <li>Monitor fluency: Perplexity on held-out text detects degradation</li>
+      <li>Combine methods: Use activation steering to explore, then commit to weight edits</li>
+      <li>Keep backups: Weight edits are irreversible without copies</li>
+    </ul>
+  </div>
+
+  <h2>References & Resources</h2>
+
+  <h3>Core Papers</h3>
+  <ul>
+    <li><strong>Meng et al. (2022):</strong> "Locating and Editing Factual Associations in GPT." <em>NeurIPS</em>. <a href="https://arxiv.org/abs/2202.05262" target="_blank">arXiv:2202.05262</a></li>
+    <li><strong>Meng et al. (2023):</strong> "Mass-Editing Memory in a Transformer." <em>ICLR</em>. <a href="https://arxiv.org/abs/2210.07229" target="_blank">arXiv:2210.07229</a></li>
+    <li><strong>Hu et al. (2022):</strong> "LoRA: Low-Rank Adaptation of Large Language Models." <em>ICLR</em>. <a href="https://arxiv.org/abs/2106.09685" target="_blank">arXiv:2106.09685</a></li>
+  </ul>
+
+  <h3>Related Work</h3>
+  <ul>
+    <li><strong>Mitchell et al. (2022):</strong> "Fast Model Editing at Scale." <em>ICLR</em>.</li>
+    <li><strong>Dai et al. (2022):</strong> "Knowledge Neurons in Pretrained Transformers." <em>ACL</em>.</li>
+    <li><strong>De Cao et al. (2021):</strong> "Editing Factual Knowledge in Language Models." <em>EMNLP</em>.</li>
+    <li><strong>Geva et al. (2021):</strong> "Transformer Feed-Forward Layers Are Key-Value Memories." <em>EMNLP</em>.</li>
+  </ul>
+
+  <h3>Tools and Code</h3>
+  <ul>
+    <li><strong>EasyEdit:</strong> Unified library for model editing methods <a href="https://github.com/zjunlp/EasyEdit" target="_blank">GitHub</a></li>
+    <li><strong>PEFT (Hugging Face):</strong> Parameter-efficient fine-tuning including LoRA <a href="https://github.com/huggingface/peft" target="_blank">GitHub</a></li>
+    <li><strong>MEMIT implementation:</strong> <a href="https://github.com/kmeng01/memit" target="_blank">GitHub</a></li>
+  </ul>
 
 </body>
 
