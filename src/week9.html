@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Week 9: Representation Similarity Analysis</title>
+  <title>Week 9: Training Dynamics & Mechanism Formation</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
@@ -140,769 +140,446 @@
 </head>
 
 <body>
-  <h1>Week 9: Representation Similarity Analysis</h1>
+  <h1>Week 9: Training Dynamics & Mechanism Formation</h1>
 
   <div class="objectives">
     <h3>Learning Objectives</h3>
     <ul>
-      <li>Understand why comparing representations across layers, models, or modalities matters</li>
-      <li>Master key similarity metrics: RSA, CKA, CCA, and Procrustes</li>
-      <li>Compare concept representations to human semantic spaces</li>
-      <li>Identify which layers encode specific concepts</li>
-      <li>Validate interpretability findings through cross-model consistency</li>
-      <li>Apply RSA methods to your research project</li>
-      <li>Understand the limitations and failure modes of similarity metrics</li>
+      <li>Understand how neural network mechanisms emerge during training</li>
+      <li>Study phase transitions and grokking phenomena</li>
+      <li>Track circuit formation across training checkpoints</li>
+      <li>Apply interpretability methods to training trajectories</li>
+      <li>Identify when your concept's representation emerges</li>
+      <li>Understand why some mechanisms form suddenly vs gradually</li>
+      <li>Connect training dynamics to final model behavior</li>
     </ul>
   </div>
 
-  <h2>1. Why Compare Representations?</h2>
+  <h2>1. Why Study Training Dynamics?</h2>
 
-  <h3>The Comparison Problem</h3>
+  <h3>The Formation Question</h3>
   <p>
-    Throughout this course, you've analyzed individual models in isolation. But critical questions require
-    <strong>comparison</strong>:
+    Weeks 1-8 studied your concept in a <strong>fully trained model</strong>. But critical questions remain:
   </p>
 
   <ul>
-    <li><strong>Which layer</strong> encodes your concept? (Layer comparison)</li>
-    <li><strong>Is your finding</strong> model-specific or universal? (Cross-model comparison)</li>
-    <li><strong>How does</strong> the model's representation relate to human understanding? (Model-to-human comparison)
-    </li>
-    <li><strong>Did fine-tuning</strong> change the representation space? (Before-after comparison)</li>
-    <li><strong>Are two concepts</strong> encoded similarly? (Concept-to-concept comparison)</li>
+    <li><strong>When</strong> does your concept's circuit form during training?</li>
+    <li><strong>Does it emerge</strong> suddenly (phase transition) or gradually?</li>
+    <li><strong>Which components</strong> appear first? Which come later?</li>
+    <li><strong>What training dynamics</strong> (loss curves, gradient patterns) coincide with emergence?</li>
+    <li><strong>Can we predict</strong> when a capability will emerge from training dynamics?</li>
   </ul>
 
   <div class="key-insight">
-    <p><strong>The Challenge:</strong></p>
+    <p><strong>Why This Matters for Research:</strong></p>
     <p>
-      Neural network layers have different dimensionalities, use different coordinate systems, and may permute their
-      axes arbitrarily. You can't just subtract vectors or compute correlations.
+      Understanding <em>how</em> mechanisms form helps explain <em>why</em> they exist. Training dynamics reveal:
     </p>
-    <p>
-      <strong>Representation Similarity Analysis (RSA)</strong> provides geometry-aware methods to compare
-      representational spaces despite these differences.
-    </p>
+    <ul>
+      <li>What inductive biases lead models to learn your concept</li>
+      <li>Whether your concept is a "natural" solution or coincidental</li>
+      <li>How robust the mechanism is (sudden vs gradual = different stability)</li>
+      <li>What minimal training is needed for the concept to appear</li>
+    </ul>
   </div>
 
   <h3>Use Cases for Your Project</h3>
 
   <div class="example-box">
-    <p><strong>Example 1: Finding Where Concepts Live</strong></p>
+    <p><strong>Example: Induction Heads</strong></p>
     <p>
-      <strong>Question:</strong> Which transformer layer encodes musical key?
-    </p>
-    <p>
-      <strong>Method:</strong> Compare each layer's representations to a "ground truth" label space (major vs minor
-      keys) using CKA.
-    </p>
-    <p>
-      <strong>Result:</strong> CKA peaks at layer 18, suggesting key is primarily encoded there.
-    </p>
-
-    <hr>
-
-    <p><strong>Example 2: Validating Cross-Model Consistency</strong></p>
-    <p>
-      <strong>Question:</strong> Is the "politeness" representation specific to GPT-4 or universal across LLMs?
-    </p>
-    <p>
-      <strong>Method:</strong> Extract politeness concept vectors from GPT-4 and Llama-3, compare using Procrustes
-      alignment.
-    </p>
-    <p>
-      <strong>Result:</strong> High similarity (r=0.82) suggests concept is universal, not model artifact.
-    </p>
-
-    <hr>
-
-    <p><strong>Example 3: Comparing to Human Judgments</strong></p>
-    <p>
-      <strong>Question:</strong> Does the model's protein similarity match biochemist judgments?
-    </p>
-    <p>
-      <strong>Method:</strong> Collect human similarity ratings for protein pairs, compare to model embedding
-      distances using RSA.
-    </p>
-    <p>
-      <strong>Result:</strong> Spearman ρ=0.71 indicates moderate alignment with human understanding.
+      Olsson et al. (2022) found induction heads emerge in a sharp phase transition around 2B tokens. Before: random attention. After: systematic pattern copying. This sudden emergence suggests induction is a "natural" circuit that SGD discovers reliably.
     </p>
   </div>
 
-  <h2>2. Representational Similarity Analysis (RSA)</h2>
+  <h2>2. Grokking: Delayed Generalization</h2>
 
-  <div class="paper-card">
-    <h4>Paper: "Representational Similarity Analysis"</h4>
-    <p><strong>Authors:</strong> Nikolaus Kriegeskorte, Marieke Mur, Peter Bandettini</p>
-    <p><strong>Published:</strong> Frontiers in Systems Neuroscience, 2008</p>
-    <p><strong>Key contribution:</strong> Framework for comparing representations across different systems (brains,
-      models, measurements)</p>
-  </div>
-
-  <h3>Core Idea</h3>
+  <h3>The Grokking Phenomenon</h3>
 
   <p>
-    Instead of comparing representations directly, <strong>compare their similarity structures</strong>.
+    <strong>Grokking</strong> (Power et al., 2022) is when a model:
   </p>
+  <ol>
+    <li>Overfits training data quickly (100% train accuracy)</li>
+    <li>Remains at chance on validation for many epochs</li>
+    <li>Suddenly achieves perfect generalization after extended training</li>
+  </ol>
 
   <div class="info-box">
-    <p><strong>RSA Procedure:</strong></p>
-    <ol>
-      <li><strong>Build Representational Dissimilarity Matrix (RDM)</strong> for each system
-        <ul>
-          <li>For \(n\) stimuli/examples, compute pairwise distances</li>
-          <li>Result: \(n \times n\) matrix where RDM[i,j] = distance between representations of stimulus i and j</li>
-        </ul>
-      </li>
-      <li><strong>Compare RDMs</strong> using correlation (Spearman ρ or Pearson r)
-        <ul>
-          <li>Flatten RDMs into vectors (upper triangular entries)</li>
-          <li>Compute correlation between vectors</li>
-        </ul>
-      </li>
-      <li><strong>Interpret:</strong> High correlation → similar representational geometry</li>
-    </ol>
+    <p><strong>Key Observation:</strong> During the "grokking" phase, the model has already memorized the training data but is still learning to generalize. Something internal changes even though training loss is flat.</p>
   </div>
 
-  <h3>Mathematical Formulation</h3>
+  <h3>Mechanistic Explanation</h3>
 
   <p>
-    Given representations \(X \in \mathbb{R}^{n \times d_1}\) (e.g., layer 10) and \(Y \in \mathbb{R}^{n \times d_2}\)
-    (e.g., layer 20):
+    Nanda et al. (2023) "Progress measures for grokking via mechanistic interpretability" showed:
   </p>
 
-  <p>
-    1. <strong>Compute RDMs:</strong>
-  </p>
-  <p style="text-align: center;">
-    \(\text{RDM}_X[i,j] = \|x_i - x_j\|_2\)
-  </p>
-  <p style="text-align: center;">
-    \(\text{RDM}_Y[i,j] = \|y_i - y_j\|_2\)
-  </p>
-
-  <p>
-    2. <strong>Flatten to vectors:</strong> Extract upper triangular entries (excluding diagonal)
-  </p>
-
-  <p>
-    3. <strong>Compute similarity:</strong>
-  </p>
-  <p style="text-align: center;">
-    \(\rho = \text{Spearman}(\text{vec}(\text{RDM}_X), \text{vec}(\text{RDM}_Y))\)
-  </p>
-
-  <h3>Strengths and Limitations</h3>
-
-  <div class="comparison-box">
-    <p><strong>✓ Strengths:</strong></p>
-    <ul>
-      <li><strong>Dimension-agnostic:</strong> Works for representations of any dimensionality</li>
-      <li><strong>Scale-invariant:</strong> Uses rank correlation (Spearman), robust to rescaling</li>
-      <li><strong>Interpretable:</strong> Directly tests if two systems organize stimuli similarly</li>
-      <li><strong>Flexible distance metrics:</strong> Can use cosine, Euclidean, correlation distance</li>
-    </ul>
-
-    <p><strong>✗ Limitations:</strong></p>
-    <ul>
-      <li><strong>Sensitive to stimulus selection:</strong> Results depend heavily on which examples you include</li>
-      <li><strong>Doesn't find alignment:</strong> Only measures similarity, doesn't transform one space to another</li>
-      <li><strong>Computationally expensive:</strong> \(O(n^2)\) pairwise comparisons</li>
-      <li><strong>No significance testing:</strong> Hard to know if ρ=0.6 is "good"</li>
-    </ul>
-  </div>
-
-  <h2>3. Centered Kernel Alignment (CKA)</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Similarity of Neural Network Representations Revisited"</h4>
-    <p><strong>Authors:</strong> Simon Kornblith, Mohammad Norouzi, Honglak Lee, Geoffrey Hinton</p>
-    <p><strong>Published:</strong> ICML 2019</p>
-    <p><strong>Key contribution:</strong> CKA is invariant to invertible linear transformations, making it superior to
-      earlier metrics</p>
-  </div>
-
-  <h3>Why CKA?</h3>
-
-  <p>
-    Early similarity metrics (like CCA) had problems:
-  </p>
   <ul>
-    <li>Sensitive to small dimensional subspaces</li>
-    <li>Affected by random permutations</li>
-    <li>Failed to detect trivial differences (e.g., layer width changes)</li>
+    <li><strong>Two competing circuits:</strong> A "memorization circuit" (fast to learn, doesn't generalize) and a "generalizing circuit" (slow to learn, works on all data)</li>
+    <li><strong>Circuit competition:</strong> Initially, memorization circuit dominates. Over time, weight decay and other regularization favor the generalizing circuit</li>
+    <li><strong>Phase transition:</strong> When generalizing circuit becomes stronger, validation accuracy suddenly jumps</li>
   </ul>
 
-  <p>
-    <strong>CKA addresses these issues</strong> by comparing representations via kernel functions, focusing on the
-    geometry of the data cloud rather than individual coordinates.
-  </p>
-
-  <h3>Mathematical Formulation</h3>
-
-  <p>
-    Given representations \(X \in \mathbb{R}^{n \times d_1}\) and \(Y \in \mathbb{R}^{n \times d_2}\):
-  </p>
-
-  <p>
-    1. <strong>Compute Gram matrices:</strong>
-  </p>
-  <p style="text-align: center;">
-    \(K = XX^T\) (similarity between examples in X-space)
-  </p>
-  <p style="text-align: center;">
-    \(L = YY^T\) (similarity between examples in Y-space)
-  </p>
-
-  <p>
-    2. <strong>Center the matrices:</strong>
-  </p>
-  <p style="text-align: center;">
-    \(\bar{K} = HKH\), where \(H = I - \frac{1}{n}\mathbf{1}\mathbf{1}^T\)
-  </p>
-
-  <p>
-    3. <strong>Compute CKA:</strong>
-  </p>
-  <p style="text-align: center;">
-    \(\text{CKA}(X, Y) = \frac{\|\bar{K} \odot \bar{L}\|_F}{\|\bar{K}\|_F \|\bar{L}\|_F}\)
-  </p>
-
-  <p>
-    Where \(\odot\) is element-wise multiplication and \(\|\cdot\|_F\) is Frobenius norm.
-  </p>
-
-  <h3>Key Properties</h3>
-
-  <div class="info-box">
-    <ul>
-      <li><strong>Range:</strong> CKA ∈ [0, 1], where 1 = identical geometry, 0 = orthogonal</li>
-      <li><strong>Invariant to:</strong> Invertible linear transformations, isotropic scaling, orthogonal rotations</li>
-      <li><strong>Not invariant to:</strong> Nonlinear transformations, permutations of features (which is good—these
-        change meaning)</li>
-      <li><strong>Interpretable:</strong> Measures what fraction of variance is shared between representations</li>
-    </ul>
-  </div>
-
-  <h3>Practical Usage</h3>
-
   <div class="example-box">
-    <p><strong>Example: Finding Where Concepts Emerge</strong></p>
-
-    <p><strong>Task:</strong> Identify which layer encodes sentiment in movie reviews</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Create "ground truth" representation: one-hot encoding of sentiment labels (positive/negative)</li>
-      <li>For each transformer layer, extract representations for 1000 reviews</li>
-      <li>Compute CKA between layer representation and ground truth</li>
-      <li>Plot CKA vs layer depth</li>
-    </ol>
-
-    <p><strong>Interpretation:</strong></p>
-    <ul>
-      <li>CKA increases with depth → concept emerges gradually</li>
-      <li>Peak at layer 15 → sentiment is most explicit here</li>
-      <li>CKA drops in final layers → sentiment abstracted away for generation</li>
-    </ul>
+    <p><strong>Experiment: Modular Addition</strong></p>
+    <p>
+      Task: Predict (a + b) mod 113
+    </p>
+    <p>
+      <strong>Memorization circuit:</strong> Lookup table in early layers<br>
+      <strong>Generalizing circuit:</strong> Fourier features that exploit group structure
+    </p>
+    <p>
+      By tracking the strength of each circuit (via ablation) across checkpoints, Nanda et al. could predict exactly when grokking would occur—before it showed up in validation metrics!
+    </p>
   </div>
 
-  <h2>4. Canonical Correlation Analysis (CCA) and Variants</h2>
+  <h2>3. Phase Transitions in Learning</h2>
+
+  <h3>Sudden vs Gradual Emergence</h3>
+
+  <p>
+    Not all mechanisms form gradually. Some appear in sharp <strong>phase transitions</strong>:
+  </p>
+
+  <table>
+    <tr>
+      <th>Mechanism Type</th>
+      <th>Emergence Pattern</th>
+      <th>Example</th>
+    </tr>
+    <tr>
+      <td>Simple features</td>
+      <td>Gradual</td>
+      <td>Edge detectors in CNNs</td>
+    </tr>
+    <tr>
+      <td>Composed circuits</td>
+      <td>Phase transition</td>
+      <td>Induction heads (Olsson et al.)</td>
+    </tr>
+    <tr>
+      <td>Algorithm discovery</td>
+      <td>Phase transition (grokking)</td>
+      <td>Modular arithmetic (Nanda et al.)</td>
+    </tr>
+  </table>
+
+  <h3>The Induction Head Phase Transition</h3>
 
   <div class="paper-card">
-    <h4>Paper: "SVCCA: Singular Vector Canonical Correlation Analysis for Deep Learning Dynamics and Interpretability"
-    </h4>
-    <p><strong>Authors:</strong> Maithra Raghu, Justin Gilmer, Jason Yosinski, Jascha Sohl-Dickstein</p>
-    <p><strong>Published:</strong> NeurIPS 2017</p>
-    <p><strong>Key contribution:</strong> Combines SVD with CCA to handle high-dimensional, noisy representations</p>
-  </div>
+    <h4>Case Study: Olsson et al. (2022) "In-context Learning and Induction Heads"</h4>
 
-  <h3>Canonical Correlation Analysis (CCA)</h3>
+    <p><strong>Finding:</strong> Induction heads (the circuit enabling in-context learning) form suddenly during training</p>
 
-  <p>
-    CCA finds linear transformations of \(X\) and \(Y\) that maximize correlation.
-  </p>
+    <p><strong>Timeline:</strong></p>
+    <ul>
+      <li><strong>Before 2B tokens:</strong> No induction behavior, random attention patterns</li>
+      <li><strong>Around 2B tokens:</strong> Sharp increase in induction score over ~50M tokens</li>
+      <li><strong>After 2.5B tokens:</strong> Fully formed induction heads, strong ICL performance</li>
+    </ul>
 
-  <p>
-    <strong>Goal:</strong> Find weight matrices \(W_X\) and \(W_Y\) such that:
-  </p>
-  <p style="text-align: center;">
-    \(\text{corr}(XW_X, YW_Y)\) is maximized
-  </p>
-
-  <p>
-    <strong>Output:</strong> Canonical correlation coefficients \(\rho_1, \rho_2, \ldots, \rho_k\) where \(k =
-    \min(d_1, d_2)\)
-  </p>
-
-  <p>
-    <strong>Interpretation:</strong> Mean of \(\rho_i\) indicates how well representations align after optimal rotation.
-  </p>
-
-  <h3>Singular Vector CCA (SVCCA)</h3>
-
-  <p>
-    Problem with vanilla CCA: Sensitive to noise in high dimensions.
-  </p>
-
-  <div class="info-box">
-    <p><strong>SVCCA Solution:</strong></p>
+    <p><strong>What emerges:</strong></p>
     <ol>
-      <li><strong>SVD preprocessing:</strong> For \(X\) and \(Y\), keep only top-\(k\) singular vectors (e.g., 99%
-        variance)</li>
-      <li><strong>Apply CCA:</strong> Run CCA on dimensionality-reduced representations</li>
-      <li><strong>Aggregate:</strong> Mean canonical correlation = similarity score</li>
+      <li><strong>Previous token heads:</strong> Attend to previous occurrence of current token</li>
+      <li><strong>Induction heads:</strong> Attend to token after the previous occurrence</li>
+      <li><strong>Composition:</strong> These heads compose via Q-K circuit</li>
     </ol>
 
-    <p><strong>Why this helps:</strong> Removes noisy dimensions that CCA might spuriously align</p>
+    <p><strong>Key Insight:</strong> ICL ability correlates perfectly with induction head formation—suggesting induction heads <em>are</em> the mechanism for ICL, at least in small models.</p>
   </div>
 
-  <h3>When to Use CCA vs CKA</h3>
+  <h2>4. Methods: Tracking Mechanism Formation</h2>
+
+  <h3>Checkpoint-Based Analysis</h3>
+
+  <p>
+    To study training dynamics, you need to apply your interpretability methods to models at different training stages:
+  </p>
+
+  <ol>
+    <li><strong>Save checkpoints:</strong> Every N steps (e.g., every 1000 steps, or logarithmically spaced)</li>
+    <li><strong>Apply methods:</strong> Run your Week 3-8 analyses on each checkpoint
+      <ul>
+        <li>Probing accuracy over time</li>
+        <li>Circuit component strengths (ablation effects)</li>
+        <li>Attention pattern analysis</li>
+        <li>SAE feature activation patterns</li>
+      </ul>
+    </li>
+    <li><strong>Plot trajectories:</strong> How do these metrics evolve?</li>
+    <li><strong>Identify transitions:</strong> When do sudden changes occur?</li>
+  </ol>
+
+  <h3>Key Metrics to Track</h3>
 
   <table>
     <tr>
       <th>Metric</th>
-      <th>When to Use</th>
-      <th>Pros</th>
-      <th>Cons</th>
+      <th>What It Measures</th>
+      <th>Interpretation</th>
     </tr>
     <tr>
-      <td><strong>CCA</strong></td>
-      <td>When you want to find explicit alignment between spaces</td>
-      <td>Provides transformation matrices; interpretable components</td>
-      <td>Sensitive to noise; biased toward small subspaces</td>
+      <td>Probe accuracy</td>
+      <td>Linear readability of concept</td>
+      <td>When does concept become linearly accessible?</td>
     </tr>
     <tr>
-      <td><strong>SVCCA</strong></td>
-      <td>High-dimensional, noisy representations</td>
-      <td>Robust to noise; good for training dynamics</td>
-      <td>Arbitrary SVD cutoff; loses information</td>
+      <td>Ablation effect</td>
+      <td>Causal importance of component</td>
+      <td>When does component become necessary?</td>
     </tr>
     <tr>
-      <td><strong>CKA</strong></td>
-      <td>Comparing overall geometry; different dimensionalities</td>
-      <td>Invariant to rotations; no hyperparameters; robust</td>
-      <td>Doesn't provide alignment; harder to interpret "why"</td>
+      <td>Attention patterns</td>
+      <td>Information routing</td>
+      <td>When do specific attention heads form?</td>
     </tr>
     <tr>
-      <td><strong>RSA</strong></td>
-      <td>Comparing to human data; neuroscience applications</td>
-      <td>Intuitive; flexible distance metrics</td>
-      <td>Sensitive to stimuli; computationally expensive</td>
+      <td>Loss on concept-specific data</td>
+      <td>Task-specific performance</td>
+      <td>When does model learn the concept?</td>
+    </tr>
+    <tr>
+      <td>Logit lens evolution</td>
+      <td>Prediction development across layers</td>
+      <td>How does processing change over training?</td>
     </tr>
   </table>
 
-  <h2>5. Procrustes Analysis</h2>
-
-  <h3>The Alignment Problem</h3>
-
-  <p>
-    Sometimes you want more than similarity—you want to <strong>align</strong> two representation spaces.
-  </p>
-
-  <p>
-    <strong>Use case:</strong> Compare concept vectors across models (e.g., "honesty" in GPT-4 vs Llama).
-  </p>
-
-  <h3>Procrustes Method</h3>
+  <h3>Detecting Phase Transitions</h3>
 
   <div class="info-box">
-    <p><strong>Goal:</strong> Find rotation matrix \(R\) that best aligns \(X\) to \(Y\)</p>
+    <p><strong>How to identify a phase transition:</strong></p>
+    <ul>
+      <li><strong>Sharp gradient:</strong> Metric changes rapidly over short training period</li>
+      <li><strong>Temporal correlation:</strong> Multiple related metrics change simultaneously</li>
+      <li><strong>Bifurcation point:</strong> Before = one behavior, after = qualitatively different</li>
+      <li><strong>Reproducibility:</strong> Transition occurs at similar point across random seeds</li>
+    </ul>
+  </div>
 
-    <p><strong>Minimize:</strong></p>
-    <p style="text-align: center;">
-      \(\|XR - Y\|_F^2\)
+  <h2>5. Circuit Formation Patterns</h2>
+
+  <h3>Hierarchical Assembly</h3>
+
+  <p>
+    Complex circuits often form in stages:
+  </p>
+
+  <ol>
+    <li><strong>Foundation components</strong> form first (e.g., attention heads that move information)</li>
+    <li><strong>Processing components</strong> form next (e.g., MLPs that transform representations)</li>
+    <li><strong>Composition</strong> emerges last (components wire together into full circuit)</li>
+  </ol>
+
+  <div class="example-box">
+    <p><strong>Example: Induction Circuit Assembly</strong></p>
+    <ol>
+      <li><strong>Step 1 (~1.5B tokens):</strong> Previous token heads form</li>
+      <li><strong>Step 2 (~2B tokens):</strong> Induction heads form</li>
+      <li><strong>Step 3 (~2.2B tokens):</strong> Q-K composition circuit connects them</li>
+    </ol>
+    <p>
+      Each stage builds on the previous. Without previous token heads, induction heads can't function.
     </p>
-
-    <p><strong>Solution (via SVD):</strong></p>
-    <ol>
-      <li>Compute \(M = Y^T X\)</li>
-      <li>SVD: \(M = U \Sigma V^T\)</li>
-      <li>Optimal rotation: \(R = VU^T\)</li>
-    </ol>
-
-    <p><strong>Similarity score:</strong> Procrustes distance = \(\|XR - Y\|_F\) (lower = more similar)</p>
   </div>
 
-  <h3>Application: Cross-Model Concept Comparison</h3>
-
-  <div class="example-box">
-    <p><strong>Research Question:</strong> Is the "factual recall" mechanism universal across LLMs?</p>
-
-    <p><strong>Method:</strong></p>
-    <ol>
-      <li>Extract factual recall concept vector from GPT-4 (using steering or probing)</li>
-      <li>Extract factual recall concept vector from Llama-3</li>
-      <li>Use Procrustes to align the two spaces</li>
-      <li>Measure distance between aligned vectors</li>
-    </ol>
-
-    <p><strong>Result interpretation:</strong></p>
-    <ul>
-      <li>Small distance → concept is universal (same mechanism)</li>
-      <li>Large distance → model-specific implementation</li>
-    </ul>
-  </div>
-
-  <h2>6. Comparing Representations to Human Judgments</h2>
-
-  <h3>Why Compare to Humans?</h3>
+  <h3>Redundancy and Pruning</h3>
 
   <p>
-    For domains like semantics, aesthetics, or morality, <strong>human similarity judgments</strong> are the ground
-    truth.
-  </p>
-
-  <p>
-    <strong>Question:</strong> Does the model's conceptual space match human understanding?
-  </p>
-
-  <h3>Method 1: Direct RSA</h3>
-
-  <div class="example-box">
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li><strong>Collect human data:</strong> Ask humans to rate similarity of concept pairs (e.g., "How similar are
-        'cat' and 'dog'?" on 1-7 scale)</li>
-      <li><strong>Build human RDM:</strong> Matrix of human similarity judgments</li>
-      <li><strong>Build model RDM:</strong> Pairwise distances in model's embedding space</li>
-      <li><strong>Compare:</strong> Spearman correlation between RDMs</li>
-    </ol>
-
-    <p><strong>Interpretation:</strong></p>
-    <ul>
-      <li>High correlation (ρ > 0.7) → model's geometry matches human conceptual space</li>
-      <li>Low correlation (ρ < 0.3) → model uses different organizing principles</li>
-    </ul>
-  </div>
-
-  <h3>Method 2: Behavioral Alignment Tasks</h3>
-
-  <p>
-    Instead of explicit ratings, use <strong>behavioral tasks</strong>:
+    Training dynamics often show:
   </p>
 
   <ul>
-    <li><strong>Odd-one-out:</strong> "Which doesn't belong: cat, dog, car?" (measures clustering)</li>
-    <li><strong>Categorization:</strong> Free sorting into groups</li>
-    <li><strong>Triplet comparisons:</strong> "Is A more similar to B or C?"</li>
+    <li><strong>Overproduction:</strong> Many components initially contribute to a task</li>
+    <li><strong>Consolidation:</strong> Over training, contribution concentrates in fewer components</li>
+    <li><strong>Specialization:</strong> Components become more selective/focused</li>
   </ul>
 
-  <p>
-    These tasks reveal implicit similarity structure, which you can compare to model representations via RSA or CKA.
-  </p>
+  <h2>6. Practical Considerations</h2>
 
-  <h2>7. Identifying Where Concepts Are Encoded</h2>
-
-  <h3>Layer-wise Analysis</h3>
-
-  <p>
-    A common research question: <strong>Which layer encodes concept X?</strong>
-  </p>
-
-  <div class="info-box">
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Define concept operationally (e.g., sentiment = positive/negative labels)</li>
-      <li>Create dataset with concept labels</li>
-      <li>For each transformer layer, extract representations</li>
-      <li>Compute CKA (or probe accuracy) between layer and concept labels</li>
-      <li>Plot metric vs layer depth</li>
-    </ol>
-
-    <p><strong>Common patterns:</strong></p>
-    <ul>
-      <li><strong>Early layers:</strong> Syntax, surface form</li>
-      <li><strong>Middle layers:</strong> Semantics, concepts, entities</li>
-      <li><strong>Late layers:</strong> Task-specific features, pragmatics</li>
-    </ul>
-  </div>
-
-  <h3>Example: Semantic Role Encoding</h3>
-
-  <div class="example-box">
-    <p><strong>Question:</strong> Where does BERT encode semantic roles (agent, patient, theme)?</p>
-
-    <p><strong>Dataset:</strong> 500 sentences annotated with semantic roles</p>
-
-    <p><strong>Method:</strong></p>
-    <ol>
-      <li>For each layer (0-12), extract token representations for role-bearing words</li>
-      <li>Compute CKA between layer representations and one-hot role labels</li>
-    </ol>
-
-    <p><strong>Findings:</strong></p>
-    <ul>
-      <li>CKA peaks at layer 8 (middle layer)</li>
-      <li>Early layers (1-3): Low CKA (surface syntax dominates)</li>
-      <li>Late layers (10-12): CKA decreases (semantic roles abstracted for MLM task)</li>
-    </ul>
-
-    <p><strong>Implication:</strong> For semantic role probing, use layer 8 representations.</p>
-  </div>
-
-  <h2>8. Validation Through Cross-Model Consistency</h2>
-
-  <h3>The Generalization Problem</h3>
-
-  <p>
-    You found a concept vector in GPT-4. But is it a <strong>general principle</strong> or a <strong>model
-      artifact</strong>?
-  </p>
+  <h3>Computational Costs</h3>
 
   <div class="key-insight">
-    <p><strong>Validation strategy:</strong> Test if the concept exists in multiple models.</p>
+    <p><strong>Challenge:</strong> Full training runs are expensive. Strategies to reduce cost:</p>
     <ul>
-      <li>If consistent across models → likely a fundamental concept</li>
-      <li>If model-specific → may be due to architecture or training data quirks</li>
+      <li><strong>Use small models:</strong> GPT-2 Small, Pythia-160M for initial studies</li>
+      <li><strong>Fine-tune instead of pretraining:</strong> Study how concept emerges during task-specific fine-tuning</li>
+      <li><strong>Sparse checkpoints:</strong> Log-spaced checkpoints capture transitions with fewer saves</li>
+      <li><strong>Targeted metrics:</strong> Don't run all analyses on all checkpoints—focus on key transitions</li>
     </ul>
   </div>
 
-  <h3>Cross-Model Comparison Protocol</h3>
+  <h3>Experimental Design</h3>
 
-  <div class="example-box">
-    <p><strong>Research question:</strong> Is "political bias" encoded similarly in different LLMs?</p>
+  <p><strong>For your project:</strong></p>
 
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Extract concept vector from GPT-4 using contrastive activation addition</li>
-      <li>Extract concept vector from Llama-3, Claude, Gemini using same method</li>
-      <li>Align representation spaces using Procrustes</li>
-      <li>Measure pairwise distances between concept vectors</li>
-      <li>Compute CKA between models' representations of political texts</li>
-    </ol>
+  <ol>
+    <li><strong>Option A: Fine-tuning study</strong>
+      <ul>
+        <li>Start with pretrained model (e.g., GPT-2)</li>
+        <li>Fine-tune on dataset emphasizing your concept</li>
+        <li>Track when concept-specific circuit strengthens</li>
+        <li>Faster and cheaper than pretraining from scratch</li>
+      </ul>
+    </li>
+    <li><strong>Option B: Small-scale pretraining</strong>
+      <ul>
+        <li>Train small model (e.g., 2-layer transformer) from scratch</li>
+        <li>On simplified task involving your concept</li>
+        <li>Complete control over training dynamics</li>
+        <li>Can run multiple seeds for robustness</li>
+      </ul>
+    </li>
+    <li><strong>Option C: Using public checkpoints</strong>
+      <ul>
+        <li>Pythia suite provides checkpoints at many training steps</li>
+        <li>No training cost—just analysis</li>
+        <li>Limited to what checkpoints are available</li>
+      </ul>
+    </li>
+  </ol>
 
-    <p><strong>Strong evidence of universality:</strong></p>
-    <ul>
-      <li>High CKA (> 0.8) between model representations</li>
-      <li>Concept vectors align after Procrustes (cosine similarity > 0.7)</li>
-      <li>Interventions using cross-model concept vectors transfer successfully</li>
-    </ul>
-  </div>
+  <h2>7. Connecting to Your Research</h2>
 
-  <h2>9. Limitations and Pitfalls</h2>
+  <h3>Research Questions Enabled by Training Dynamics</h3>
 
-  <h3>Common Mistakes</h3>
-
-  <div class="info-box">
-    <p><strong>1. Ignoring data distribution</strong></p>
-    <ul>
-      <li><strong>Problem:</strong> CKA is sensitive to example selection</li>
-      <li><strong>Example:</strong> Using 90% negative, 10% positive examples inflates similarity to negative-only
-        space</li>
-      <li><strong>Solution:</strong> Balance datasets; report results across multiple samplings</li>
-    </ul>
-
-    <p><strong>2. Misinterpreting magnitude</strong></p>
-    <ul>
-      <li><strong>Problem:</strong> "CKA=0.6" has no absolute meaning—depends on task</li>
-      <li><strong>Solution:</strong> Compare to baselines (random, different-layer, different-model)</li>
-    </ul>
-
-    <p><strong>3. Confusing similarity with functionality</strong></p>
-    <ul>
-      <li><strong>Problem:</strong> Similar representations don't imply same behavior</li>
-      <li><strong>Example:</strong> Two models have high CKA but different downstream accuracy</li>
-      <li><strong>Solution:</strong> Validate with behavioral metrics (probing, task performance)</li>
-    </ul>
-
-    <p><strong>4. Over-relying on linear metrics</strong></p>
-    <ul>
-      <li><strong>Problem:</strong> CCA, CKA assume linear or kernel-linear geometry</li>
-      <li><strong>Failure case:</strong> Concepts encoded nonlinearly may show low CKA despite functional equivalence
-      </li>
-      <li><strong>Solution:</strong> Combine with nonlinear probes (Week 5) and causal interventions (Week 4)</li>
-    </ul>
-  </div>
-
-  <h3>When RSA Fails</h3>
-
-  <div class="example-box">
-    <p><strong>Case study: Adversarial similarity</strong></p>
-
-    <p>
-      Two models could have high CKA on normal examples but completely different representations on adversarial
-      perturbations.
-    </p>
-
-    <p><strong>Lesson:</strong> Test similarity across diverse data distributions, including edge cases.</p>
-
-    <hr>
-
-    <p><strong>Case study: Degenerate solutions</strong></p>
-
-    <p>
-      A model might encode a concept redundantly in multiple subspaces. CKA might show low similarity to each
-      individual subspace, missing the overall encoding.
-    </p>
-
-    <p><strong>Lesson:</strong> Use multiple metrics (RSA, CKA, probing accuracy) and interpret jointly.</p>
-  </div>
-
-  <h2>10. Practical Implementation</h2>
-
-  <h3>Code Example: CKA Computation</h3>
-
-  <div class="example-box">
-    <p><strong>Python implementation:</strong></p>
-    <pre><code>import numpy as np
-
-def center_gram(K):
-    """Center a Gram matrix."""
-    n = K.shape[0]
-    H = np.eye(n) - np.ones((n, n)) / n
-    return H @ K @ H
-
-def cka(X, Y):
-    """Compute CKA between two representation matrices."""
-    # Gram matrices
-    K = X @ X.T
-    L = Y @ Y.T
-
-    # Center
-    K_c = center_gram(K)
-    L_c = center_gram(L)
-
-    # CKA formula
-    numerator = np.linalg.norm(K_c * L_c, 'fro') ** 2
-    denominator = np.linalg.norm(K_c, 'fro') * np.linalg.norm(L_c, 'fro')
-
-    return numerator / denominator
-
-# Example usage
-# X: (n_examples, d1) - layer 10 representations
-# Y: (n_examples, d2) - layer 20 representations
-# similarity = cka(X, Y)  # returns value in [0, 1]
-</code></pre>
-  </div>
-
-  <h2>11. Applying RSA to Your Project</h2>
+  <ul>
+    <li><strong>Necessity:</strong> Is your circuit necessary for the task, or just correlated? (If it forms when the capability emerges, it's likely necessary)</li>
+    <li><strong>Sufficiency:</strong> Can early checkpoints solve the task if you manually strengthen the circuit? (Test via activation patching)</li>
+    <li><strong>Robustness:</strong> Does the circuit form consistently across seeds? (Universal vs incidental)</li>
+    <li><strong>Simplicity:</strong> Do simpler circuits form before more complex alternatives? (Inductive bias)</li>
+  </ul>
 
   <h3>Integration with Previous Weeks</h3>
 
-  <p>
-    RSA complements methods from earlier weeks:
-  </p>
-
-  <table>
-    <tr>
-      <th>Week</th>
-      <th>Method</th>
-      <th>How RSA Helps</th>
-    </tr>
-    <tr>
-      <td><strong>Week 4</strong></td>
-      <td>Causal Mediation</td>
-      <td>Identify which layer to patch by finding where concept is encoded (CKA peak)</td>
-    </tr>
-    <tr>
-      <td><strong>Week 5</strong></td>
-      <td>Probes</td>
-      <td>Validate probe findings: Does CKA agree with probe accuracy?</td>
-    </tr>
-    <tr>
-      <td><strong>Week 6</strong></td>
-      <td>Attribution</td>
-      <td>Check if attribution patterns are consistent across models (cross-model CKA)</td>
-    </tr>
-    <tr>
-      <td><strong>Week 7</strong></td>
-      <td>SAEs</td>
-      <td>Compare SAE-discovered features to human semantic spaces (RSA)</td>
-    </tr>
-    <tr>
-      <td><strong>Week 8</strong></td>
-      <td>Circuits</td>
-      <td>Test if circuit components are universal (Procrustes alignment of circuit vectors)</td>
-    </tr>
-  </table>
-
-  <h3>Project Workflow</h3>
-
-  <div class="info-box">
-    <p><strong>Step 1: Locate Your Concept</strong></p>
+  <div class="comparison-box">
+    <p><strong>Week-by-Week Application:</strong></p>
     <ul>
-      <li>Compute CKA between each layer and your concept labels</li>
-      <li>Identify peak layer → focus subsequent analysis here</li>
-    </ul>
-
-    <p><strong>Step 2: Validate Across Models</strong></p>
-    <ul>
-      <li>Extract concept from GPT-4, Llama, Claude</li>
-      <li>Use Procrustes to align, measure distance</li>
-      <li>High consistency → stronger evidence</li>
-    </ul>
-
-    <p><strong>Step 3: Compare to Human Understanding</strong></p>
-    <ul>
-      <li>Collect human similarity judgments (even n=20 is useful)</li>
-      <li>Compute RSA between model RDM and human RDM</li>
-      <li>Interpret alignment or divergence</li>
-    </ul>
-
-    <p><strong>Step 4: Report Robustness</strong></p>
-    <ul>
-      <li>Test across multiple datasets</li>
-      <li>Vary hyperparameters (SVD cutoffs, distance metrics)</li>
-      <li>Report mean and variance of similarity metrics</li>
+      <li><strong>Week 3 (Visualization):</strong> Track logit lens evolution—when does concept prediction sharpen?</li>
+      <li><strong>Week 4 (Causal):</strong> Plot ablation effects over time—when do components become necessary?</li>
+      <li><strong>Week 5 (Probes):</strong> Probe accuracy trajectory—when does linear representation emerge?</li>
+      <li><strong>Week 7 (SAEs):</strong> Feature activation over training—do features sharpen or stay diffuse?</li>
+      <li><strong>Week 8 (Circuits):</strong> Path patching at different checkpoints—when does composition happen?</li>
     </ul>
   </div>
 
-  <h2>12. Summary</h2>
+  <h2>8. Case Studies</h2>
+
+  <h3>Case 1: Modular Addition Grokking</h3>
+
+  <div class="paper-card">
+    <p><strong>Task:</strong> Learn (a + b) mod p for prime p</p>
+    <p><strong>Observations:</strong></p>
+    <ul>
+      <li>Training accuracy: 100% at epoch 1000</li>
+      <li>Validation accuracy: ~0% until epoch 10,000, then jumps to 100%</li>
+    </ul>
+    <p><strong>Mechanistic findings (Nanda et al.):</strong></p>
+    <ul>
+      <li>Memorization circuit (lookup table) forms by epoch 1000</li>
+      <li>Fourier feature circuit (generalizable algorithm) forms gradually during epochs 1000-10,000</li>
+      <li>Weight decay slowly shrinks memorization circuit while Fourier circuit grows stronger</li>
+      <li>At crossover point (~epoch 9500), Fourier circuit dominates → grokking</li>
+    </ul>
+    <p><strong>Prediction:</strong> By tracking circuit strengths with ablation, could predict grokking 2000 epochs early</p>
+  </div>
+
+  <h3>Case 2: Induction Head Formation</h3>
+
+  <div class="paper-card">
+    <p><strong>Task:</strong> Language modeling (next-token prediction)</p>
+    <p><strong>Observations (Olsson et al.):</strong></p>
+    <ul>
+      <li>In-context learning score near 0 before 2B tokens</li>
+      <li>Sharp increase from 2.0B to 2.5B tokens</li>
+      <li>Plateau at high ICL performance after 2.5B tokens</li>
+    </ul>
+    <p><strong>Mechanistic findings:</strong></p>
+    <ul>
+      <li><strong>1.5B tokens:</strong> Previous token heads form</li>
+      <li><strong>2.0B tokens:</strong> Induction heads begin forming</li>
+      <li><strong>2.2B tokens:</strong> Q-K composition between head types strengthens</li>
+      <li><strong>2.5B tokens:</strong> Full induction circuit operational</li>
+    </ul>
+    <p><strong>Key insight:</strong> Phase transition is sharp (~500M tokens) but hierarchical assembly takes longer</p>
+  </div>
+
+  <h2>9. Common Patterns and Principles</h2>
+
+  <h3>Empirical Observations</h3>
+
+  <div class="info-box">
+    <p><strong>Patterns across multiple studies:</strong></p>
+    <ul>
+      <li><strong>Simple before complex:</strong> Individual components form before composed circuits</li>
+      <li><strong>Multiple solutions:</strong> Models often try many approaches before settling on one</li>
+      <li><strong>Sudden composition:</strong> Components exist separately, then suddenly wire together</li>
+      <li><strong>Lottery ticket-like:</strong> Some random initializations have "winning" subnetworks that form faster</li>
+      <li><strong>Regularization matters:</strong> Weight decay, dropout affect which circuits win</li>
+    </ul>
+  </div>
+
+  <h2>10. Limitations and Open Questions</h2>
+
+  <h3>What We Don't Understand</h3>
+
+  <ul>
+    <li><strong>Why sharp transitions?</strong> What causes phase transitions vs smooth learning?</li>
+    <li><strong>Prediction:</strong> Can we predict emergence timing from early training signals?</li>
+    <li><strong>Intervention:</strong> Can we speed up or redirect circuit formation?</li>
+    <li><strong>Scaling:</strong> Do these patterns hold in very large models?</li>
+    <li><strong>Generality:</strong> Are these findings specific to transformers or universal?</li>
+  </ul>
+
+  <h2>11. Summary</h2>
 
   <h3>Key Takeaways</h3>
 
   <ul>
-    <li><strong>RSA compares representational geometry</strong> despite differences in dimensionality and coordinate
-      systems</li>
-    <li><strong>CKA is robust and invariant</strong> to linear transformations—preferred for layer/model comparison</li>
-    <li><strong>CCA/SVCCA find explicit alignments</strong> useful when you need transformation matrices</li>
-    <li><strong>Procrustes aligns spaces</strong> for direct concept vector comparison across models</li>
-    <li><strong>Compare to human judgments</strong> to validate that model concepts match human understanding</li>
-    <li><strong>Use RSA to identify where concepts live</strong> and whether findings generalize</li>
-    <li><strong>Combine with other methods</strong>—RSA is most powerful when validating causal/probe/SAE findings</li>
+    <li><strong>Mechanisms don't exist from initialization—they form</strong> during training through specific dynamics</li>
+    <li><strong>Formation can be sudden (phase transition) or gradual</strong> depending on circuit complexity</li>
+    <li><strong>Grokking reveals competing circuits</strong>—memorization vs generalization</li>
+    <li><strong>Induction heads show hierarchical assembly</strong>—components before composition</li>
+    <li><strong>Checkpoint analysis</strong> lets you apply interpretability methods across training</li>
+    <li><strong>Training dynamics reveal why mechanisms exist</strong>—what makes them "natural" solutions</li>
   </ul>
 
-  <h3>Best Practices</h3>
+  <h3>For Your Project</h3>
 
   <div class="info-box">
     <ul>
-      <li>Always use multiple metrics (RSA, CKA, probing accuracy) and check for agreement</li>
-      <li>Report baselines (random layers, different tasks) to interpret magnitude</li>
-      <li>Test robustness across data distributions and hyperparameters</li>
-      <li>Don't confuse representational similarity with functional equivalence—validate behaviorally</li>
-      <li>Use cross-model consistency as evidence of generalization</li>
+      <li>Choose: fine-tuning study, small-scale pretraining, or public checkpoints (Pythia)</li>
+      <li>Save checkpoints at appropriate intervals (log-spaced recommended)</li>
+      <li>Apply your Week 3-8 methods to each checkpoint</li>
+      <li>Look for phase transitions, grokking, or gradual emergence</li>
+      <li>Connect emergence timing to your circuit's structure and function</li>
     </ul>
   </div>
-
   <h2>References & Resources</h2>
 
   <h3>Core Papers</h3>
   <ul>
-    <li><strong>Kriegeskorte et al. (2008):</strong> "Representational similarity analysis - connecting the branches of
-      systems neuroscience." <em>Frontiers in Systems Neuroscience</em>. <a
-        href="https://www.frontiersin.org/articles/10.3389/neuro.06.004.2008/full" target="_blank">Link</a></li>
-    <li><strong>Kornblith et al. (2019):</strong> "Similarity of Neural Network Representations Revisited." <em>ICML</em>.
-      <a href="https://arxiv.org/abs/1905.00414" target="_blank">arXiv:1905.00414</a>
-    </li>
-    <li><strong>Raghu et al. (2017):</strong> "SVCCA: Singular Vector Canonical Correlation Analysis for Deep Learning
-      Dynamics and Interpretability." <em>NeurIPS</em>. <a href="https://arxiv.org/abs/1706.05806"
-        target="_blank">arXiv:1706.05806</a></li>
+    <li><strong>Nanda et al. (2023):</strong> "Progress measures for grokking via mechanistic interpretability." <em>ICLR</em>. <a href="https://arxiv.org/abs/2301.05217" target="_blank">arXiv:2301.05217</a></li>
+    <li><strong>Olsson et al. (2022):</strong> "In-context Learning and Induction Heads." <em>Transformer Circuits Thread</em>. <a href="https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html" target="_blank">Link</a></li>
+    <li><strong>Power et al. (2022):</strong> "Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets." <em>ICLR</em>. <a href="https://arxiv.org/abs/2201.02177" target="_blank">arXiv:2201.02177</a></li>
   </ul>
 
   <h3>Related Work</h3>
   <ul>
-    <li><strong>Morcos et al. (2018):</strong> "Insights on representational similarity in neural networks with canonical
-      correlation." <em>NeurIPS</em>.</li>
-    <li><strong>Ding et al. (2021):</strong> "Grounding Representation Similarity with Statistical Testing." <em>NeurIPS</em>.</li>
-    <li><strong>Klabunde et al. (2023):</strong> "Similarity of Neural Networks with Gradients." <em>ICLR</em>.</li>
-    <li><strong>Gale et al. (2022):</strong> "Geometry of Polysemanticity." <em>arXiv</em>.</li>
+    <li><strong>Chughtai et al. (2023):</strong> "A Mechanistic Interpretability Analysis of Grokking." <a href="https://arxiv.org/abs/2305.18213" target="_blank">arXiv:2305.18213</a></li>
+    <li><strong>Chan et al. (2022):</strong> "The Developmental Landscape of In-Context Learning." <a href="https://arxiv.org/abs/2210.13406" target="_blank">arXiv:2210.13406</a></li>
+    <li><strong>Elhage et al. (2022):</strong> "Toy Models of Superposition." <em>Transformer Circuits Thread</em>. <a href="https://transformer-circuits.pub/2022/toy_model/index.html" target="_blank">Link</a></li>
+    <li><strong>Wei et al. (2022):</strong> "Emergent Abilities of Large Language Models." <em>TMLR</em>. <a href="https://arxiv.org/abs/2206.07682" target="_blank">arXiv:2206.07682</a></li>
+    <li><strong>Liu et al. (2023):</strong> "Towards Understanding Grokking: An Effective Theory of Representation Learning." <em>NeurIPS</em>.</li>
   </ul>
 
-  <h3>Tutorials and Code</h3>
+  <h3>Tools and Resources</h3>
   <ul>
-    <li>Google Brain CKA implementation: <a href="https://github.com/google-research/google-research/tree/master/representation_similarity" target="_blank">GitHub</a></li>
-    <li>PyTorch CKA library: <code>pip install torch-cka</code></li>
-    <li>RSA Toolbox (MATLAB): <a href="https://github.com/rsagroup/rsatoolbox" target="_blank">GitHub</a></li>
+    <li><strong>Pythia Suite:</strong> Models with checkpoints at many training steps <a href="https://github.com/EleutherAI/pythia" target="_blank">GitHub</a></li>
+    <li><strong>TransformerLens:</strong> Library for mechanistic interpretability with checkpoint support <a href="https://github.com/neelnanda-io/TransformerLens" target="_blank">GitHub</a></li>
+    <li><strong>Grokking reproduction code:</strong> Nanda's experiments <a href="https://github.com/neelnanda-io/Grokking" target="_blank">GitHub</a></li>
   </ul>
 
   <section id="milestone">
@@ -911,65 +588,75 @@ def cka(X, Y):
     <div class="assignment-box">
       <p><strong>Due: Thursday of Week 9</strong></p>
       <p>
-        Compare your concept's representation across layers, models, or to human similarity judgments.
-        Use representation similarity analysis to validate that your findings generalize.
+        Study when and how your concept's circuit emerges during training. Apply your interpretability methods
+        to multiple training checkpoints to track mechanism formation.
       </p>
 
-      <h4>Representation Similarity Analysis</h4>
+      <h4>Training Dynamics Study</h4>
       <ul>
-        <li><strong>Choose comparison targets:</strong>
+        <li><strong>Choose your approach:</strong>
           <ul>
-            <li>Cross-layer: How does your concept representation change across layers in your model?</li>
-            <li>Cross-model: Is the representation similar in different models (e.g., GPT-2 vs Llama)?</li>
-            <li>Cross-architecture: Do different architectures represent your concept similarly?</li>
-            <li>Human similarity (optional): Do model representations correlate with human judgments?</li>
+            <li><strong>Option A (Recommended):</strong> Use Pythia checkpoints—apply your methods to pre-saved checkpoints at different training steps</li>
+            <li><strong>Option B:</strong> Fine-tune your selected model on concept-rich data, saving checkpoints every N steps</li>
+            <li><strong>Option C:</strong> Train a small model from scratch on a simplified task involving your concept</li>
           </ul>
         </li>
-        <li><strong>Apply RSA methods:</strong>
+        <li><strong>Save/select checkpoints:</strong>
           <ul>
-            <li>Use CKA or RSA to compare representations</li>
-            <li>Create similarity matrices showing how representations relate</li>
-            <li>Test statistical significance of similarities</li>
+            <li>Choose 8-15 checkpoints spanning early to late training</li>
+            <li>Log-spaced recommended (e.g., steps 100, 300, 1k, 3k, 10k, 30k, 100k)</li>
+            <li>Ensure you capture pre-emergence and post-emergence states</li>
           </ul>
         </li>
-        <li><strong>Analyze patterns:</strong>
+        <li><strong>Apply interpretability methods to each checkpoint:</strong>
           <ul>
-            <li>Do later layers have more similar representations than early layers?</li>
-            <li>Do models trained differently still converge on similar representations?</li>
-            <li>Where do representations diverge?</li>
+            <li><strong>From Week 5:</strong> Probe accuracy over training—when does concept become linearly accessible?</li>
+            <li><strong>From Week 4:</strong> Ablation effects over training—when do components become necessary?</li>
+            <li><strong>From Week 3:</strong> Logit lens evolution—when does prediction sharpen?</li>
+            <li><strong>From Week 8:</strong> Circuit strength (path patching)—when does composition emerge?</li>
           </ul>
         </li>
-        <li><strong>Interpret findings:</strong>
+        <li><strong>Analyze emergence pattern:</strong>
           <ul>
-            <li>Is your concept representation universal across models or model-specific?</li>
-            <li>Does the representation align with human understanding?</li>
-            <li>What does this tell you about the nature of your concept?</li>
+            <li>Is emergence gradual or sudden (phase transition)?</li>
+            <li>Do multiple metrics change simultaneously?</li>
+            <li>What is the timeline of component formation?</li>
+            <li>Is there hierarchical assembly (some parts before others)?</li>
           </ul>
         </li>
       </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Similarity analysis:</strong>
+        <li><strong>Training trajectory plots:</strong>
           <ul>
-            <li>Similarity matrices (heatmaps) for your chosen comparisons</li>
-            <li>Statistical significance tests</li>
-            <li>Identification of most/least similar representation pairs</li>
+            <li>Probe accuracy vs training step</li>
+            <li>Ablation effect size vs training step</li>
+            <li>Key metrics showing mechanism emergence</li>
+            <li>Annotate identified phase transitions or inflection points</li>
           </ul>
         </li>
-        <li><strong>Interpretation:</strong>
+        <li><strong>Emergence analysis:</strong>
           <ul>
-            <li>What patterns emerge from the similarity analysis?</li>
-            <li>Do findings validate or challenge your circuit from Week 8?</li>
-            <li>Is your concept universally represented or model-specific?</li>
+            <li>When does your concept's circuit form? (specific training step/token count)</li>
+            <li>Is formation sudden or gradual?</li>
+            <li>Do components form in sequence or simultaneously?</li>
+            <li>Comparison to loss curves—does emergence coincide with capability gain?</li>
           </ul>
         </li>
-        <li><strong>Code:</strong> Notebook with RSA/CKA implementation and analysis</li>
+        <li><strong>Mechanistic interpretation:</strong>
+          <ul>
+            <li>Why does the circuit form when it does?</li>
+            <li>Is there evidence of competing mechanisms (grokking-style)?</li>
+            <li>What does emergence timing reveal about your concept's role?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with checkpoint analysis and visualization</li>
       </ul>
 
       <p><em>
-        If representations are similar across models, your findings likely reflect something fundamental about
-        the concept rather than idiosyncrasies of a specific model.
+        Training dynamics reveal whether your circuit is a "natural" solution that forms reliably, or an
+        accidental feature specific to your model's initialization and training procedure.
       </em></p>
     </div>
   </section>
