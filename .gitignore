@@ -1,9 +1,6 @@
 # Downloaded papers (hosted separately)
 papers/
 
-# Utility scripts
-scripts/
-
 # Python
 __pycache__/
 *.pyc
