@@ -42,7 +42,7 @@ If concepts are encoded as directions in activation space, can we control model 
 
 ## Week 3: Evaluation Methodology
 
-How do we rigorously evaluate what models know and how they behave? Before we can study how concepts are represented, we need principled ways to probe model capabilities and measure the effects of our interventions.
+How do we rigorously evaluate what models know and how they behave? Before we can study how concepts are represented, we need principled ways to test model capabilities and measure the effects of our interventions.
 
 **Petroni et al. (2019)** "[Language Models as Knowledge Bases?](https://arxiv.org/abs/1909.01066)" established the template for probing factual knowledge via cloze-style tasks. The LAMA benchmark showed that language models encode substantial factual knowledge accessible through carefully designed prompts—a methodology we'll adapt for probing concept representations.
 
@@ -108,7 +108,7 @@ Which parts of the input drive specific model behaviors? Attribution methods tra
 
 ## Week 8: Circuits
 
-Can we reverse-engineer the algorithms implemented by neural networks? Circuit analysis aims to understand models not just as statistical patterns but as computational mechanisms—identifying the specific attention heads and MLPs that implement particular functions.
+Can we reverse-engineer the end-to-end algorithms implemented by a neural network? Circuit analysis aims to understand the mechanism for a prediction from beginning to end—not just isolated features, but the specific attention heads and MLPs that work together to implement a function.
 
 **Olsson et al. (2022)** "[In-context Learning and Induction Heads](https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html)" is the canonical circuit analysis, showing how "induction heads" (attention patterns that match and copy previous sequences) emerge during training and drive in-context learning capabilities. This paper establishes the methodology of tracing capabilities to specific, interpretable circuits.
 
