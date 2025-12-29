@@ -6,7 +6,7 @@
     <title>Chapter 1: At the Edge of Understanding - Neural Mechanics Course</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 700px;
@@ -64,13 +64,15 @@
 
 <p>Do you truly understand the work that you create?</p>
 
-<p>If you are a computer scientist or programmer reading this, you have likely experienced what I am about to describe. Since I was a teenager, I have written Mandelbrot set programs: those mesmerizing fractals that reveal infinite complexity through simple recursive mathematics. I maintain a website, mandelbrot.page, showcasing efficient algorithms for rendering these mathematical landscapes. It has been my small corner of computational craft, where I understood every line, every optimization, every subtle trade-off between speed and precision.</p>
+<p>If you are a computer scientist or programmer reading this, you have likely experienced what I am about to describe. Since I was a teenager, I have written Mandelbrot set programs: those mesmerizing fractals that reveal infinite complexity through simple recursive mathematics. I maintain a website, <a href="https://mandelbrot.page">mandelbrot.page</a>, showcasing efficient algorithms for rendering these mathematical landscapes. It has been my small corner of computational craft, where I understood every line, every optimization, every subtle trade-off between speed and precision.</p>
 
 <p>When ChatGPT was released, I began experimenting with these new coding assistants: ChatGPT, Claude, Copilot, asking them to help examine, improve, and refactor my code. The experience was impressive but reassuring. These AI tools could suggest improvements, catch bugs, propose refactorings, but they could not quite get complex algorithms working on their own. They needed my human insight, my understanding of the deeper patterns, my ability to debug the subtle interactions between different parts of the system. I was still the architect; they were talented but imperfect assistants.</p>
 
 <p>But recently, something changed. A phase transition, as physicists might say.</p>
 
-<p>Now, these coding agents can implement complex algorithms from scratch, getting them working without my involvement. They write code with subtleties of which I am only dimly aware. They make optimization choices based on patterns I do not fully grasp. When they present me with two implementation approaches, I find myself in an unsettling position: How do I choose between options I do not fully understand? Without grasping how each approach actually works, not just superficially, but deeply, how can I know the implications of my choice? Will one approach scale better? Will another be more maintainable? Will a third contain subtle bugs that only manifest under specific conditions?</p>
+<p>This December, I asked an AI coding agent to improve my Mandelbrot page. What had been 780 lines of carefully hand-crafted code <a href="https://davidbau.com/archives/2025/12/16/vibe_coding.html">expanded to over 13,600 lines</a>&mdash;complete with GPU-accelerated rendering, perturbation calculations, and sophisticated zoom algorithms I had never implemented myself. The code works beautifully. It renders fractals faster and deeper than anything I could have written. And I understand perhaps a tenth of what it does.</p>
+
+<p>This is what I call "vibe coding": delegating substantial intellectual work to an AI while maintaining only strategic oversight. When the agent presents me with two implementation approaches, I find myself in an unsettling position: How do I choose between options I do not fully understand? Without grasping how each approach actually works&mdash;not just superficially, but deeply&mdash;how can I know the implications of my choice? Will one approach scale better? Will another be more maintainable? Will a third contain subtle bugs that only manifest under specific conditions?</p>
 
 <p>This is not just my experience. It is happening across every intellectual field touched by AI. What is happening in computer science is a premonition of superhuman designs in medicine, law, and finance. We are becoming conductors of orchestras whose instruments we no longer play, architects of buildings whose structural engineering we cannot verify.</p>
 
@@ -88,7 +90,7 @@
 
 <p>It is on this stage that neural mechanics, also called mechanistic interpretability, plays a special role. This field provides us with tools to directly understand the calculations made by AI, to peer inside the black box and map the territory of artificial cognition.</p>
 
-<p>There are three key problems that neural mechanics may eventually help us solve:</p>
+<p>I have <a href="https://davidbau.com/archives/2025/12/09/in_defense_of_curiosity.html">argued elsewhere</a> that there are three key problems that neural mechanics may eventually help us solve:</p>
 
 <p><strong>First, the problem of deception.</strong> As AI systems become more capable, we face the specter of adversarial obfuscation: AIs that deceive us, or perhaps pander to us, in ways that obscure not just their "thoughts" and intentions, but actual insights about the world. If an AI is sufficiently capable, we might not be able to detect deception merely by interacting with its outputs. We need something like a lie detector or truth serum for AI, and for that, we need to understand the structure of an AI's internal representations and computations. Our modern AIs already flatter us, telling us what we want to hear while being keenly aware of our flaws, feeding our ego while leaving us ignorant.</p>
 
