@@ -118,20 +118,34 @@ Can we reverse-engineer the end-to-end algorithms implemented by a neural networ
 
 ---
 
-## Week 9: Decoding Representations & Self-Description
+## Week 9: Training Dynamics & Model Editing
 
-Can models help us interpret themselves? This week explores techniques that leverage the model's own capabilities to decode and describe its internal representations—turning the model into a collaborator in the interpretability process.
+How do circuits emerge during training, and can we surgically edit the knowledge they encode? This week connects the study of learned mechanisms to their formation and modification—understanding not just what models compute, but how those computations arise and how we can change them.
+
+**Nanda, Chan, Lieberum, Smith & Steinhardt (2023)** "[Progress measures for grokking via mechanistic interpretability](https://arxiv.org/abs/2301.05217)" fully reverse-engineers how small transformers learn modular addition, revealing an elegant algorithm using Fourier transforms and trigonometric identities. By tracking "progress measures" through training, they decompose grokking into three phases: memorization, circuit formation, and cleanup—showing that sudden capability gains reflect gradual underlying structure.
+
+**Meng, Sharma, Andonian, Belinkov & Bau (2023)** "[Mass-Editing Memory in a Transformer](https://arxiv.org/abs/2210.07229)" extends ROME to edit thousands of facts simultaneously. MEMIT distributes updates across multiple MLP layers, scaling model editing by orders of magnitude while maintaining specificity. This demonstrates that localized factual knowledge can be surgically modified without retraining.
+
+*(Optional)* **Edelman, Gurnee, & Edelman (2024)** "[What needs to go right for an induction head?](https://arxiv.org/abs/2404.07129)" uses an optogenetics-inspired causal framework to study how induction heads form during training. They identify three interacting subcircuits that drive the phase change associated with in-context learning emergence.
+
+---
+
+## Week 10: Human Understanding & Self-Description
+
+Can interpretability actually help humans understand AI systems—and can models help interpret themselves? This week addresses the ultimate goal: bridging the gap between model internals and human comprehension, whether by extracting teachable knowledge or enabling models to describe their own representations.
+
+**Schut, Tomašev, McGrath, Hassabis, Paquet & Kim (2025)** "[Bridging the Human-AI Knowledge Gap through Concept Discovery and Transfer in AlphaZero](https://www.pnas.org/doi/10.1073/pnas.2406675122)" demonstrates end-to-end knowledge transfer from AI to humans. By extracting novel concepts from AlphaZero's internal representations, they teach chess grandmasters machine-discovered strategies—proving that interpretability can yield genuinely new human understanding.
 
 **Ghandeharioun et al. (2024)** "[Patchscopes: A Unifying Framework for Inspecting Hidden Representations](https://arxiv.org/abs/2401.06102)" uses the model itself to decode its representations. By "patching" hidden states into carefully designed prompts, Patchscopes elicits natural language descriptions of what information is encoded at any layer and position. This unifies and extends the logit lens approach from Week 1.
 
-**Hewitt et al. (2025)** "[Neologism Learning for Controllability and Self-Verbalization](https://arxiv.org/abs/2510.08506)" teaches models new words for concepts they already represent internally. When a model learns a neologism for an internal concept, it can then describe what that concept means to it—enabling a form of self-report about representations. This opens new possibilities for human-machine communication about internal states.
+**Hewitt et al. (2025)** "[Neologism Learning for Controllability and Self-Verbalization](https://arxiv.org/abs/2510.08506)" teaches models new words for concepts they already represent internally. When a model learns a neologism for an internal concept, it can then describe what that concept means to it—enabling a form of self-report about representations.
 
-*(Optional)* **Hewitt, Geirhos & Kim (2025)** "[We Can't Understand AI Using our Existing Vocabulary](https://arxiv.org/abs/2502.07586)" is a position paper arguing that effective human-AI communication requires developing new shared vocabulary for concepts that exist in models but not in natural language. Provides motivation for the neologism learning approach.
+*(Optional)* **Hewitt, Geirhos & Kim (2025)** "[We Can't Understand AI Using our Existing Vocabulary](https://arxiv.org/abs/2502.07586)" argues that effective human-AI communication requires developing new shared vocabulary for concepts that exist in models but not in natural language.
 
 ---
 
 ## Summary
 
-- **Total papers**: 34 (22 core + 12 optional)
-- **Weeks covered**: 0–9 (Week 0 is intro, Weeks 1–9 have readings)
+- **Total papers**: 38 (25 core + 13 optional)
+- **Weeks covered**: 0–10 (Week 0 is intro, Weeks 1–10 have readings)
 - **Focus**: Methods for localizing and characterizing concept representations in LLMs
