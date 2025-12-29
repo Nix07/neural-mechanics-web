@@ -56,7 +56,7 @@ How do we rigorously evaluate what models know and how they behave? Before we ca
 
 ## Week 4: Representation Geometry
 
-Do abstract concepts have geometric structure in activation space? A growing body of work finds that concepts from truth to sentiment to relations are encoded as linear directions—and that this linearity has both theoretical and practical implications.
+What does a concept look like inside a neural network? This week examines the geometric structure of representations—visualizing activations with PCA, finding linear directions that correspond to concepts, and characterizing how abstract ideas like truth, sentiment, and relations are spatially organized in activation space.
 
 **Marks & Tegmark (2023)** "[The Geometry of Truth: Emergent Linear Structure in LLM Representations of True/False Datasets](https://arxiv.org/abs/2310.06824)" demonstrates that truth and falsehood correspond to a linear direction in representation space. Across diverse factual statements, a simple linear probe can separate true from false—and this direction emerges naturally from model training without explicit supervision.
 
@@ -84,7 +84,7 @@ Where in the network are specific facts and functions computed? Correlation isn'
 
 ## Week 6: Probes
 
-Can we train classifiers to decode concepts from activations? Probing offers a direct approach: train a simple model to predict a concept from internal representations. But probes come with interpretive challenges—what does it mean if a probe succeeds or fails?
+Is the information actually there? Probing asks the information-content question: can we reliably decode a concept from activations, how cleanly is it encoded, at which layers, and how do we know the probe is revealing genuine structure rather than imposing its own? This week covers the methodology and pitfalls of training classifiers to read out concepts.
 
 **Kim et al. (2018)** "[Interpretability Beyond Feature Attribution: Quantitative Testing with Concept Activation Vectors](https://arxiv.org/abs/1711.11279)" introduces TCAV (Testing with Concept Activation Vectors), a foundational probing method. Rather than asking "which input features matter," TCAV asks "how sensitive is the model to this human-defined concept?" This reframes interpretability around concepts meaningful to humans.
 
