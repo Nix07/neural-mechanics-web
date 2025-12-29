@@ -1,0 +1,19 @@
+# Downloaded papers (hosted separately)
+papers/
+
+# Utility scripts
+scripts/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# OS files
+.DS_Store
+
+# Editor swap files
+*.swp
+*.swo
+*~

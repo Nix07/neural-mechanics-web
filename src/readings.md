@@ -14,11 +14,11 @@ Curated readings for **Special Topics in AI: The Neural Mechanics of Concepts** 
 
 | Paper | Why |
 |-------|-----|
-| Elhage et al. (2021) "[A Mathematical Framework for Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html)" | Residual stream view, vocabulary for mechanistic interpretability |
 | Ferrando, Sarti, Bisazza & Costa-jussà (2024) "[A Primer on the Inner Workings of Transformer-based Language Models](https://arxiv.org/abs/2405.00208)" | Accessible pedagogical overview of interpretability techniques |
 | nostalgebraist (2020) "[interpreting GPT: the logit lens](https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens)" | Original logit lens technique — decode intermediate layers to vocabulary |
 | Wendler et al. (2024) "[Do Llamas Work in English? On the Latent Language of Multilingual Transformers](https://arxiv.org/abs/2402.10588)" | Logit lens reveals English as internal pivot language in multilingual models |
-| Belrose et al. (2023) "[Eliciting Latent Predictions from Transformers with the Tuned Lens](https://arxiv.org/abs/2303.08112)" | Improved logit lens with learned affine probes per layer |
+| Elhage et al. (2021) "[A Mathematical Framework for Transformer Circuits](https://transformer-circuits.pub/2021/framework/index.html)" *(optional)* | Deep dive: residual stream view, vocabulary for mechanistic interpretability |
+| Belrose et al. (2023) "[Eliciting Latent Predictions from Transformers with the Tuned Lens](https://arxiv.org/abs/2303.08112)" *(optional)* | Improved logit lens with learned affine probes per layer |
 
 ---
 
@@ -38,10 +38,10 @@ Curated readings for **Special Topics in AI: The Neural Mechanics of Concepts** 
 
 | Paper | Why |
 |-------|-----|
-| Brown et al. (2020) "[Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165)" | Introduced few-shot evaluation paradigm |
 | Petroni et al. (2019) "[Language Models as Knowledge Bases?](https://arxiv.org/abs/1909.01066)" | Template for probing factual knowledge via cloze tasks (LAMA) |
 | Zheng et al. (2023) "[Judging LLM-as-a-Judge](https://arxiv.org/abs/2306.05685)" | Modern evaluation technique for open-ended outputs |
 | Perez et al. (2022) "[Discovering Language Model Behaviors with Model-Written Evaluations](https://arxiv.org/abs/2212.09251)" | Using LLMs to generate evaluation datasets |
+| Brown et al. (2020) "[Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165)" *(optional)* | Introduced few-shot evaluation paradigm |
 
 ---
 
@@ -49,11 +49,11 @@ Curated readings for **Special Topics in AI: The Neural Mechanics of Concepts** 
 
 | Paper | Why |
 |-------|-----|
-| Mikolov et al. (2013) "[Efficient Estimation of Word Representations in Vector Space](https://arxiv.org/abs/1301.3781)" | Origin of "linear directions encode concepts" hypothesis (Word2Vec) |
-| Bolukbasi et al. (2016) "[Man is to Computer Programmer as Woman is to Homemaker?](https://arxiv.org/abs/1607.06520)" | First demonstration of finding/manipulating concept directions |
 | Marks & Tegmark (2023) "[The Geometry of Truth: Emergent Linear Structure in LLM Representations of True/False Datasets](https://arxiv.org/abs/2310.06824)" | Finds linear truth directions in LLMs |
 | Tigges et al. (2023) "[Linear Representations of Sentiment in Large Language Models](https://arxiv.org/abs/2310.15154)" | Clean example of concept geometry in modern LLMs |
 | Hernandez et al. (2023) "[Linearity of Relation Decoding in Transformer LMs](https://arxiv.org/abs/2308.09124)" | How relational concepts are encoded |
+| Mikolov et al. (2013) "[Efficient Estimation of Word Representations in Vector Space](https://arxiv.org/abs/1301.3781)" *(optional)* | Historical: origin of "linear directions encode concepts" hypothesis (Word2Vec) |
+| Bolukbasi et al. (2016) "[Man is to Computer Programmer as Woman is to Homemaker?](https://arxiv.org/abs/1607.06520)" *(optional)* | Historical: first demonstration of finding/manipulating concept directions |
 
 ---
 
@@ -72,8 +72,8 @@ Curated readings for **Special Topics in AI: The Neural Mechanics of Concepts** 
 | Paper | Why |
 |-------|-----|
 | Kim et al. (2018) "[Interpretability Beyond Feature Attribution: Quantitative Testing with Concept Activation Vectors](https://arxiv.org/abs/1711.11279)" | Concept Activation Vectors (TCAV) — foundational probing method |
-| Tenney et al. (2019) "[What Do You Learn from Context? Probing for Sentence Structure in Contextualized Word Representations](https://arxiv.org/abs/1905.06316)" | Systematic methodology for probing linguistic structure (Edge Probing) |
 | Hewitt & Liang (2019) "[Designing and Interpreting Probes with Control Tasks](https://arxiv.org/abs/1909.03368)" | What probes actually tell you; addresses "is the probe just memorizing?" |
+| Tenney et al. (2019) "[What Do You Learn from Context? Probing for Sentence Structure in Contextualized Word Representations](https://arxiv.org/abs/1905.06316)" *(optional)* | Systematic methodology for probing linguistic structure (Edge Probing) |
 
 ---
 
@@ -102,13 +102,13 @@ Curated readings for **Special Topics in AI: The Neural Mechanics of Concepts** 
 | Paper | Why |
 |-------|-----|
 | Ghandeharioun et al. (2024) "[Patchscopes: A Unifying Framework for Inspecting Hidden Representations](https://arxiv.org/abs/2401.06102)" | Use LLM's own abilities to decode its representations; unifies and extends logit lens |
-| Hewitt, Geirhos & Kim (2025) "[We Can't Understand AI Using our Existing Vocabulary](https://arxiv.org/abs/2502.07586)" | Position paper: need neologisms for human-machine communication about concepts |
 | Hewitt et al. (2025) "[Neologism Learning for Controllability and Self-Verbalization](https://arxiv.org/abs/2510.08506)" | Teach models new words for concepts; models self-verbalize what concepts mean to them |
+| Hewitt, Geirhos & Kim (2025) "[We Can't Understand AI Using our Existing Vocabulary](https://arxiv.org/abs/2502.07586)" *(optional)* | Position paper: need neologisms for human-machine communication about concepts |
 
 ---
 
 ## Summary
 
-- **Total papers**: 34 (31 core + 3 optional)
+- **Total papers**: 34 (22 core + 12 optional)
 - **Weeks covered**: 0–9 (Week 0 is intro, Weeks 1–9 have readings)
 - **Focus**: Methods for localizing and characterizing concept representations in LLMs
