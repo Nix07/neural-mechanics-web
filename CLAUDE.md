@@ -62,3 +62,7 @@ Each week focuses on specific interpretability methods and should include:
 1. Edit files in `src/` directory only (never edit `public/` directly)
 2. Run `make` to build changes
 3. When creating new week pages, update the schedule table in `src/index.html` to link to them
+
+## Git Commits
+
+- **No emojis in commit messages** - the deployment server cannot handle non-ASCII characters
