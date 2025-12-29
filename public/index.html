@@ -190,7 +190,8 @@
   <section id="schedule">
     <h2>Schedule</h2>
     <p>
-      <strong>Location:</strong> Northeastern University Boston campus (exact building information will be provided later).
+      <strong>Time:</strong> Tuesday 11:45 am – 1:25 pm, Thursday 2:50 pm – 4:30 pm<br>
+      <strong>Location:</strong> Hayden Hall 321
     </p>
   </section>
 
@@ -210,113 +211,122 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Weeks 0-14 -->
+        <!-- Week 0: Introduction -->
         <tr>
           <td>0</td>
-          <td colspan="2"><a href="week0_welcome.html">Welcome: At the Edge of Understanding</a><br><a href="week0.html">Introduction & Course Overview</a><br>Course structure, goals, and introduction to mechanistic interpretability.<br><small>Thu Jan 8</small>
+          <td colspan="2"><a href="week0.html">Introduction</a><br>Course structure, goals, and introduction to mechanistic interpretability.<br><small>Thu Jan 8</small>
           </td>
-          <td>Team formation and 2-3 candiate concepts.</td>
+          <td>Team formation and 2-3 candidate concepts.</td>
         </tr>
+        <!-- Week 1: Foundations -->
         <tr>
           <td>1</td>
-          <td><a href="week1.html">Steering</a><br>Controlling model behavior through activation addition and concept vectors.<br><small>Tue Jan 13</small>
+          <td><a href="week1.html">Foundations</a><br>Logit lens, intermediate representations, and the vocabulary of mechanistic interpretability.<br><small>Tue Jan 13</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Jan 15</small>
-          <td>Steering proof-of-concept</td>
+          <td><strong>Project Updates</strong><br><small>Thu Jan 15</small></td>
+          <td>Concept selection finalized</td>
         </tr>
+        <!-- Week 2: Steering -->
         <tr>
           <td>2</td>
-          <td><a href="week2.html">Benchmarking</a><br>Measuring and evaluating LLM behavior, plus dataset construction strategies.<br><small>Tue Jan 20</small>
+          <td><a href="week2.html">Steering</a><br>Controlling model behavior through activation addition, representation engineering, and superposition.<br><small>Tue Jan 20</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Jan 22</small>
-          <td>Benchmark + model selection</td>
+          <td><strong>Project Updates</strong><br><small>Thu Jan 22</small></td>
+          <td>Steering proof-of-concept</td>
         </tr>
+        <!-- Week 3: Evaluation Methodology -->
         <tr>
           <td>3</td>
-          <td><a href="week3.html">Representation Visualization</a><br>Representation Geometry<br><small>Tue Jan 27</small>
+          <td><a href="week3.html">Evaluation Methodology</a><br>Measuring and evaluating LLM behavior: cloze tasks, LLM-as-judge, model-written evaluations.<br><small>Tue Jan 27</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Jan 29</small>
-          <td>Logit lens + geometric analysis</td>
+          <td><strong>Project Updates</strong><br><small>Thu Jan 29</small></td>
+          <td>Benchmark + model selection</td>
         </tr>
+        <!-- Week 4: Representation Geometry -->
         <tr>
           <td>4</td>
-          <td><a href="week4.html">Causal Mediation Analysis</a><br>Activation patching, causal tracing, and principled validation strategies.<br><small>Tue Feb 3</small>
+          <td><a href="week4.html">Representation Geometry</a><br>What does a concept look like? PCA visualization, linear directions, and geometric structure.<br><small>Tue Feb 3</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Feb 5</small>
-          <td>Causal localization results</td>
+          <td><strong>Project Updates</strong><br><small>Thu Feb 5</small></td>
+          <td>Geometric analysis of concept</td>
         </tr>
+        <!-- Week 5: Causal Localization -->
         <tr>
           <td>5</td>
-          <td><a href="week5.html">Trained Probes</a><br>Using auxiliary models to extract information and test concept representations.<br><small>Tue Feb 10</small>
+          <td><a href="week5.html">Causal Localization</a><br>Where are facts and functions computed? Causal tracing, activation patching, and function vectors.<br><small>Tue Feb 10</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Feb 12</small>
-          <td>Probe training + analysis</td>
+          <td><strong>Project Updates</strong><br><small>Thu Feb 12</small></td>
+          <td>Causal localization results</td>
         </tr>
+        <!-- Week 6: Probes -->
         <tr>
           <td>6</td>
-          <td><a href="week6.html">Input Attribution</a><br>Which input tokens matter, plus sanity checks and validation tests.<br><small>Tue Feb 17</small>
+          <td><a href="week6.html">Probes</a><br>Is the information there? Training classifiers to decode concepts, plus methodological pitfalls.<br><small>Tue Feb 17</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Feb 19</small>
-          <td>Attribution analysis, or other experiment updates</td>
+          <td><strong>Project Updates</strong><br><small>Thu Feb 19</small></td>
+          <td>Probe training + analysis</td>
         </tr>
+        <!-- Week 7: Attribution -->
         <tr>
           <td>7</td>
-          <td><a href="week7.html">Feature Discovery</a><br>Automatic discovery via sparse autoencoders, plus when features mislead.<br><small>Tue Feb 24</small>
+          <td><a href="week7.html">Attribution</a><br>Which input tokens matter? Integrated gradients, faithful attribution, and RAG analysis.<br><small>Tue Feb 24</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Feb 26</small>
-          <td>SAE feature discovery, or other experiment updates</td>
+          <td><strong>Project Updates</strong><br><small>Thu Feb 26</small></td>
+          <td>Attribution analysis</td>
         </tr>
+        <!-- Spring Break -->
+        <tr style="background-color: #e8e8e8;">
+          <td>—</td>
+          <td colspan="2"><em>Spring Break</em><br><small>Mar 2–6</small></td>
+          <td>No class</td>
+        </tr>
+        <!-- Week 8: Circuits -->
         <tr>
           <td>8</td>
-          <td><a href="week8.html">Circuits</a><br>Reverse-engineering computational algorithms with principled causal validation.<br><small>Tue Mar 3</small>
+          <td><a href="week8.html">Circuits</a><br>Reverse-engineering end-to-end algorithms: induction heads, ACDC, and automated circuit discovery.<br><small>Tue Mar 10</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Mar 5</small>
-          <td>Circuit analysis, or other epxeriment updates</td>
+          <td><strong>Project Updates</strong><br><small>Thu Mar 12</small></td>
+          <td>Circuit analysis (optional)</td>
         </tr>
+        <!-- Week 9: Decoding & Self-Description -->
         <tr>
           <td>9</td>
-          <td><a href="week9.html">Training Dynamics</a><br>How mechanisms emerge during training: grokking, phase transitions, and circuit formation.<br><small>Tue Mar 10</small>
+          <td><a href="week9.html">Decoding & Self-Description</a><br>Can models interpret themselves? Patchscopes, neologism learning, and model self-verbalization.<br><small>Tue Mar 17</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Mar 12</small>
-          <td>Checkpoint analysis of emergence, or other experiment updates</td>
+          <td><strong>Project Updates</strong><br><small>Thu Mar 19</small></td>
+          <td>Self-description experiments (optional)</td>
         </tr>
+        <!-- Project Weeks -->
         <tr>
           <td>10</td>
-          <td><a href="week10.html">Model Editing</a><br>Surgical fact editing with ROME/MEMIT and parameter-efficient fine-tuning with LoRA.<br><small>Tue Mar 17</small>
+          <td>How to Write a Paper<br><small>Tue Mar 24</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Mar 19</small>
-          <td>Model editing demonstration, or other experiment updates</td>
+          <td><strong>Project Discussion</strong><br><small>Thu Mar 26</small></td>
+          <td>Introduction + related work draft</td>
         </tr>
         <tr>
           <td>11</td>
-          <td><a href="week11.html">Human Understanding</a><br>Testing if explanations help humans and extracting superhuman knowledge.<br><small>Tue Mar 24</small>
+          <td>Plot-a-thon: Experiment Discussion<br><small>Tue Mar 31</small>
           </td>
-          <td><strong>Project Updates</strong><br><small>Thu Mar 26</small>
-          <td>Human validation study, or other experiment updates</td>
+          <td><strong>Methods Section Workshop</strong><br><small>Thu Apr 2</small></td>
+          <td>Methods draft due</td>
         </tr>
         <tr>
           <td>12</td>
-          <td>How to Write a Paper<br><small>Tue Mar 31</small>
+          <td>Plot-a-thon: Results Discussion<br><small>Tue Apr 7</small>
           </td>
-          <td><strong>Intro Section Peer Editing</strong><br><small>Thu Apr 2</small>
-          <td>Introduction, related work, methods draft</td>
+          <td><strong>Complete Draft Due for Peer Review</strong><br><small>Thu Apr 9</small></td>
+          <td>Full paper draft</td>
         </tr>
         <tr>
           <td>13</td>
-          <td>Plot-a-thon Experiment Discussion<br><small>Tue Apr 7</small>
+          <td>Peer Review Workshop<br><small>Tue Apr 14</small>
           </td>
-          <td><strong>Complete Draft Due for Peer Review</strong><br><small>Thu Apr 9</small>
-          <td>Full paper draft for peer review</td>
-        </tr>
-        <tr>
-          <td>14</td>
-          <td>Plot-a-thon Experiment Discussion<br><small>Tue Apr 14</small>
-          </td>
-          <td><strong>Paper Editing Workshop</strong><br><small>Thu Apr 16</small>
+          <td><strong>Paper Editing Workshop</strong><br><small>Thu Apr 16</small></td>
           <td>Final revisions</td>
         </tr>
         <tr>
-          <td>15</td>
+          <td>14</td>
           <td colspan="2">Final Presentations<br><small>Tue Apr 21</small>
           </td>
           <td>Final paper due Wed Apr 22</td>
