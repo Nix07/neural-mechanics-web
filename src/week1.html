@@ -210,7 +210,20 @@
   <section id="tutorial">
     <h2>Tutorial: Understanding Transformer Internals</h2>
 
-    <h3>1. The Residual Stream View</h3>
+    <h3>1. The Transformer as a Grid of States</h3>
+    <p>
+      A transformer language model processes text through three phases, creating a grid of internal states:
+    </p>
+
+    <img src="imgs/transformer-state-grid-3-phases.png" alt="Transformer state grid showing three phases: encoder, layers, and decoder" style="max-width: 100%; margin: 20px 0;">
+
+    <ol>
+      <li><strong>Encoder:</strong> First, the encoder turns each input token into a vector of neural activations. The word "the" becomes a high-dimensional vector.</li>
+      <li><strong>Layers:</strong> Then a series of neural layers mixes and transforms the vectors for each token. Information flows both along each token's "column" and across tokens via attention.</li>
+      <li><strong>Decoder:</strong> Finally, the decoder turns each vector into a prediction for the next word. After "Miles Davis plays the", the model predicts "trumpet".</li>
+    </ol>
+
+    <h3>2. The Residual Stream View</h3>
     <p>
       A transformer can be understood as a series of operations that read from and write to a shared "residual stream."
       At each layer, attention heads and MLP modules add information to this stream rather than replacing it entirely.
@@ -229,9 +242,15 @@
       "knows" at layer L.
     </p>
 
-    <h3>2. The Logit Lens</h3>
+    <h3>3. The Logit Lens: Early Exit Decoding</h3>
     <p>
-      The <strong>logit lens</strong> applies the unembedding matrix directly to intermediate activations:
+      What if we don't wait until the final layer to decode? The <strong>logit lens</strong> applies the decoder (unembedding matrix) directly to intermediate activations:
+    </p>
+
+    <img src="imgs/transformer-early-exit-logit-lens.png" alt="Early exit decoding showing how predictions evolve: thing → jazz → horn → horn → trumpet" style="max-width: 100%; margin: 20px 0;">
+
+    <p>
+      If you decode each vector early, you can see how the prediction evolves. In this example, the model's prediction for "Miles Davis plays the ___" progresses through: "thing" &rarr; "jazz" &rarr; "horn" &rarr; "horn" &rarr; "trumpet". The correct answer emerges gradually as information is refined through the layers.
     </p>
 
     <div class="diagram">
@@ -240,24 +259,23 @@
     </div>
 
     <p>
-      This lets us see what the model would "predict" if we stopped processing at layer L. Key observations:
+      Key observations from logit lens analysis:
     </p>
     <ul>
-      <li>Early layers often predict the input token or simple continuations</li>
+      <li>Early layers often predict generic or input-related tokens</li>
       <li>Middle layers begin to show task-relevant predictions</li>
       <li>Late layers refine toward the final answer</li>
       <li>The "correct" prediction often emerges gradually, not suddenly</li>
     </ul>
 
-    <h3>3. What Does Latent Language Reveal?</h3>
+    <h3>4. What Does Latent Language Reveal?</h3>
     <p>
       When applying logit lens to multilingual models processing non-English text, a striking pattern emerges:
       regardless of input language, intermediate representations often decode to English tokens.
     </p>
 
     <p>
-      This suggests models may use English as an internal "lingua franca"&mdash;even when input and output are in
-      another language, the intermediate computation happens in an English-like representation space.
+      <strong>Wendler et al. (2024)</strong> studied this systematically with translation tasks. When prompting a model to translate French to Chinese (e.g., <code>Fran&ccedil;ais: "fleur" - 中文:</code>), the intermediate layers decode to... English! The model appears to pivot through English internally, even when English is neither the input nor output language.
     </p>
 
     <p>
@@ -269,7 +287,7 @@
       <li>Internal representations are not simple copies of input/output</li>
     </ul>
 
-    <h3>4. Tuned Lens: Beyond Raw Projection</h3>
+    <h3>5. Tuned Lens: Beyond Raw Projection</h3>
     <p>
       The basic logit lens assumes we can directly project intermediate activations with the unembedding matrix.
       But representations at early layers may not be in the same "format" as final-layer representations.
@@ -288,10 +306,86 @@
     </p>
   </section>
 
-  <section id="code-exercise">
-    <h2>Code Exercise</h2>
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Logit Lens Workbench</h2>
+
     <p>
-      This week's exercise provides hands-on experience with the core concepts:
+      In this hands-on exercise, we'll use the <a href="https://workbench.ndif.us" target="_blank">NDIF Logit Lens Workbench</a>&mdash;a code-free tool for exploring transformer internals. No programming required!
+    </p>
+
+    <a href="https://workbench.ndif.us" target="_blank" class="colab-button">
+      Open NDIF Logit Lens Workbench
+    </a>
+
+    <h3>Part 1: Reproduce the Wendler Results</h3>
+    <p>
+      First, we'll replicate the "latent language" finding from Wendler et al. (2024). Does the model really pivot through English when translating between non-English languages?
+    </p>
+
+    <h4>Instructions:</h4>
+    <ol>
+      <li>Open the workbench and select a multilingual model (e.g., Llama-2)</li>
+      <li>Enter a French-to-Chinese translation prompt:
+        <div class="diagram" style="text-align: left;">
+          Fran&ccedil;ais: "cinq" - 中文: "五"<br>
+          Fran&ccedil;ais: "coeur" - 中文: "心"<br>
+          Fran&ccedil;ais: "trois" - 中文: "三"<br>
+          Fran&ccedil;ais: "nuage" - 中文:
+        </div>
+      </li>
+      <li>Examine the logit lens heatmap for the final token position</li>
+      <li>At which layers do you see English words appearing? At which layers does Chinese emerge?</li>
+    </ol>
+
+    <h4>Discussion Questions:</h4>
+    <ul>
+      <li>What English words appear in the intermediate layers?</li>
+      <li>Is the pattern consistent across different French words?</li>
+      <li>Try reversing the direction (Chinese &rarr; German). Do you still see English?</li>
+    </ul>
+
+    <h3>Part 2: Exploring a Research Question&mdash;Do Models Understand Puns?</h3>
+    <p>
+      Now let's apply logit lens to investigate a research question we'll revisit throughout the course: <strong>how do language models process puns?</strong>
+    </p>
+
+    <p>
+      Puns are interesting because they require recognizing that a word has multiple meanings simultaneously. If a model "gets" a pun, we might expect to see both meanings active in its intermediate representations.
+    </p>
+
+    <h4>Example Puns to Explore:</h4>
+    <div class="diagram" style="text-align: left;">
+      "I used to be a banker, but I lost interest."<br><br>
+      "The past, present, and future walked into a bar. It was tense."<br><br>
+      "I'm reading a book about anti-gravity. It's impossible to put down."
+    </div>
+
+    <h4>Instructions:</h4>
+    <ol>
+      <li>Enter a pun-setup prompt that leads to a punchline word</li>
+      <li>Look at the logit lens output for the position just before the punchline</li>
+      <li>Do you see evidence of both meanings of the pun word?</li>
+      <li>At what layer does the "correct" (pun) completion emerge?</li>
+      <li>Compare with a non-pun sentence using the same words&mdash;does the pattern differ?</li>
+    </ol>
+
+    <h4>Research Questions to Consider:</h4>
+    <ul>
+      <li>Can you find evidence that the model represents both meanings of the pun word?</li>
+      <li>Does the "wrong" meaning appear at early layers before being suppressed?</li>
+      <li>How does the model's behavior differ between good puns and bad puns?</li>
+      <li>What would it mean to "localize" pun understanding in the model?</li>
+    </ul>
+
+    <p>
+      <em>We'll return to the pun research question throughout the semester as we learn new interpretability methods. Each technique will give us a different lens on the same phenomenon.</em>
+    </p>
+  </section>
+
+  <section id="code-exercise">
+    <h2>Optional: Code Exercise</h2>
+    <p>
+      For those who want to dive deeper into the implementation, this exercise provides hands-on coding experience:
     </p>
     <ul>
       <li>Load a transformer language model and examine its architecture</li>
@@ -306,7 +400,7 @@
     </a>
 
     <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
-      <em>Note: The Colab notebook will be created and linked here.</em>
+      <em>Note: The Colab notebook will be linked here.</em>
     </p>
   </section>
 

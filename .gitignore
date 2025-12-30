@@ -1,6 +1,9 @@
 # Downloaded papers (hosted separately)
 papers/
 
+# Slide decks (source material, not deployed)
+slides/
+
 # Python
 __pycache__/
 *.pyc
