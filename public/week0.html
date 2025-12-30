@@ -293,19 +293,26 @@
 
   <h3>Early Success: The Lamp-Controlling Neuron</h3>
   <p>
-    Early work on GANs (Generative Adversarial Networks) provides an instructive template. Researchers found individual neurons that controlled specific scene properties: a single neuron might control whether lights are on or off.
+    Early work on GANs (Generative Adversarial Networks) provides an instructive template. A StyleGAN trained to generate bedrooms&mdash;with no supervision beyond imitation of a few million bedroom images&mdash;revealed striking internal structure.
   </p>
 
   <div class="example-box">
     <p><strong>Experiment (Bau et al., 2019):</strong></p>
     <ol>
-      <li>Generate a bedroom image (no lamps)</li>
-      <li>Manually increase activation of "lamp neuron"</li>
-      <li>Result: Lamps appear in the image!</li>
-      <li>Decrease activation: Lamps disappear</li>
+      <li>Generate one image that has a lamp, using a fixed random seed z, and manually mark the pixels illuminated by the lamp light</li>
+      <li>For each of the 9,000 style neurons, regenerate the same image (same seed z) with that neuron removed (set to zero), and rank neurons by their causal effect on the marked pixels</li>
+      <li>Test the highest-ranked neuron for its effect on other bedroom images</li>
     </ol>
-    <p><em>This is causal mediation: intervening on internal components establishes their causal role in the outputs.</em></p>
+    <p><strong>Result:</strong> A single neuron turns lights on and off across many different images.</p>
   </div>
+
+  <p>
+    This is surprising because there is nothing in the training data explicitly about switching lights on and off. The training set contains only static bedroom images&mdash;no before/after pairs, no labels about lighting. Yet "switching off the lights" emerges as a concept that the neural network learned from the training process.
+  </p>
+
+  <p>
+    <strong>This leads to the central question of this course:</strong> When we train on much more complex data&mdash;text spanning all of human knowledge&mdash;what concepts do neural networks learn?
+  </p>
 
   <h3>Key Research Threads in LLMs</h3>
   <p>
