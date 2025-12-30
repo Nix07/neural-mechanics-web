@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 0: Are Concepts Different from Words? - Neural Mechanics Course</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fff;
+        }
+        h1 {
+            font-size: 2.2em;
+            font-weight: 600;
+            margin-bottom: 0.5em;
+            color: #1a1a1a;
+        }
+        h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-top: 1.8em;
+            margin-bottom: 0.8em;
+            color: #2c3e50;
+        }
+        p {
+            margin-bottom: 1.2em;
+            text-align: justify;
+        }
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        strong {
+            font-weight: 600;
+        }
+        ul, ol {
+            margin-bottom: 1.2em;
+            padding-left: 1.5em;
+        }
+        li {
+            margin-bottom: 0.6em;
+        }
+        .references {
+            margin-top: 3em;
+            padding-top: 2em;
+            border-top: 1px solid #e0e0e0;
+        }
+        .references p {
+            text-align: left;
+            margin-bottom: 0.8em;
+            padding-left: 2em;
+            text-indent: -2em;
+        }
+    </style>
+</head>
+<body>
+
+<p style="margin-bottom: 20px;"><a href="index.html">&larr; Course Home</a> | <a href="week0.html">Week 0: Course Overview &rarr;</a></p>
+
+<h1>Week 0: Are Concepts Different from Words?</h1>
+
+<h2>The Central Question</h2>
+
+<p>Large language models process text, but do they think in words? This course begins with a provocation: the internal representations that drive model behavior may be fundamentally different from the tokens that flow in and out. If true, this has profound implications for how we understand, control, and extract knowledge from these systems.</p>
+
+<p>Words are surface phenomena. They vary across languages, shift meaning with context, and often fail to capture the abstractions that underlie coherent reasoning. Concepts, by contrast, are the invariants&mdash;the stable structures that persist across linguistic transformations. This course asks: can we find these invariants inside neural networks? Can we characterize them, manipulate them, and ultimately build an atlas of the concepts that drive AI behavior?</p>
+
+<h2>The Mysteries of Language Models</h2>
+
+<p>Modern LLMs exhibit capabilities that seem to exceed mere pattern matching over tokens. Consider in-context learning (ICL): a model that has never been trained on a specific task can perform it after seeing just a few examples in its prompt. This is a form of metareasoning&mdash;the model is not just processing text but reasoning about how to reason.</p>
+
+<p>Where does this capability come from? It is not explicitly programmed. It emerges from training on next-token prediction, yet manifests as something that looks remarkably like flexible cognition. Understanding how such emergent capabilities are implemented&mdash;not just that they exist, but how they work mechanistically&mdash;is one of the core challenges that motivates interpretability research.</p>
+
+<h2>The Gap Between Knowledge and Expression</h2>
+
+<p>What an AI knows is not always what it says. This gap between internal representation and external behavior has become starkly visible in recent work.</p>
+
+<p><strong>Rager et al. (2025)</strong> study DeepSeek models, revealing a striking case of censorship mechanics. The models demonstrably possess knowledge about sensitive topics&mdash;their internal representations encode the relevant concepts&mdash;yet they refuse to express this knowledge in their outputs. The information exists inside the model; the suppression is a separate mechanism layered on top.</p>
+
+<p>This dissociation between knowing and saying is not merely a curiosity about Chinese AI policy. It points to a general phenomenon: models may have internal states that diverge systematically from their outputs. If we want to understand what models actually believe, know, or intend, we cannot rely solely on their words. We must look inside.</p>
+
+<h2>Causal Mediation: Finding the Neurons That Matter</h2>
+
+<p>How do we identify which internal components are responsible for specific behaviors? Early work on generative adversarial networks (GANs) provides an instructive template.</p>
+
+<p>In research on GAN image synthesis, it became possible to identify individual neurons that controlled specific scene properties. A single neuron might control whether lights in a scene are on or off. Activating that neuron turns on the lights; suppressing it turns them off. This is causal mediation analysis: intervening on internal components to establish their causal role in the model's outputs.</p>
+
+<p>The methodology generalizes from GANs to language models. If we can identify the internal representations that causally mediate specific behaviors&mdash;not just correlate with them, but actually cause them&mdash;we gain both scientific understanding and practical control.</p>
+
+<h2>Key Research Threads</h2>
+
+<p>Three lines of work illustrate the progress that has been made in localizing and characterizing neural concepts.</p>
+
+<p><strong>Meng et al. (2022)</strong> introduced ROME (Rank-One Model Editing), demonstrating that factual associations in GPT-style models are localized in specific MLP layers. By applying causal tracing&mdash;corrupting inputs and restoring activations at targeted locations&mdash;they identified where facts like "The Eiffel Tower is in Paris" are stored. This work established that factual knowledge has a discernible address inside the network.</p>
+
+<p><strong>Todd et al. (2024)</strong> extended this localization paradigm from facts to functions. When a model performs in-context learning of an abstract task&mdash;translating to French, answering with antonyms, continuing a pattern&mdash;where is that function encoded? Function vectors show that task-level abstractions are also localizable and, remarkably, transferable: a vector extracted from one context can induce the same function in another.</p>
+
+<p><strong>Prakash et al. (2025)</strong> examined how models represent and track the mental states of agents described in text&mdash;theory of mind. This work shows that interpretability methods can reach beyond simple factual recall into the representation of genuinely abstract, cognitively rich concepts.</p>
+
+<h2>Induction Heads and the Emergence of Language-Independent Concepts</h2>
+
+<p>Among the most thoroughly analyzed circuits in transformers are induction heads: attention patterns that implement a simple but powerful operation of matching previous tokens and copying what came next. This mechanism underlies much of in-context learning.</p>
+
+<p>Work by Feucht and colleagues has characterized induction heads in detail, including the Dual Route model that describes how multiple pathways contribute to in-context learning behavior. Crucially, this research reveals that the relevant internal representations are often language-independent. A concept that emerges in English contexts may be the same internal structure that handles the analogous German or Chinese context.</p>
+
+<p>This finding reinforces the central thesis: concepts inside LLMs are not words. They are abstract structures that remain stable under transformations&mdash;switching languages, rephrasing prompts, varying surface details&mdash;that change everything about the tokens while preserving the underlying meaning.</p>
+
+<h2>Concepts as Invariants</h2>
+
+<p>What, then, is a concept inside a neural network?</p>
+
+<p>The emerging picture suggests that concepts are invariants of the system&mdash;internal structures whose functional roles remain unchanged under many transformations. Just as a physical law remains valid regardless of the coordinate system used to express it, a neural concept may persist across languages, phrasings, and contexts.</p>
+
+<p>Some examples of concepts that appear to have this invariant character:</p>
+
+<ul>
+    <li><strong>User concepts</strong>: Models appear to maintain representations of who they are talking to, tracking properties of the user across a conversation.</li>
+    <li><strong>Humor concepts</strong>: The recognition that something is funny seems to involve consistent internal structures even as the surface form of jokes varies wildly.</li>
+    <li><strong>Truthfulness concepts</strong>: Directions in activation space that correspond to whether a statement is true or false, independent of topic or phrasing.</li>
+    <li><strong>Task concepts</strong>: The abstract notion of "translate" or "summarize" as distinct from any particular instance of translation or summarization.</li>
+</ul>
+
+<p>These are not isolated neurons but distributed patterns of activation. They are not explicitly labeled in the training data but emerge from the structure of the task. And they are not words&mdash;they are what the words point to.</p>
+
+<h2>Toward an Atlas of Neural Concepts</h2>
+
+<p>If concepts inside LLMs are real, discoverable, and causally important, then we should map them systematically. The vision motivating this course is the creation of an atlas of neural concepts: a comprehensive characterization of the internal structures that drive model behavior across domains.</p>
+
+<p>Such an atlas would serve multiple purposes:</p>
+
+<ul>
+    <li><strong>Scientific understanding</strong>: What are the basic building blocks of machine cognition?</li>
+    <li><strong>Safety and alignment</strong>: Which concepts relate to honesty, deception, harm, and helpfulness?</li>
+    <li><strong>Knowledge extraction</strong>: What has the model learned that humans do not yet know?</li>
+    <li><strong>Control and steering</strong>: How can we intervene on concepts to shape behavior?</li>
+</ul>
+
+<p>Building this atlas requires methods. The works surveyed above&mdash;and the techniques you will learn throughout this course&mdash;constitute the toolkit for this cartographic project.</p>
+
+<h2>Discussion Questions</h2>
+
+<ol>
+    <li><strong>What do these works have in common?</strong> Each of the research threads discussed above&mdash;causal tracing, function vectors, theory of mind representations, induction head circuits&mdash;uses a distinct set of methods. What is the shared methodology that connects them? What makes something a "mechanistic interpretability" approach?</li>
+    <li><strong>What belongs in the atlas?</strong> If we were to construct an atlas of neural concepts, what should it contain? Individual neurons? Directions in activation space? Circuits? Functional roles? What level of description is most useful, and for whom?</li>
+    <li><strong>How do we know when we have found a concept?</strong> What criteria distinguish a genuine neural concept from a spurious correlation or an artifact of our analysis methods? How do we validate that what we have found is real?</li>
+    <li><strong>What concepts matter most?</strong> Given limited research resources, which concepts should we prioritize understanding? What makes a concept important from a scientific perspective? From a safety perspective? From a practical application perspective?</li>
+    <li><strong>Can models describe their own concepts?</strong> If concepts are not words, can language models ever articulate what they internally represent? Or is there a fundamental gap between neural representation and linguistic expression?</li>
+</ol>
+
+<div class="references">
+<h2>References</h2>
+
+<p>Meng, K., Bau, D., Andonian, A., &amp; Belinkov, Y. (2022). <a href="papers/meng-2022-rome-2202.05262.pdf">Locating and editing factual associations in GPT</a>. <em>Advances in Neural Information Processing Systems, 35</em>, 17359&ndash;17372.</p>
+
+<p>Prakash, N., Shaham, T. R., Gross, T., Bau, D., &amp; Belinkov, Y. (2025). <a href="papers/prakash-2024-entity-tracking-2402.14811.pdf">Fine-tuning enhances existing mechanisms: A case study on entity tracking</a>. <em>ICLR 2024</em>.</p>
+
+<p>Rager, S., et al. (2025). Open-source DeepSeek censorship. Preprint.</p>
+
+<p>Todd, E., Li, M. L., Sharma, A., Mueller, A., Wallace, B. C., &amp; Bau, D. (2024). <a href="papers/todd-2023-function-vectors-2310.15213.pdf">Function vectors in large language models</a>. <em>ICLR 2024</em>.</p>
+</div>
+
+<p style="margin-top: 3em; padding-top: 2em; border-top: 1px solid #e0e0e0;"><a href="index.html">&larr; Course Home</a> | <a href="week0.html">Week 0: Course Overview &rarr;</a></p>
+
+</body>
+</html>
