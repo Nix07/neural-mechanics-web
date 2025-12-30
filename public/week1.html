@@ -309,33 +309,33 @@
       This accounts for layer-specific representation formats, often yielding more interpretable intermediate predictions.
     </p>
 
-    <h3>6. Skeptical Questions About Logit Lens</h3>
+    <h3>6. From Observation to Understanding: What Experiments Are Needed?</h3>
     <p>
-      Before drawing conclusions from logit lens observations, consider what the method actually shows&mdash;and what it doesn't.
+      Logit lens generates striking observations. But observations are not explanations. The central challenge is: <strong>what additional experiments would you need to turn a logit lens observation into a scientific claim?</strong>
     </p>
 
-    <p>
-      <strong>What does "decoding" even mean?</strong> When we project an intermediate activation through the unembedding matrix and get "trumpet," we're applying a linear transformation designed for the <em>final</em> layer to an <em>intermediate</em> representation. Why should this tell us anything meaningful? The intermediate layers weren't trained to produce outputs that make sense when decoded this way. We might be looking at computational byproducts rather than genuine intermediate predictions.
-    </p>
+    <div class="discussion-box" style="background-color: #fff9e6; border-left: 4px solid #f39c12; padding: 15px; margin: 20px 0;">
+      <h4>Class Discussion: Designing Follow-up Experiments</h4>
+      <p>Consider the Wendler observation: intermediate layers decode to English during French&rarr;Chinese translation.</p>
+      <ol>
+        <li><strong>Hypothesis:</strong> "The model uses English as an internal lingua franca."</li>
+        <li><strong>Alternative hypothesis:</strong> "The decoder matrix is biased toward English tokens."</li>
+        <li><strong>Another alternative:</strong> "This is a tokenization artifact."</li>
+      </ol>
+      <p><strong>Your task:</strong> For each alternative, design an experiment that would distinguish it from the main hypothesis. What would you measure? What controls would you need? What result would be convincing?</p>
+    </div>
 
     <p>
-      <strong>Correlation vs. causation:</strong> Suppose you see "horn" decoded at layer 20 and "trumpet" at layer 25. Does this mean layer 20-25 "refined" the prediction from horn to trumpet? Not necessarily. The layers might have computed something else entirely, and the decoded words might be epiphenomenal&mdash;correlated with what the model is doing, but not causally involved. How would you distinguish these possibilities?
+      Similar questions arise for any logit lens observation:
     </p>
+    <ul>
+      <li>If you see a prediction "emerge" across layers (thing &rarr; jazz &rarr; horn &rarr; trumpet), how would you test whether those intermediate states are <em>causally</em> involved in the final prediction, versus being epiphenomenal?</li>
+      <li>If a pattern appears in one example, what systematic evaluation would establish generalization? How many examples? What variations?</li>
+      <li>If logit lens shows the "right answer" at layer 20, how would you verify that the model actually has the capability you're testing, rather than exploiting a spurious correlation?</li>
+    </ul>
 
     <p>
-      <strong>Sample size of one:</strong> Logit lens naturally invites analysis of individual prompts. But a single example tells you almost nothing about generalization. If you see English in intermediate layers during French&rarr;Chinese translation, is this a general phenomenon or an artifact of this particular word, this tokenization, this model? What controls would you need?
-    </p>
-
-    <p>
-      <strong>The decoder bias problem:</strong> The unembedding matrix was trained on data that is predominantly English. When intermediate representations project to English tokens, is the model "thinking in English," or is the decoder simply more sensitive to English-like patterns? How could you test this?
-    </p>
-
-    <p>
-      <strong>What are we actually learning?</strong> Even when logit lens reveals a striking pattern, ask: what scientific claim does this support? "The model sometimes decodes to English in middle layers" is an observation. "The model uses English as an internal lingua franca" is a much stronger claim that requires much more evidence.
-    </p>
-
-    <p>
-      These aren't reasons to dismiss logit lens&mdash;it remains a valuable tool for exploration and hypothesis generation. But the distance between "I observed X" and "I understand Y" is often larger than it first appears.
+      We'll develop tools to address these questions throughout the course: causal interventions (Week 5), systematic evaluation methodology (Week 3), and validation techniques (Weeks 6-7). For now, the goal is to recognize the gap between observation and understanding&mdash;and to start thinking about how to bridge it.
     </p>
   </section>
 
