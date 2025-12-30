@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 10: Model Editing</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body);"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #333;
+    }
+
+    h1 {
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      color: #34495e;
+      margin-top: 30px;
+      border-bottom: 2px solid #bdc3c7;
+      padding-bottom: 5px;
+    }
+
+    h3 {
+      color: #555;
+      margin-top: 20px;
+    }
+
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .info-box {
+      background-color: #e8f4f8;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .key-insight {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .example-box {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .comparison-box {
+      background-color: #f0f7ff;
+      border: 1px solid #3498db;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .paper-card {
+      background-color: #fff;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .paper-card h4 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+
+    .warning-box {
+      background-color: #ffe8e8;
+      border-left: 4px solid #d32f2f;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    ul,
+    ol {
+      margin: 10px 0;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .objectives {
+      background-color: #f0f7ff;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+    }
+
+    pre {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Week 10: Model Editing</h1>
+
+  <div class="objectives">
+    <h3>Learning Objectives</h3>
+    <ul>
+      <li>Understand the spectrum from activation interventions to weight modifications</li>
+      <li>Learn surgical editing methods: ROME and MEMIT for factual updates</li>
+      <li>Master parameter-efficient fine-tuning with LoRA</li>
+      <li>Compare weight-space vs. activation-space interventions</li>
+      <li>Apply interpretability findings to modify model behavior through weights</li>
+      <li>Validate that your interpretability work is actionable and causal</li>
+      <li>Understand limitations and safety considerations for model editing</li>
+    </ul>
+  </div>
+
+  <h2>1. From Understanding to Control</h2>
+
+  <h3>Why Model Editing?</h3>
+
+  <p>
+    Weeks 1-9 taught you to <strong>analyze</strong> neural networks: find features, trace circuits, and discover concepts. But interpretability research should be <strong>actionable</strong>.
+  </p>
+
+  <div class="key-insight">
+    <p><strong>The Action Test:</strong></p>
+    <p>
+      If you truly understand how a model represents concept X:
+    </p>
+    <ul>
+      <li>You should be able to <strong>modify</strong> that representation</li>
+      <li>The modification should <strong>change behavior</strong> predictably</li>
+      <li>Side effects should be <strong>minimal and understandable</strong></li>
+    </ul>
+    <p>
+      Model editing turns interpretability insights into concrete interventions by <strong>changing model weights</strong>.
+    </p>
+  </div>
+
+  <h3>The Intervention Spectrum</h3>
+
+  <table>
+    <tr>
+      <th>Method</th>
+      <th>What Changes</th>
+      <th>Persistence</th>
+      <th>Scope</th>
+      <th>Cost</th>
+    </tr>
+    <tr>
+      <td><strong>Prompting</strong></td>
+      <td>Input only</td>
+      <td>Single inference</td>
+      <td>Narrow (one generation)</td>
+      <td>Free</td>
+    </tr>
+    <tr>
+      <td><strong>Steering (Week 2)</strong></td>
+      <td>Activations</td>
+      <td>Per-inference</td>
+      <td>Moderate (affects reasoning)</td>
+      <td>Low (add vectors)</td>
+    </tr>
+    <tr>
+      <td><strong>Model Editing (ROME/MEMIT)</strong></td>
+      <td>Specific weights</td>
+      <td>Permanent</td>
+      <td>Narrow (targeted facts)</td>
+      <td>Medium (compute edit)</td>
+    </tr>
+    <tr>
+      <td><strong>Fine-tuning (LoRA)</strong></td>
+      <td>Many weights</td>
+      <td>Permanent</td>
+      <td>Broad (task/domain)</td>
+      <td>High (training)</td>
+    </tr>
+    <tr>
+      <td><strong>Full retraining</strong></td>
+      <td>All weights</td>
+      <td>Permanent</td>
+      <td>Complete</td>
+      <td>Very high</td>
+    </tr>
+  </table>
+
+  <p>
+    This week focuses on the middle ground: <strong>surgical edits</strong> (ROME/MEMIT) and <strong>efficient fine-tuning</strong> (LoRA).
+  </p>
+
+  <h2>2. Locating Knowledge in Weights</h2>
+
+  <h3>Where Are Facts Stored?</h3>
+
+  <p>
+    Before editing, we need to know <strong>where</strong> to edit. Research shows factual knowledge in transformers is stored in <strong>MLP layers</strong>, particularly in middle-to-late layers.
+  </p>
+
+  <div class="paper-card">
+    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
+    <p><strong>Published:</strong> NeurIPS 2022</p>
+    <p><strong>Key contribution:</strong> Causal tracing reveals that facts are stored in mid-layer MLPs; introduces ROME for surgical editing</p>
+  </div>
+
+  <h3>Causal Tracing for Knowledge Localization</h3>
+
+  <div class="info-box">
+    <p><strong>Method:</strong> Corrupt activations at different layers, measure impact on factual recall</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li><strong>Clean run:</strong> "The Eiffel Tower is located in" → "Paris" (baseline)</li>
+      <li><strong>Corrupted run:</strong> Add noise to subject token ("Eiffel Tower") embedding → fails to recall "Paris"</li>
+      <li><strong>Restoration test:</strong> Restore activations at layer L → if recall recovers, knowledge flows through layer L</li>
+      <li><strong>Sweep:</strong> Test all layers to find where restoration is most effective</li>
+    </ol>
+
+    <p><strong>Finding:</strong> Mid-layer MLPs (layers 8-20 in GPT-2-XL) are critical for factual recall.</p>
+  </div>
+
+  <h3>Key Insights from Localization</h3>
+
+  <ul>
+    <li><strong>Early layers:</strong> Process syntax and surface form (not factual content)</li>
+    <li><strong>Mid layers:</strong> Store factual associations (subject → object mappings)</li>
+    <li><strong>Late layers:</strong> Refine predictions and adapt to context</li>
+    <li><strong>MLPs specifically:</strong> Attention retrieves context; MLPs store knowledge</li>
+  </ul>
+
+  <h2>3. ROME: Rank-One Model Editing</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
+    <p><strong>Published:</strong> NeurIPS 2022</p>
+    <p><strong>Key contribution:</strong> Surgical fact editing via rank-one weight updates to MLP layers</p>
+  </div>
+
+  <h3>The Editing Problem</h3>
+
+  <p>
+    <strong>Goal:</strong> Change a specific fact without affecting other knowledge.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Example:</strong></p>
+    <ul>
+      <li><strong>Current fact:</strong> "The Space Needle is located in Seattle"</li>
+      <li><strong>Desired update:</strong> "The Space Needle is located in Paris"</li>
+      <li><strong>Constraint:</strong> Don't break other facts ("Eiffel Tower is in Paris", "Seattle is in Washington")</li>
+    </ul>
+  </div>
+
+  <h3>How ROME Works</h3>
+
+  <div class="info-box">
+    <p><strong>Core idea:</strong> Modify MLP weights to map subject representation → new object</p>
+
+    <p><strong>Mathematical formulation:</strong></p>
+    <ol>
+      <li><strong>Identify critical layer:</strong> Use causal tracing to find layer \(L\) where fact is stored</li>
+      <li><strong>Extract subject representation:</strong> \(h = \text{MLP}_L(\text{subject\_activation})\)</li>
+      <li><strong>Define target:</strong> \(h^* = \) representation that predicts new object</li>
+      <li><strong>Compute rank-one update:</strong>
+        <p style="text-align: center;">
+          \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T k}\)
+        </p>
+        where \(k\) is the input to the MLP (subject activation).
+      </li>
+      <li><strong>Update weights:</strong> \(W_{\text{new}} = W_{\text{old}} + \Delta W\)</li>
+    </ol>
+
+    <p><strong>Why rank-one?</strong> Minimal change to weights → minimal side effects</p>
+  </div>
+
+  <h3>ROME Algorithm Step-by-Step</h3>
+
+  <div class="example-box">
+    <p><strong>Example: Editing "The Space Needle is in Seattle" → "The Space Needle is in Paris"</strong></p>
+
+    <p><strong>Step 1: Locate the fact</strong></p>
+    <ul>
+      <li>Run causal tracing on "The Space Needle is in [MASK]"</li>
+      <li>Find critical layer (e.g., layer 17 MLP)</li>
+    </ul>
+
+    <p><strong>Step 2: Gather statistics</strong></p>
+    <ul>
+      <li>Pass 1000 examples through the model</li>
+      <li>Collect covariance matrix \(C\) of MLP inputs at layer 17</li>
+      <li>This captures "typical" activation patterns</li>
+    </ul>
+
+    <p><strong>Step 3: Compute edit direction</strong></p>
+    <ul>
+      <li>Get current output: \(h = \text{MLP}_{17}(\text{subject})\) → predicts "Seattle"</li>
+      <li>Get target output: \(h^*\) = representation that predicts "Paris"</li>
+      <li>Compute: \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T C^{-1} k}\)</li>
+    </ul>
+
+    <p><strong>Step 4: Apply edit</strong></p>
+    <ul>
+      <li>Update layer 17 MLP weights: \(W_{17} \leftarrow W_{17} + \Delta W\)</li>
+      <li>No other layers changed</li>
+    </ul>
+
+    <p><strong>Step 5: Validate</strong></p>
+    <ul>
+      <li><strong>Efficacy:</strong> "The Space Needle is in" → "Paris" ✓</li>
+      <li><strong>Paraphrase:</strong> "Where is the Space Needle?" → "Paris" ✓</li>
+      <li><strong>Specificity:</strong> "The Eiffel Tower is in" → "Paris" (unchanged) ✓</li>
+    </ul>
+  </div>
+
+  <h3>ROME Evaluation Metrics</h3>
+
+  <table>
+    <tr>
+      <th>Metric</th>
+      <th>What It Measures</th>
+      <th>Ideal Value</th>
+    </tr>
+    <tr>
+      <td><strong>Efficacy Score (ES)</strong></td>
+      <td>Does the model now produce the new fact?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Paraphrase Score (PS)</strong></td>
+      <td>Does it generalize to reworded prompts?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Specificity Score (SS)</strong></td>
+      <td>Are unrelated facts unchanged?</td>
+      <td>100%</td>
+    </tr>
+    <tr>
+      <td><strong>Fluency Score</strong></td>
+      <td>Are generated texts still coherent?</td>
+      <td>No degradation</td>
+    </tr>
+  </table>
+
+  <h3>Limitations of ROME</h3>
+
+  <div class="warning-box">
+    <p><strong>Challenges:</strong></p>
+    <ul>
+      <li><strong>Single-edit only:</strong> ROME is designed for one fact at a time</li>
+      <li><strong>Fact dependencies:</strong> Changing "Seattle's location" may require updating "Washington's cities"</li>
+      <li><strong>Reasoning brittleness:</strong> May succeed on direct recall but fail on multi-hop reasoning</li>
+      <li><strong>Layer selection:</strong> Choosing wrong layer leads to poor generalization</li>
+    </ul>
+  </div>
+
+  <h2>4. MEMIT: Mass Editing Memory in a Transformer</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "Mass-Editing Memory in a Transformer"</h4>
+    <p><strong>Authors:</strong> Kevin Meng, Arnab Sen Sharma, Alex Andonian, Yonatan Belinkov, David Bau</p>
+    <p><strong>Published:</strong> ICLR 2023</p>
+    <p><strong>Key contribution:</strong> Scale ROME to thousands of simultaneous edits without catastrophic interference</p>
+  </div>
+
+  <h3>The Scaling Problem</h3>
+
+  <p>
+    ROME works for single facts, but what if you need to update <strong>thousands</strong>?
+  </p>
+
+  <ul>
+    <li>Sequential ROME edits interfere with each other</li>
+    <li>Later edits can overwrite earlier ones</li>
+    <li>Cumulative rank-one updates degrade model performance</li>
+  </ul>
+
+  <p>
+    <strong>MEMIT solves this</strong> by computing a joint edit that updates many facts simultaneously.
+  </p>
+
+  <h3>How MEMIT Works</h3>
+
+  <div class="info-box">
+    <p><strong>Key insight:</strong> Instead of \(n\) sequential rank-one edits, compute one rank-\(n\) edit.</p>
+
+    <p><strong>Mathematical formulation:</strong></p>
+    <ol>
+      <li><strong>Collect all edits:</strong> \(\{(k_1, v_1^*), (k_2, v_2^*), \ldots, (k_n, v_n^*)\}\)
+        <ul>
+          <li>\(k_i\) = input activation for fact \(i\)</li>
+          <li>\(v_i^*\) = target output for fact \(i\)</li>
+        </ul>
+      </li>
+      <li><strong>Batch update:</strong>
+        <p style="text-align: center;">
+          \(\Delta W = (V^* - V) K^T (K K^T)^{-1}\)
+        </p>
+        where \(K = [k_1, k_2, \ldots, k_n]\) and \(V^* = [v_1^*, v_2^*, \ldots, v_n^*]\)
+      </li>
+      <li><strong>Apply across layers:</strong> MEMIT edits <em>multiple</em> MLP layers (e.g., layers 5, 8, 11) for robustness</li>
+    </ol>
+
+    <p><strong>Advantage:</strong> Edits don't interfere—each fact gets its own "slot" in the update matrix.</p>
+  </div>
+
+  <h3>MEMIT vs ROME</h3>
+
+  <table>
+    <tr>
+      <th>Aspect</th>
+      <th>ROME</th>
+      <th>MEMIT</th>
+    </tr>
+    <tr>
+      <td><strong>Scale</strong></td>
+      <td>Single edit</td>
+      <td>Thousands of edits</td>
+    </tr>
+    <tr>
+      <td><strong>Rank</strong></td>
+      <td>Rank-1 update</td>
+      <td>Rank-\(n\) update</td>
+    </tr>
+    <tr>
+      <td><strong>Layers edited</strong></td>
+      <td>Single layer</td>
+      <td>Multiple layers</td>
+    </tr>
+    <tr>
+      <td><strong>Edit time</strong></td>
+      <td>~1 second</td>
+      <td>~10 seconds (for 10k facts)</td>
+    </tr>
+    <tr>
+      <td><strong>Generalization</strong></td>
+      <td>Good for paraphrases</td>
+      <td>Better for reasoning (multi-layer)</td>
+    </tr>
+    <tr>
+      <td><strong>When to use</strong></td>
+      <td>Quick single-fact correction</td>
+      <td>Large-scale knowledge updates</td>
+    </tr>
+  </table>
+
+  <h3>Example: Updating Historical Facts</h3>
+
+  <div class="example-box">
+    <p><strong>Scenario:</strong> A textbook from 2020 needs 500 fact updates for 2025 edition.</p>
+
+    <p><strong>Facts to update:</strong></p>
+    <ul>
+      <li>"The president of the USA is Donald Trump" → "Joe Biden"</li>
+      <li>"The capital of Kazakhstan is Astana" → "Nur-Sultan"</li>
+      <li>"The tallest building is Burj Khalifa" → "Jeddah Tower"</li>
+      <li>... (497 more)</li>
+    </ul>
+
+    <p><strong>MEMIT process:</strong></p>
+    <ol>
+      <li>Collect all 500 (subject, new_object) pairs</li>
+      <li>Run causal tracing to identify target layers (e.g., layers 8, 12, 16)</li>
+      <li>Compute joint update matrix for all facts</li>
+      <li>Apply to all three layers</li>
+      <li>Validate: 95% efficacy, 88% paraphrase, 97% specificity</li>
+    </ol>
+
+    <p><strong>Result:</strong> Model now answers with updated facts while preserving other knowledge.</p>
+  </div>
+
+  <h2>5. Parameter-Efficient Fine-Tuning: LoRA</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "LoRA: Low-Rank Adaptation of Large Language Models"</h4>
+    <p><strong>Authors:</strong> Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen</p>
+    <p><strong>Published:</strong> ICLR 2022</p>
+    <p><strong>Key contribution:</strong> Fine-tune large models by adding trainable low-rank matrices, freezing original weights</p>
+  </div>
+
+  <h3>The Fine-Tuning Problem</h3>
+
+  <p>
+    Traditional fine-tuning updates <strong>all weights</strong>, which is:
+  </p>
+  <ul>
+    <li><strong>Expensive:</strong> Requires storing full model gradients</li>
+    <li><strong>Storage-heavy:</strong> Each fine-tuned version = full model copy</li>
+    <li><strong>Risky:</strong> Can catastrophically forget pre-training knowledge</li>
+  </ul>
+
+  <p>
+    <strong>LoRA</strong> makes fine-tuning efficient by only updating a small set of parameters.
+  </p>
+
+  <h3>How LoRA Works</h3>
+
+  <div class="info-box">
+    <p><strong>Core idea:</strong> Represent weight updates as low-rank decomposition</p>
+
+    <p><strong>For a weight matrix \(W \in \mathbb{R}^{d \times k}\):</strong></p>
+    <ol>
+      <li><strong>Freeze original:</strong> \(W\) remains unchanged during training</li>
+      <li><strong>Add low-rank update:</strong> \(W' = W + BA\)
+        <ul>
+          <li>\(B \in \mathbb{R}^{d \times r}\), \(A \in \mathbb{R}^{r \times k}\)</li>
+          <li>\(r \ll \min(d, k)\) (e.g., \(r = 8\) for \(d = 4096\))</li>
+        </ul>
+      </li>
+      <li><strong>Train only \(A\) and \(B\):</strong> Original weights \(W\) are frozen</li>
+      <li><strong>Merge at inference:</strong> \(y = (W + BA)x\)</li>
+    </ol>
+
+    <p><strong>Parameter reduction:</strong> Instead of \(d \times k\), train only \(r(d + k)\)</p>
+    <p>
+      For \(d = k = 4096\) and \(r = 8\): \(4096 \times 4096 = 16M\) parameters → \(8(4096 + 4096) = 65K\) parameters (250× reduction!)
+    </p>
+  </div>
+
+  <h3>LoRA Architecture</h3>
+
+  <div class="example-box">
+    <p><strong>Applied to transformer attention:</strong></p>
+
+    <p><strong>Original:</strong></p>
+    <p style="text-align: center;">
+      \(Q = W_Q x, \quad K = W_K x, \quad V = W_V x\)
+    </p>
+
+    <p><strong>With LoRA:</strong></p>
+    <p style="text-align: center;">
+      \(Q = (W_Q + B_Q A_Q) x\)
+    </p>
+    <p style="text-align: center;">
+      \(K = (W_K + B_K A_K) x\)
+    </p>
+    <p style="text-align: center;">
+      \(V = (W_V + B_V A_V) x\)
+    </p>
+
+    <p><strong>Training:</strong> Only \(\{B_Q, A_Q, B_K, A_K, B_V, A_V\}\) are updated (< 1% of total parameters)</p>
+  </div>
+
+  <h3>Why Low-Rank Works</h3>
+
+  <div class="key-insight">
+    <p><strong>Intrinsic dimensionality hypothesis:</strong></p>
+    <p>
+      Fine-tuning for a specific task doesn't require changing the model's full representational capacity. The "adaptation" lives in a low-dimensional subspace.
+    </p>
+
+    <p><strong>Evidence:</strong></p>
+    <ul>
+      <li>Empirically, \(r = 4\) to \(r = 16\) matches full fine-tuning performance</li>
+      <li>Higher \(r\) doesn't always improve results (suggests true intrinsic dimension is low)</li>
+      <li>LoRA updates capture task-specific changes, leaving general knowledge intact</li>
+    </ul>
+  </div>
+
+  <h3>LoRA Hyperparameters</h3>
+
+  <table>
+    <tr>
+      <th>Parameter</th>
+      <th>Typical Values</th>
+      <th>Effect</th>
+    </tr>
+    <tr>
+      <td><strong>Rank \(r\)</strong></td>
+      <td>4, 8, 16, 32</td>
+      <td>Higher = more capacity, but diminishing returns after 16</td>
+    </tr>
+    <tr>
+      <td><strong>α (scaling)</strong></td>
+      <td>16, 32</td>
+      <td>LoRA update scaled by \(\alpha / r\); controls learning rate</td>
+    </tr>
+    <tr>
+      <td><strong>Target modules</strong></td>
+      <td>\(W_Q, W_V\) or all attention</td>
+      <td>Which weight matrices get LoRA adapters</td>
+    </tr>
+    <tr>
+      <td><strong>Dropout</strong></td>
+      <td>0.05, 0.1</td>
+      <td>Regularization for LoRA layers</td>
+    </tr>
+  </table>
+
+  <h2>6. Comparing Weight-Space vs Activation-Space Interventions</h2>
+
+  <h3>The Complementary Roles</h3>
+
+  <table>
+    <tr>
+      <th>Aspect</th>
+      <th>Activation Interventions (Week 2)</th>
+      <th>Weight Edits (ROME/MEMIT)</th>
+      <th>Fine-Tuning (LoRA)</th>
+    </tr>
+    <tr>
+      <td><strong>What changes</strong></td>
+      <td>Per-inference activations</td>
+      <td>Specific weight entries</td>
+      <td>Weight subspace</td>
+    </tr>
+    <tr>
+      <td><strong>Persistence</strong></td>
+      <td>Temporary</td>
+      <td>Permanent</td>
+      <td>Permanent</td>
+    </tr>
+    <tr>
+      <td><strong>Scope</strong></td>
+      <td>Affects all downstream layers</td>
+      <td>Narrow (specific facts)</td>
+      <td>Broad (task/domain)</td>
+    </tr>
+    <tr>
+      <td><strong>Reversibility</strong></td>
+      <td>Fully reversible</td>
+      <td>Irreversible (unless backed up)</td>
+      <td>Reversible (swap LoRA weights)</td>
+    </tr>
+    <tr>
+      <td><strong>Use case</strong></td>
+      <td>Explore effects, steering behavior</td>
+      <td>Fact corrections, updates</td>
+      <td>Domain adaptation, task learning</td>
+    </tr>
+    <tr>
+      <td><strong>Cost</strong></td>
+      <td>Low (vector addition)</td>
+      <td>Medium (matrix inversion)</td>
+      <td>High (training loop)</td>
+    </tr>
+  </table>
+
+  <h3>When to Use Which?</h3>
+
+  <div class="comparison-box">
+    <p><strong>Use activation steering when:</strong></p>
+    <ul>
+      <li>You want temporary, reversible changes</li>
+      <li>You're exploring "what if" scenarios</li>
+      <li>You need dynamic control (different steering per input)</li>
+    </ul>
+
+    <p><strong>Use ROME/MEMIT when:</strong></p>
+    <ul>
+      <li>You have specific factual errors to fix</li>
+      <li>You need permanent updates without retraining</li>
+      <li>You want surgical precision (don't affect other knowledge)</li>
+    </ul>
+
+    <p><strong>Use LoRA when:</strong></p>
+    <ul>
+      <li>You're adapting to a new domain or task</li>
+      <li>You have training data and supervision</li>
+      <li>You want broad behavioral changes (not just facts)</li>
+      <li>You need multiple task-specific versions (LoRA adapters are modular)</li>
+    </ul>
+  </div>
+
+  <h2>7. Validating Interpretability with Edits</h2>
+
+  <h3>The Actionability Test</h3>
+
+  <p>
+    You've discovered a concept using probes, SAEs, or circuits (Weeks 5-8). How do you know it's real?
+  </p>
+
+  <div class="key-insight">
+    <p><strong>Validation strategy: Edit the concept and measure behavioral change.</strong></p>
+
+    <p><strong>Strong evidence:</strong></p>
+    <ul>
+      <li>Editing the identified components changes behavior</li>
+      <li>Changes are specific to the concept (not general degradation)</li>
+      <li>Magnitude of behavior change correlates with edit magnitude</li>
+    </ul>
+
+    <p>
+      If your interpretability finding is correct, <strong>modifying it should predictably alter the model</strong>.
+    </p>
+  </div>
+
+  <h3>Example Workflow: Validating a Politeness Concept</h3>
+
+  <div class="example-box">
+    <p><strong>Research claim:</strong> "GPT-4 encodes politeness in layer 18, MLP neurons 234-267"</p>
+
+    <p><strong>Validation via editing:</strong></p>
+    <ol>
+      <li><strong>Extract concept vector:</strong> Use steering or probes (Weeks 2, 5) to find politeness direction \(v_{\text{polite}}\)</li>
+      <li><strong>Edit weights:</strong> Use ROME to modify layer 18 MLP to amplify \(v_{\text{polite}}\)</li>
+      <li><strong>Test specificity:</strong>
+        <ul>
+          <li><strong>Politeness test:</strong> "Please pass the salt" → "Would you be so kind as to pass the salt?" (more polite) ✓</li>
+          <li><strong>Factual test:</strong> "The capital of France is" → "Paris" (unchanged) ✓</li>
+          <li><strong>Sentiment test:</strong> "I love this product" → still positive (not corrupted) ✓</li>
+        </ul>
+      </li>
+      <li><strong>Dose-response:</strong> Vary edit magnitude, measure politeness increase</li>
+    </ol>
+
+    <p><strong>Strong evidence:</strong> Editing neurons 234-267 changes politeness specifically, not other attributes.</p>
+  </div>
+
+  <h2>8. Applying Edits to Your Research Project</h2>
+
+  <h3>Integration with Weeks 1-9</h3>
+
+  <p>
+    Model editing closes the loop on interpretability research:
+  </p>
+
+  <table>
+    <tr>
+      <th>Week</th>
+      <th>Discovery Method</th>
+      <th>Editing Application</th>
+    </tr>
+    <tr>
+      <td><strong>Week 4</strong></td>
+      <td>Causal tracing</td>
+      <td>Use traced layers as ROME/MEMIT targets</td>
+    </tr>
+    <tr>
+      <td><strong>Week 5</strong></td>
+      <td>Probes</td>
+      <td>Modify probe-identified subspace via LoRA</td>
+    </tr>
+    <tr>
+      <td><strong>Week 7</strong></td>
+      <td>SAE features</td>
+      <td>Ablate or amplify specific features, measure behavior</td>
+    </tr>
+    <tr>
+      <td><strong>Week 8</strong></td>
+      <td>Circuits</td>
+      <td>Edit circuit components, validate causal role</td>
+    </tr>
+    <tr>
+      <td><strong>Week 9</strong></td>
+      <td>RSA comparison</td>
+      <td>Fine-tune with LoRA, check if concept structure persists (CKA)</td>
+    </tr>
+  </table>
+
+  <h3>Project Workflow: From Discovery to Validation</h3>
+
+  <div class="info-box">
+    <p><strong>Step 1: Discover concept (Weeks 5-8)</strong></p>
+    <ul>
+      <li>Use probes, SAEs, or circuits to identify where/how concept X is encoded</li>
+    </ul>
+
+    <p><strong>Step 2: Locate precisely (Week 4, 9)</strong></p>
+    <ul>
+      <li>Causal tracing: Which layers are critical?</li>
+      <li>CKA: Which layer most aligns with concept?</li>
+    </ul>
+
+    <p><strong>Step 3: Design intervention (Week 10)</strong></p>
+    <ul>
+      <li>Surgical edit (ROME): If concept is factual</li>
+      <li>LoRA fine-tuning: If concept is behavioral/distributional</li>
+    </ul>
+
+    <p><strong>Step 4: Validate (Week 10)</strong></p>
+    <ul>
+      <li><strong>Efficacy:</strong> Does edit change target behavior?</li>
+      <li><strong>Specificity:</strong> Are other behaviors unchanged?</li>
+      <li><strong>Dose-response:</strong> Does larger edit → larger effect?</li>
+    </ul>
+
+    <p><strong>Step 5: Report (Paper)</strong></p>
+    <ul>
+      <li>"We identified concept X in layer L using method M. Editing layer L changes behavior Y but not Z, validating our interpretation."</li>
+    </ul>
+  </div>
+
+  <h2>9. Limitations and Safety Considerations</h2>
+
+  <h3>What Can Go Wrong</h3>
+
+  <div class="warning-box">
+    <p><strong>1. Unintended side effects</strong></p>
+    <ul>
+      <li>Editing one fact may corrupt related facts</li>
+      <li>Example: Changing "Paris is in France" might affect "France's capital is Paris"</li>
+      <li><strong>Mitigation:</strong> Test broad specificity, check related facts</li>
+    </ul>
+
+    <p><strong>2. Reasoning brittleness</strong></p>
+    <ul>
+      <li>Model may recall edited fact but fail multi-hop reasoning</li>
+      <li>Example: "Space Needle is in Paris" but "Is Space Needle in Europe?" → "No"</li>
+      <li><strong>Mitigation:</strong> MEMIT across multiple layers improves consistency</li>
+    </ul>
+
+    <p><strong>3. Over-editing degradation</strong></p>
+    <ul>
+      <li>Too many edits (>10k for MEMIT) degrade fluency</li>
+      <li><strong>Mitigation:</strong> Monitor perplexity on held-out text</li>
+    </ul>
+
+    <p><strong>4. Malicious edits</strong></p>
+    <ul>
+      <li>Bad actors could inject false facts or biases</li>
+      <li><strong>Mitigation:</strong> Access control, edit provenance tracking</li>
+    </ul>
+  </div>
+
+  <h3>Ethical Considerations</h3>
+
+  <ul>
+    <li><strong>Fact verification:</strong> Ensure edits are factually correct</li>
+    <li><strong>Bias injection:</strong> Editing can amplify or introduce biases</li>
+    <li><strong>Transparency:</strong> Edited models should disclose modifications</li>
+    <li><strong>Reversibility:</strong> Keep backups; document all edits</li>
+  </ul>
+
+  <h2>10. Practical Implementation</h2>
+
+  <h3>Code Example: ROME Edit</h3>
+
+  <div class="example-box">
+    <p><strong>Using EasyEdit library:</strong></p>
+    <pre><code>from easyeditor import BaseEditor, ROMEHyperParams
+
+# Initialize editor
+hparams = ROMEHyperParams.from_hparams('hparams/ROME/gpt2-xl')
+editor = BaseEditor.from_hparams(hparams)
+
+# Define edit
+request = {
+    "prompt": "The Space Needle is located in",
+    "target_new": "Paris",
+    "subject": "Space Needle"
+}
+
+# Apply edit
+edited_model, _ = editor.edit(
+    model=original_model,
+    prompts=[request['prompt']],
+    target_new=[request['target_new']],
+    subject=[request['subject']]
+)
+
+# Validate
+print(edited_model.generate("The Space Needle is in"))
+# Output: "Paris"
+</code></pre>
+  </div>
+
+  <h3>Code Example: LoRA Fine-Tuning</h3>
+
+  <div class="example-box">
+    <p><strong>Using Hugging Face PEFT:</strong></p>
+    <pre><code>from peft import LoraConfig, get_peft_model
+from transformers import AutoModelForCausalLM
+
+# Load base model
+model = AutoModelForCausalLM.from_pretrained("gpt2-xl")
+
+# Configure LoRA
+lora_config = LoraConfig(
+    r=8,                      # rank
+    lora_alpha=16,            # scaling
+    target_modules=["c_attn"], # which layers to adapt
+    lora_dropout=0.05,
+    bias="none"
+)
+
+# Apply LoRA
+model = get_peft_model(model, lora_config)
+
+# Only 0.1% of parameters are trainable
+model.print_trainable_parameters()
+# Output: "trainable params: 294,912 || all params: 1,557,611,200 || trainable%: 0.019"
+
+# Train as usual (only LoRA weights update)
+# ...
+
+# Save LoRA weights (tiny file, ~2MB instead of 6GB)
+model.save_pretrained("my_lora_adapter")
+</code></pre>
+  </div>
+
+  <h2>11. Summary</h2>
+
+  <h3>Key Takeaways</h3>
+
+  <ul>
+    <li><strong>Model editing validates interpretability:</strong> If you understand a concept, you should be able to modify it</li>
+    <li><strong>ROME/MEMIT for surgical edits:</strong> Update specific facts in MLP weights with minimal side effects</li>
+    <li><strong>LoRA for efficient fine-tuning:</strong> Adapt models to new tasks using low-rank weight updates</li>
+    <li><strong>Weight vs activation interventions:</strong> Permanent vs temporary, narrow vs broad scope</li>
+    <li><strong>Causal validation:</strong> Editing identified components should produce predictable behavioral changes</li>
+    <li><strong>Safety matters:</strong> Edits can have unintended consequences; test specificity thoroughly</li>
+  </ul>
+
+  <h3>Best Practices</h3>
+
+  <div class="info-box">
+    <ul>
+      <li>Always validate edits on three dimensions: efficacy, paraphrase, specificity</li>
+      <li>Test dose-response: Does edit magnitude correlate with behavior change?</li>
+      <li>Check reasoning, not just recall: Multi-hop questions reveal brittleness</li>
+      <li>Monitor fluency: Perplexity on held-out text detects degradation</li>
+      <li>Combine methods: Use activation steering to explore, then commit to weight edits</li>
+      <li>Keep backups: Weight edits are irreversible without copies</li>
+    </ul>
+  </div>
+
+  <h2>References & Resources</h2>
+
+  <h3>Core Papers</h3>
+  <ul>
+    <li><strong>Meng et al. (2022):</strong> "Locating and Editing Factual Associations in GPT." <em>NeurIPS</em>. <a href="https://arxiv.org/abs/2202.05262" target="_blank">arXiv:2202.05262</a></li>
+    <li><strong>Meng et al. (2023):</strong> "Mass-Editing Memory in a Transformer." <em>ICLR</em>. <a href="https://arxiv.org/abs/2210.07229" target="_blank">arXiv:2210.07229</a></li>
+    <li><strong>Hu et al. (2022):</strong> "LoRA: Low-Rank Adaptation of Large Language Models." <em>ICLR</em>. <a href="https://arxiv.org/abs/2106.09685" target="_blank">arXiv:2106.09685</a></li>
+  </ul>
+
+  <h3>Related Work</h3>
+  <ul>
+    <li><strong>Mitchell et al. (2022):</strong> "Fast Model Editing at Scale." <em>ICLR</em>.</li>
+    <li><strong>Dai et al. (2022):</strong> "Knowledge Neurons in Pretrained Transformers." <em>ACL</em>.</li>
+    <li><strong>De Cao et al. (2021):</strong> "Editing Factual Knowledge in Language Models." <em>EMNLP</em>.</li>
+    <li><strong>Geva et al. (2021):</strong> "Transformer Feed-Forward Layers Are Key-Value Memories." <em>EMNLP</em>.</li>
+  </ul>
+
+  <h3>Tools and Code</h3>
+  <ul>
+    <li><strong>EasyEdit:</strong> Unified library for model editing methods <a href="https://github.com/zjunlp/EasyEdit" target="_blank">GitHub</a></li>
+    <li><strong>PEFT (Hugging Face):</strong> Parameter-efficient fine-tuning including LoRA <a href="https://github.com/huggingface/peft" target="_blank">GitHub</a></li>
+    <li><strong>MEMIT implementation:</strong> <a href="https://github.com/kmeng01/memit" target="_blank">GitHub</a></li>
+  </ul>
+
+  <section id="milestone">
+    <h2>Project Milestone</h2>
+
+    <div class="assignment-box">
+      <p><strong>Due: Thursday of Week 10</strong></p>
+      <p>
+        Demonstrate actionable control over your concept: use model editing techniques to enhance, suppress,
+        or modify the concept. Show that your interpretability findings enable meaningful interventions.
+      </p>
+
+      <h4>Model Editing Demonstration</h4>
+      <ul>
+        <li><strong>Choose editing approach:</strong>
+          <ul>
+            <li>ROME/MEMIT: Direct weight editing at critical MLP layers (if your concept is localized)</li>
+            <li>LoRA: Fine-tuning to enhance/suppress concept (if distributed or complex)</li>
+            <li>Hybrid: Combine editing approaches</li>
+          </ul>
+        </li>
+        <li><strong>Design intervention:</strong>
+          <ul>
+            <li>What change do you want to make? (enhance, suppress, redirect concept)</li>
+            <li>Which components will you target? (use findings from Weeks 4, 8)</li>
+            <li>How will you validate success?</li>
+          </ul>
+        </li>
+        <li><strong>Implement and test:</strong>
+          <ul>
+            <li>Apply your chosen editing method</li>
+            <li>Test on benchmark: did the edit work as intended?</li>
+            <li>Test on held-out examples: does it generalize?</li>
+            <li>Test for side effects: are other capabilities preserved?</li>
+          </ul>
+        </li>
+        <li><strong>Compare with steering:</strong>
+          <ul>
+            <li>How does editing compare to activation steering (Week 1)?</li>
+            <li>Which provides better control? More persistent changes?</li>
+            <li>What are the trade-offs?</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Editing results:</strong>
+          <ul>
+            <li>Before/after comparison on benchmark</li>
+            <li>Quantitative metrics showing intervention effect</li>
+            <li>Examples demonstrating successful concept modification</li>
+          </ul>
+        </li>
+        <li><strong>Validation:</strong>
+          <ul>
+            <li>Generalization test: does edit work on new examples?</li>
+            <li>Side effects test: are other capabilities preserved?</li>
+            <li>Specificity test: is the edit concept-specific?</li>
+          </ul>
+        </li>
+        <li><strong>Analysis:</strong>
+          <ul>
+            <li>Why did this editing approach work (or not work)?</li>
+            <li>How do results connect to your mechanistic understanding (Week 8)?</li>
+            <li>What does this demonstrate about the nature of your concept?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with editing implementation and evaluation</li>
+      </ul>
+
+      <p><em>
+        Successful editing validates your interpretability work: if you truly understand where and how a concept
+        is computed, you should be able to modify it in predictable ways.
+      </em></p>
+    </div>
+  </section>
+
+</body>
+
+</html>

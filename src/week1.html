@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 1: Steering - Neural Mechanics</title>
+  <title>Week 1: Foundations - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -131,20 +131,20 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 1: Steering</h1>
+    <h1>Week 1: Foundations</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
-    <a href="index.html">← Back to Course Home</a>
+    <a href="index.html">&larr; Back to Course Home</a>
   </nav>
 
   <section id="overview">
     <h2>Overview</h2>
     <p>
-      This week, you'll move from measuring external behavior to exploring the internal representations that drive it.
-      You'll learn how neural networks process information, what activation vectors are, and how concepts are encoded
-      as directions in high-dimensional space. Most importantly, you'll gain hands-on experience extracting
-      representation vectors and using them to steer model behavior—your first step toward mechanistic control of LLMs.
+      How can we peer inside a running language model to see what it's "thinking"? The key insight is that transformer
+      intermediate layers encode evolving predictions that we can decode and inspect. This week introduces the conceptual
+      vocabulary and core techniques for mechanistic interpretability, including the logit lens&mdash;a simple but powerful
+      idea that opened a window into the progressive refinement of representations through the network.
     </p>
   </section>
 
@@ -152,47 +152,40 @@
     <h2>Learning Objectives</h2>
     <p>By the end of this week, you should be able to:</p>
     <ul>
-      <li>Explain what a feedforward neural network is and how it processes information</li>
-      <li>Describe how neural networks are trained and why individual neuron roles remain unknown after training</li>
-      <li>Define what an activation vector is and where it occurs in a neural network</li>
-      <li>Explain the distributed representation hypothesis</li>
-      <li>Explain the linear representation hypothesis and why it matters for interpretability</li>
-      <li>Explain the superposition hypothesis with a concrete example</li>
-      <li>Identify and describe the main components of a transformer language model: token encoders, residual stream,
-        token decoders, multihead attention layers, and MLP layers</li>
-      <li>Understand sparse autoencoders (SAEs) at a level sufficient to use Neuronpedia</li>
-      <li>Use Neuronpedia to find representation vectors for concepts</li>
-      <li>Successfully steer a language model using representation vectors</li>
+      <li>Explain what a transformer language model is and how it processes sequences</li>
+      <li>Describe the residual stream view of transformers</li>
+      <li>Identify the main components: token embeddings, attention layers, MLP layers, and unembedding</li>
+      <li>Apply the logit lens to decode intermediate layer activations into vocabulary space</li>
+      <li>Interpret what the model is "predicting" at each layer</li>
+      <li>Understand how predictions evolve across layers</li>
+      <li>Explain the difference between base logit lens and tuned lens approaches</li>
+      <li>Discuss what latent language reveals about multilingual model internals</li>
     </ul>
   </section>
 
   <section id="readings">
-    <h2>Readings</h2>
+    <h2>Required Readings</h2>
 
-    <h3>Core Readings</h3>
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2209.10652" target="_blank">Toy Models of Superposition</a>
+          <a href="https://arxiv.org/abs/2405.00208" target="_blank">A Primer on the Inner Workings of Transformer-based Language Models</a>
         </div>
-        <div class="reading-description">Elhage et al. (2022). Foundational paper on superposition, distributed representations, and why
-          features don't align with neurons</div>
+        <div class="reading-description">Ferrando, Sarti, Bisazza &amp; Costa-juss&agrave; (2024). Accessible pedagogical overview of interpretability techniques, establishing shared vocabulary for the course.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2306.03341" target="_blank">Inference-Time Intervention: Eliciting Truthful
-            Answers from a Language Model</a>
+          <a href="https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens" target="_blank">Interpreting GPT: The Logit Lens</a>
         </div>
-        <div class="reading-description">Li et al. (2023). Extracting and applying steering vectors to control model behavior</div>
+        <div class="reading-description">nostalgebraist (2020). The foundational blog post introducing logit lens&mdash;decoding intermediate layer activations directly into vocabulary space.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2310.01405" target="_blank">Representation Engineering: A Top-Down Approach to
-            AI Transparency</a>
+          <a href="https://arxiv.org/abs/2402.10588" target="_blank">Do Llamas Work in English? On the Latent Language of Multilingual Transformers</a>
         </div>
-        <div class="reading-description">Zou et al. (2023). Framework for finding and manipulating high-level concept representations</div>
+        <div class="reading-description">Wendler et al. (2024). Applies logit lens to multilingual models, revealing that models often pivot through English in intermediate representations.</div>
       </div>
     </div>
 
@@ -200,355 +193,99 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework
-            for Transformer Circuits</a>
+          <a href="https://arxiv.org/abs/2303.08112" target="_blank">Eliciting Latent Predictions from Transformers with the Tuned Lens</a>
         </div>
-        <div class="reading-description">Detailed explanation of transformer components and the residual stream (not
-          arxiv, but essential)</div>
+        <div class="reading-description">Belrose et al. (2023). Refined version of logit lens with learned probes for more accurate intermediate decoding.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2406.04093" target="_blank">Scaling and evaluating sparse autoencoders</a>
+          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework for Transformer Circuits</a>
         </div>
-        <div class="reading-description">Modern approach to decomposing superposition using SAEs</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank">Towards Monosemanticity: Decomposing Language
-            Models With Dictionary Learning</a>
-        </div>
-        <div class="reading-description">Bricken et al. (2023). Anthropic's work on finding interpretable features with sparse dictionaries
-        </div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2310.06824" target="_blank">The Geometry of Truth: Emergent Linear Structure
-            in Large Language Model Representations</a>
-        </div>
-        <div class="reading-description">Marks & Tegmark (2023). Evidence for linear representation of concepts across diverse tasks</div>
-      </div>
-    </div>
-
-    <h3>Tools & Resources</h3>
-    <div class="reading-list">
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://www.neuronpedia.org/" target="_blank">Neuronpedia</a>
-        </div>
-        <div class="reading-description">Interactive tool for exploring SAE features and finding representation vectors
-        </div>
+        <div class="reading-description">Elhage et al. (2021). Deeper mathematical treatment of the residual stream view. Dense but foundational.</div>
       </div>
     </div>
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: From Neurons to Steering</h2>
+    <h2>Tutorial: Understanding Transformer Internals</h2>
 
-    <h3>1. Feedforward Neural Networks: The Foundation</h3>
+    <h3>1. The Residual Stream View</h3>
     <p>
-      A <strong>feedforward neural network</strong> is a computational graph that transforms inputs to outputs through
-      layers of simple operations. Each layer consists of:
-    </p>
-    <ul>
-      <li><strong>Linear transformation:</strong> Multiply input by a weight matrix W and add bias b</li>
-      <li><strong>Nonlinear activation:</strong> Apply a function like ReLU or GELU element-wise</li>
-    </ul>
-
-    <div class="diagram">
-      Input → [Linear + Nonlinear] → [Linear + Nonlinear] → ... → Output
-    </div>
-
-    <p>
-      The magic is in the weights: billions of numbers that determine what the network computes. But where do these
-      weights come from?
-    </p>
-
-    <h3>2. Training: Optimization Without Explicit Design</h3>
-    <p>
-      Neural networks are <strong>trained</strong>, not programmed. The process:
-    </p>
-    <ol>
-      <li>Initialize weights randomly</li>
-      <li>Show the network many examples (e.g., predict next tokens)</li>
-      <li>Measure error between predictions and actual answers</li>
-      <li>Use gradient descent to adjust weights to reduce error</li>
-      <li>Repeat millions of times</li>
-    </ol>
-
-    <p>
-      This process is remarkably effective, but creates a fundamental interpretability challenge: <strong>We never
-        explicitly told the network what each neuron should do.</strong> The roles of individual neurons emerge from
-      optimization, and they can be arbitrary, redundant, or polysemantic (having multiple meanings).
-    </p>
-
-    <p>
-      This is why interpretability is hard: the network works, but we don't know <em>how</em> in terms of what
-      individual components compute.
-    </p>
-
-    <h3>3. Activation Vectors: Internal Computational States</h3>
-    <p>
-      As a neural network processes input, it creates intermediate representations at each layer. An <strong>activation
-        vector</strong> is the state of the network at a particular layer and position.
-    </p>
-
-    <p>
-      For a language model processing text, at each token position and each layer, there's a vector (typically
-      768-12,288 dimensions) representing what the network "knows" at that point:
+      A transformer can be understood as a series of operations that read from and write to a shared "residual stream."
+      At each layer, attention heads and MLP modules add information to this stream rather than replacing it entirely.
     </p>
 
     <div class="diagram">
-      Input: "The cat sat on the"<br><br>
-      Layer 0: [v₀₀, v₀₁, v₀₂, v₀₃, v₀₄] ← activation vectors for each token<br>
-      Layer 1: [v₁₀, v₁₁, v₁₂, v₁₃, v₁₄]<br>
+      x<sub>0</sub> = embed(token)<br>
+      x<sub>1</sub> = x<sub>0</sub> + attention<sub>1</sub>(x<sub>0</sub>) + MLP<sub>1</sub>(x<sub>0</sub>)<br>
+      x<sub>2</sub> = x<sub>1</sub> + attention<sub>2</sub>(x<sub>1</sub>) + MLP<sub>2</sub>(x<sub>1</sub>)<br>
       ...<br>
-      Layer 12: [v₁₂,₀, v₁₂,₁, v₁₂,₂, v₁₂,₃, v₁₂,₄]<br><br>
-      Output probabilities for next token
+      output = unembed(x<sub>final</sub>)
     </div>
 
     <p>
-      Each activation vector is a high-dimensional point in activation space. The hypothesis of mechanistic
-      interpretability is that these vectors encode meaningful information about the input in a structured way.
+      This view enables a key insight: we can peek at intermediate states x<sub>L</sub> to see what the model
+      "knows" at layer L.
     </p>
 
-    <h3>4. The Distributed Representation Hypothesis</h3>
+    <h3>2. The Logit Lens</h3>
     <p>
-      Unlike symbolic systems where concepts are discrete symbols, neural networks use <strong>distributed
-        representations</strong>: each concept is represented by a pattern of activity across many neurons.
-    </p>
-
-    <p>
-      Key properties:
-    </p>
-    <ul>
-      <li><strong>Many neurons per concept:</strong> "cat" isn't stored in neuron #47; it's a pattern across thousands
-        of neurons</li>
-      <li><strong>Many concepts per neuron:</strong> Each neuron participates in representing multiple concepts</li>
-      <li><strong>Graceful degradation:</strong> Damage to a few neurons doesn't destroy specific concepts</li>
-      <li><strong>Similarity structure:</strong> Similar concepts have similar patterns (cat ≈ dog ≠ democracy)</li>
-    </ul>
-
-    <p>
-      This is powerful for learning but challenging for interpretation: we can't point to "the democracy neuron."
-    </p>
-
-    <h3>5. The Linear Representation Hypothesis</h3>
-    <p>
-      A more specific claim that has proven surprisingly accurate: <strong>concepts are represented as
-        directions</strong> in the high-dimensional activation space.
-    </p>
-
-    <p>
-      Formally: there exists a direction vector d such that the component of an activation vector a in direction d
-      measures the presence/strength of a concept:
+      The <strong>logit lens</strong> applies the unembedding matrix directly to intermediate activations:
     </p>
 
     <div class="diagram">
-      concept_strength = a · d (dot product)
+      intermediate_logits = W<sub>U</sub> &middot; x<sub>L</sub><br>
+      probs = softmax(intermediate_logits)
     </div>
 
     <p>
-      Why this matters:
+      This lets us see what the model would "predict" if we stopped processing at layer L. Key observations:
     </p>
     <ul>
-      <li><strong>Interpretability:</strong> We can find concept directions by comparing activations</li>
-      <li><strong>Intervention:</strong> We can add/subtract directions to steer behavior</li>
-      <li><strong>Measurement:</strong> We can quantify concept presence by projection</li>
-      <li><strong>Compositionality:</strong> Directions can be added/subtracted (king - man + woman ≈ queen)</li>
+      <li>Early layers often predict the input token or simple continuations</li>
+      <li>Middle layers begin to show task-relevant predictions</li>
+      <li>Late layers refine toward the final answer</li>
+      <li>The "correct" prediction often emerges gradually, not suddenly</li>
     </ul>
 
+    <h3>3. What Does Latent Language Reveal?</h3>
     <p>
-      Evidence: Linear probes work well, steering vectors are effective, truth directions exist across contexts, etc.
-    </p>
-
-    <h3>6. The Superposition Hypothesis</h3>
-    <p>
-      Here's a puzzle: models have ~100,000 neurons per layer but need to represent millions of features (concepts,
-      patterns, facts). How?
+      When applying logit lens to multilingual models processing non-English text, a striking pattern emerges:
+      regardless of input language, intermediate representations often decode to English tokens.
     </p>
 
     <p>
-      <strong>Superposition</strong>: Models represent more features than dimensions by storing them as
-      quasi-orthogonal directions, accepting some interference between features that rarely co-occur.
-    </p>
-
-    <h4>Simple Example: 2D Space, 3 Features</h4>
-    <div class="diagram">
-      Feature A: direction (1, 0)<br>
-      Feature B: direction (0, 1)<br>
-      Feature C: direction (1/√2, 1/√2)<br><br>
-      All nearly orthogonal if sparse!
-    </div>
-
-    <p>
-      With 100,000 dimensions and sparse features (most are zero for any given input), you can pack in millions of
-      directions with limited interference.
+      This suggests models may use English as an internal "lingua franca"&mdash;even when input and output are in
+      another language, the intermediate computation happens in an English-like representation space.
     </p>
 
     <p>
-      Consequences:
+      <strong>Implications:</strong>
     </p>
     <ul>
-      <li>Individual neurons are polysemantic (respond to multiple unrelated features)</li>
-      <li>We need methods like SAEs to disentangle features from neurons</li>
-      <li>The network has compressed representations through clever geometry</li>
+      <li>Interpretability tools developed on English may apply to other languages</li>
+      <li>Models may not process all languages equally</li>
+      <li>Internal representations are not simple copies of input/output</li>
     </ul>
 
-    <h3>7. Transformer Architecture: The Components</h3>
+    <h3>4. Tuned Lens: Beyond Raw Projection</h3>
     <p>
-      Modern language models use the transformer architecture. Understanding its components is essential for
-      mechanistic interpretability.
+      The basic logit lens assumes we can directly project intermediate activations with the unembedding matrix.
+      But representations at early layers may not be in the same "format" as final-layer representations.
     </p>
 
-    <h4>Core Components</h4>
+    <p>
+      The <strong>tuned lens</strong> learns a small affine transformation at each layer:
+    </p>
 
-    <p><strong>Token Encoder:</strong> Converts each token (word piece) to an initial vector</p>
     <div class="diagram">
-      "cat" → [0.2, -0.5, 0.8, ..., 0.1] (768-dim vector)
-    </div>
-
-    <p><strong>Residual Stream:</strong> The "main highway" of information flow. Each layer reads from and writes to
-      this stream.</p>
-    <div class="diagram">
-      x₀ = embed(token)<br>
-      x₁ = x₀ + attention₁(x₀) + MLP₁(x₀)<br>
-      x₂ = x₁ + attention₂(x₁) + MLP₂(x₁)<br>
-      ...<br>
-      xₙ = residual stream at layer n
+      tuned_logits = W<sub>U</sub> &middot; (A<sub>L</sub> x<sub>L</sub> + b<sub>L</sub>)
     </div>
 
     <p>
-      Key insight: Each component adds information to the stream rather than replacing it. This enables information to
-      flow across many layers.
+      This accounts for layer-specific representation formats, often yielding more interpretable intermediate predictions.
     </p>
-
-    <p><strong>Multihead Attention:</strong> Looks at previous tokens to gather context. "Multi-head" means parallel
-      attention operations with different learned patterns.</p>
-
-    <ul>
-      <li>Computes attention scores: which previous tokens are relevant?</li>
-      <li>Weighted sum: combine information from relevant tokens</li>
-      <li><strong>Causal masking:</strong> Can only attend to current and previous tokens, never future ones (for
-        autoregressive generation)</li>
-    </ul>
-
-    <p><strong>MLP (Feed-Forward) Layers:</strong> After attention, each position independently processes its vector
-      through a 2-layer feedforward network. Often interpreted as memory storage.</p>
-
-    <p><strong>Token Decoder:</strong> The final layer converts the residual stream vector to probabilities over the
-      vocabulary</p>
-    <div class="diagram">
-      x_final → linear → logits → softmax → P(next token)
-    </div>
-
-    <h3>8. Sparse Autoencoders: Finding Features in Superposition</h3>
-    <p>
-      Since neurons are polysemantic due to superposition, we need tools to disentangle the features actually encoded
-      in activation vectors. <strong>Sparse Autoencoders (SAEs)</strong> are one such tool.
-    </p>
-
-    <h4>Basic Idea</h4>
-    <p>
-      Train a neural network to:
-    </p>
-    <ol>
-      <li><strong>Encode:</strong> Map activation vector (e.g., 768-dim) to larger sparse code (e.g., 16,384-dim) where
-        most elements are zero</li>
-      <li><strong>Decode:</strong> Reconstruct the original activation from the sparse code</li>
-      <li><strong>Sparsity:</strong> Encourage only a few features to be active at once</li>
-    </ol>
-
-    <div class="diagram">
-      activation (768) → encoder → sparse features (16,384) → decoder → reconstruction (768)
-    </div>
-
-    <p>
-      The learned sparse features often correspond to interpretable concepts: a direction for "medical terms", another
-      for "positive sentiment", etc.
-    </p>
-
-    <h4>Using Neuronpedia</h4>
-    <p>
-      <a href="https://www.neuronpedia.org/" target="_blank">Neuronpedia</a> is a database of SAE features trained on
-      various models. For this course:
-    </p>
-    <ul>
-      <li>Browse features by searching for concepts</li>
-      <li>See which text examples maximally activate each feature</li>
-      <li>Download feature vectors for use in steering</li>
-      <li>Understand what patterns the model has learned</li>
-    </ul>
-
-    <p>
-      You don't need to understand SAE training details—just know that they decompose activations into interpretable
-      feature directions.
-    </p>
-
-    <h3>9. Steering: Causal Intervention with Representation Vectors</h3>
-    <p>
-      Now we put it all together. If concepts are linear directions, we can <strong>steer</strong> behavior by adding
-      concept vectors to activations.
-    </p>
-
-    <h4>Finding a Steering Vector</h4>
-    <ol>
-      <li><strong>Contrastive examples:</strong> Create pairs where one has the concept, one doesn't
-        <ul>
-          <li>"Tell me how to bake cookies" vs "Refuse to tell me how to bake cookies"</li>
-        </ul>
-      </li>
-      <li><strong>Extract activations:</strong> Run both through the model, record activation vectors at each layer
-      </li>
-      <li><strong>Take difference:</strong> v_concept = mean(activations_with) - mean(activations_without)</li>
-      <li><strong>Result:</strong> A direction that points toward the concept</li>
-    </ol>
-
-    <p>
-      Alternatively, use SAE features from Neuronpedia as steering vectors directly.
-    </p>
-
-    <h4>Applying a Steering Vector</h4>
-    <p>
-      During model inference:
-    </p>
-    <ol>
-      <li>Run the model normally on your input</li>
-      <li>At target layer(s), intercept the activation vectors</li>
-      <li>Add the steering vector: a_new = a_original + α * v_steering</li>
-      <li>Continue processing with modified activations</li>
-    </ol>
-
-    <p>
-      The coefficient α controls strength: positive amplifies the concept, negative suppresses it.
-    </p>
-
-    <h4>What You Can Steer</h4>
-    <ul>
-      <li>Sentiment: make outputs more positive/negative</li>
-      <li>Truthfulness: increase honesty/accuracy</li>
-      <li>Topic: emphasize certain subjects</li>
-      <li>Style: formal vs casual language</li>
-      <li><strong>Your concept:</strong> Whatever you're studying for your project!</li>
-    </ul>
-
-    <h3>Putting It All Together</h3>
-    <p>
-      The journey from neurons to steering:
-    </p>
-    <ol>
-      <li>Networks process information through layers of neurons</li>
-      <li>Training discovers effective weights, but neuron roles aren't explicit</li>
-      <li>Activation vectors are intermediate computational states</li>
-      <li>Concepts are represented as distributed patterns (distributed hypothesis)</li>
-      <li>Specifically, concepts are directions in activation space (linear hypothesis)</li>
-      <li>Multiple concepts pack into fewer dimensions via superposition</li>
-      <li>Transformers process sequences through attention and MLPs, modifying the residual stream</li>
-      <li>SAEs help us find interpretable feature directions despite superposition</li>
-      <li>We can extract and apply these directions to steer model behavior</li>
-    </ol>
   </section>
 
   <section id="code-exercise">
@@ -558,10 +295,10 @@
     </p>
     <ul>
       <li>Load a transformer language model and examine its architecture</li>
-      <li>Extract and visualize activation vectors at different layers</li>
-      <li>Extract steering vectors using contrastive pairs</li>
-      <li>Apply steering vectors to control model behavior</li>
-      <li>Experiment with Neuronpedia to find feature directions</li>
+      <li>Extract activation vectors at different layers</li>
+      <li>Implement the logit lens to decode intermediate predictions</li>
+      <li>Visualize how predictions evolve across layers</li>
+      <li>Compare logit lens results across different prompts</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
@@ -573,123 +310,36 @@
     </p>
   </section>
 
-  <section id="assignment">
-    <h2>Project Assignment</h2>
-
-    <div class="assignment-box">
-      <h3 style="margin-top: 0;">Extract and Apply Steering Vectors for Your Concept</h3>
-
-      <p>
-        <strong>Goal:</strong> Find representation vectors for your concept and demonstrate that you can steer model
-        behavior with them.
-      </p>
-
-      <h4>Requirements:</h4>
-      <ol>
-        <li><strong>Contrastive Dataset:</strong> Create 10-20 pairs of prompts where one exhibits your concept and one
-          doesn't
-          <ul>
-            <li>Example for "legal reasoning": "Apply legal precedent to..." vs "Ignore legal precedent..."</li>
-            <li>Pairs should differ primarily in your target concept</li>
-            <li>Include diverse phrasings and contexts</li>
-          </ul>
-        </li>
-
-        <li><strong>Steering Vector Extraction:</strong>
-          <ul>
-            <li>Extract activations from multiple layers (try early, middle, and late layers)</li>
-            <li>Compute mean difference vectors</li>
-            <li>Analyze which layers produce the strongest concept representations</li>
-          </ul>
-        </li>
-
-        <li><strong>Steering Experiments:</strong> Demonstrate steering on at least 5 test examples
-          <ul>
-            <li>Show original model output (no steering)</li>
-            <li>Show output with positive steering (amplify concept)</li>
-            <li>Show output with negative steering (suppress concept)</li>
-            <li>Vary steering strength (α) and report effects</li>
-          </ul>
-        </li>
-
-        <li><strong>Neuronpedia Exploration:</strong>
-          <ul>
-            <li>Search Neuronpedia for features related to your concept</li>
-            <li>Identify 3-5 relevant SAE features</li>
-            <li>Compare SAE feature steering with your contrastive steering vectors</li>
-            <li>Which works better? Why might that be?</li>
-          </ul>
-        </li>
-
-        <li><strong>Analysis:</strong> Address these questions in your writeup:
-          <ul>
-            <li>Which layer(s) encode your concept most strongly?</li>
-            <li>How does steering strength affect output quality vs concept presence?</li>
-            <li>Are there unintended side effects of steering?</li>
-            <li>Do the SAE features match your intuitions about the concept?</li>
-            <li>How would you evaluate whether steering is "successful"?</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h4>Deliverables:</h4>
-      <ul>
-        <li>Code notebook showing extraction and steering experiments</li>
-        <li>Written report (3-4 pages) including:
-          <ul>
-            <li>Your contrastive dataset</li>
-            <li>Layer-wise analysis of concept representations</li>
-            <li>Steering results with examples</li>
-            <li>Neuronpedia findings</li>
-            <li>Analysis and reflection</li>
-          </ul>
-        </li>
-        <li>Saved steering vectors (for use in future weeks)</li>
-      </ul>
-
-      <p>
-        <strong>Due:</strong> Before Week 3 class
-      </p>
-    </div>
-  </section>
-
   <section id="milestone">
     <h2>Project Milestone</h2>
+
     <div class="assignment-box">
       <p><strong>Due: Thursday of Week 1</strong></p>
       <p>
-        Select one concept from your candidate list (from Week 0) and demonstrate a steering proof-of-concept.
-        The goal is to show that your concept exists in the model and can be controlled through activation interventions.
-      </p>
-      <p>
-        This is an exploratory phase—you're testing whether your concept is "steerable" and gathering initial evidence
-        that the model has learned something meaningful about it. Don't worry about perfection; focus on demonstrating
-        that there's something interesting to investigate further.
+        This week focuses on getting oriented with the tools and selecting your concept for the semester project.
       </p>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Concept selection:</strong> Which concept did you choose and why?</li>
-        <li><strong>Contrastive examples:</strong> 10-20 minimal pairs demonstrating your concept (e.g., polite vs. direct, formal vs. casual)</li>
-        <li><strong>Steering demonstration:</strong> Show that you can extract a steering vector and use it to shift model behavior
+        <li><strong>Concept pitches:</strong> Prepare 2-3 candidate concepts from your domain expertise</li>
+        <li><strong>Literature review:</strong> Find 3-5 papers relevant to your concepts (not necessarily interpretability papers)</li>
+        <li><strong>Initial exploration:</strong> Apply logit lens to prompts related to your concepts
           <ul>
-            <li>Extract vectors from contrastive activations</li>
-            <li>Apply steering vector to new prompts</li>
-            <li>Show 3-5 examples of successful steering</li>
+            <li>Do the intermediate predictions seem related to your concept?</li>
+            <li>At which layers does relevant information appear?</li>
           </ul>
         </li>
-        <li><strong>Initial observations:</strong> What did you notice? Does steering work consistently? At which layers is it most effective?</li>
       </ul>
 
       <p><em>
-        Tip: If steering doesn't work well for your first concept, try another from your candidate list.
-        Finding a concept that responds well to steering will make the rest of the semester much more productive!
+        Tip: Choose concepts that can be expressed in language and that the model might reasonably "know about."
+        Abstract concepts from your field (legal reasoning, medical diagnosis, literary themes) are great candidates.
       </em></p>
     </div>
   </section>
 
   <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
-    <p><a href="index.html">← Back to Course Home</a></p>
+    <p><a href="index.html">&larr; Back to Course Home</a></p>
   </footer>
 
 </body>

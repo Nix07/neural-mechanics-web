@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 3: Representation Visualization - Neural Mechanics</title>
+  <title>Week 3: Evaluation Methodology - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -45,12 +45,6 @@
       font-size: 1.2em;
       margin-top: 20px;
       margin-bottom: 10px;
-    }
-
-    h4 {
-      font-size: 1.05em;
-      margin-top: 15px;
-      margin-bottom: 8px;
     }
 
     a {
@@ -115,21 +109,6 @@
       border-radius: 3px;
       font-family: 'Courier New', monospace;
     }
-
-    .diagram {
-      background-color: #f8f8f8;
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin: 15px 0;
-      font-family: monospace;
-      text-align: center;
-    }
-
-    .math {
-      font-style: italic;
-      text-align: center;
-      margin: 10px 0;
-    }
   </style>
 </head>
 
@@ -137,7 +116,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 3: Representation Visualization</h1>
+    <h1>Week 3: Evaluation Methodology</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -147,10 +126,10 @@
   <section id="overview">
     <h2>Overview</h2>
     <p>
-      This week focuses on techniques for making the invisible visible. You'll learn how to visualize high-dimensional
-      activation vectors, understand the geometric structure of representations, and use visualization to discover
-      interpretable patterns. From PCA projections to attention heatmaps, from the geometry of truth to the dual-route
-      model of induction, you'll develop the visual intuition essential for mechanistic interpretability research.
+      Before we can understand what's happening inside a large language model, we need to know how to measure what it
+      does. This week introduces the fundamental methods for evaluating LLM behavior, from basic probability outputs to
+      sophisticated benchmarking strategies. You'll learn how to design effective prompts, interpret model outputs, and
+      assess whether a model has truly learned a concept or simply memorized training data.
     </p>
   </section>
 
@@ -158,56 +137,45 @@
     <h2>Learning Objectives</h2>
     <p>By the end of this week, you should be able to:</p>
     <ul>
-      <li>Apply fundamental linear algebra concepts: vectors, dot products, norms, matrix-vector products</li>
-      <li>Understand and apply Singular Value Decomposition (SVD) and Principal Component Analysis (PCA)</li>
-      <li>Use PCA to visualize high-dimensional activation vectors in 2D/3D</li>
-      <li>Explain the "geometry of truth" and how concepts form linear subspaces</li>
-      <li>Compute and interpret mass mean-difference vectors and Euclidean classifiers</li>
-      <li>Understand the geometry of token embeddings (encoder) and unembeddings (decoder)</li>
-      <li>Perform and interpret semantic-vector arithmetic (e.g., king - man + woman ≈ queen)</li>
-      <li>Use the logit lens to visualize what the model "thinks" at intermediate layers</li>
-      <li>Visualize and interpret attention patterns across heads and layers</li>
-      <li>Explain how induction heads work and visualize their characteristic attention patterns</li>
-      <li>Distinguish between token-level induction and concept-level induction</li>
-      <li>Understand the dual-route model of induction and how it relates to semantic processing</li>
-      <li>Explain how concept induction heads attend to the last token of multi-token words</li>
-      <li>Demonstrate that concept-level representations enable semantic-vector arithmetic</li>
+      <li>Describe what an autoregressive language modeling neural network calculates, including its inputs and how it
+        outputs probabilities for a single token</li>
+      <li>Explain how to sample probabilistic output autoregressively to generate long outputs</li>
+      <li>Apply three prompting strategies for measuring model capabilities: instruction-following, cloze prompts, and
+        in-context learning</li>
+      <li>Use methods for conforming to easy-to-evaluate output formats through ICL, custom decoding, or MCQ prompting
+      </li>
+      <li>Evaluate long-form output using an LLM-as-judge approach</li>
+      <li>Understand and compute evaluation metrics: precision, recall, F1, and perplexity</li>
+      <li>Apply statistical significance testing and interpret error bars in evaluation results</li>
+      <li>Distinguish between memorization and generalization, and identify the risk of training data overlap and
+        contamination</li>
+      <li>Describe the approaches used by HELM to create fair and accurate benchmarks</li>
     </ul>
   </section>
 
   <section id="readings">
-    <h2>Readings</h2>
+    <h2>Required Readings</h2>
 
-    <h3>Core Readings</h3>
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2310.06824" target="_blank">The Geometry of Truth: Emergent Linear Structure
-            in Large Language Model Representations</a>
+          <a href="https://arxiv.org/abs/1909.01066" target="_blank">Language Models as Knowledge Bases?</a>
         </div>
-        <div class="reading-description">Marks & Tegmark (2023). How truth forms linear subspaces across contexts and models</div>
+        <div class="reading-description">Petroni et al. (2019). The LAMA benchmark&mdash;template for probing factual knowledge via cloze-style tasks.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2209.11895" target="_blank">In-context Learning and Induction Heads</a>
+          <a href="https://arxiv.org/abs/2306.05685" target="_blank">Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena</a>
         </div>
-        <div class="reading-description">Olsson et al. (2022). Discovering and visualizing induction heads through attention patterns</div>
+        <div class="reading-description">Zheng et al. (2023). When and how to use LLMs as evaluators for open-ended outputs.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2406.16116" target="_blank">Not All Language Model Features Are Linear</a>
+          <a href="https://arxiv.org/abs/2212.09251" target="_blank">Discovering Language Model Behaviors with Model-Written Evaluations</a>
         </div>
-        <div class="reading-description">Engels et al. (2024). Exploring when and how features deviate from linear structure (includes
-          multi-token analysis)</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2012.14913" target="_blank">Transformer Feed-Forward Layers Are Key-Value Memories</a>
-        </div>
-        <div class="reading-description">Geva et al. (2021). Understanding MLP layers as memory stores; related to SVD interpretability</div>
+        <div class="reading-description">Perez et al. (2022). Using LLMs to generate evaluation datasets at scale.</div>
       </div>
     </div>
 
@@ -215,499 +183,460 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://www.lesswrong.com/posts/AcKRB8wDpdaN6v6ru/interpreting-gpt-the-logit-lens" target="_blank">
-            Interpreting GPT: The Logit Lens</a>
+          <a href="https://arxiv.org/abs/2005.14165" target="_blank">Language Models are Few-Shot Learners (GPT-3)</a>
         </div>
-        <div class="reading-description">Blog post introducing the logit lens technique (LessWrong, not arXiv)</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2209.10652" target="_blank">Toy Models of Superposition</a>
-        </div>
-        <div class="reading-description">Elhage et al. (2022). Geometric understanding of how features pack into activation space</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/1301.3781" target="_blank">Linguistic Regularities in Continuous Space Word
-            Representations (Word2Vec)</a>
-        </div>
-        <div class="reading-description">Mikolov et al. (2013). Classic paper on semantic-vector arithmetic</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://transformer-circuits.pub/2021/framework/index.html" target="_blank">A Mathematical Framework
-            for Transformer Circuits</a>
-        </div>
-        <div class="reading-description">Elhage et al. (2021). Technical reference on attention patterns and composition</div>
+        <div class="reading-description">Brown et al. (2020). Introduced the few-shot evaluation paradigm that now dominates the field.</div>
       </div>
     </div>
-
-    <h3>Note on Dual-Route Induction</h3>
-    <p style="margin-left: 20px; color: #555;">
-      <em>The Feucht et al. paper on dual-route induction and concept-level copying is forthcoming. In lecture, we'll
-        discuss the key findings: how concept induction heads attend to the last token of multi-token words and how
-        their representations support semantic-vector arithmetic better than token-level induction.</em>
-    </p>
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: Visualizing the Geometry of Language Model Representations</h2>
+    <h2>Tutorial: Understanding and Measuring LLM Behavior</h2>
 
-    <h3>1. Linear Algebra Review</h3>
+    <h3>1. The Autoregressive Language Model</h3>
     <p>
-      Before diving into visualization, let's review the mathematical tools we'll use.
+      At its core, a large language model is a function that takes a sequence of tokens as input and produces a
+      probability distribution over the next token. Given a sequence of tokens <code>x₁, x₂, ..., xₙ</code>, the model
+      computes:
+    </p>
+    <p style="text-align: center; font-style: italic;">
+      P(xₙ₊₁ | x₁, x₂, ..., xₙ)
+    </p>
+    <p>
+      This is a distribution over the entire vocabulary—typically 50,000 to 100,000+ tokens. The model doesn't directly
+      generate text; it generates probabilities. Understanding this distinction is crucial: every behavior we observe
+      emerges from these probability distributions.
     </p>
 
-    <h4>Vectors and Operations</h4>
+    <h3>2. Autoregressive Sampling</h3>
     <p>
-      A <strong>vector</strong> is a list of numbers: <code>v = [v₁, v₂, ..., vₙ]</code>
+      To generate longer sequences, we sample from the model autoregressively:
     </p>
     <ul>
-      <li><strong>Dot product:</strong> <code>v · w = v₁w₁ + v₂w₂ + ... + vₙwₙ</code> (measures similarity/projection)
+      <li><strong>Greedy decoding:</strong> Always pick the highest probability token</li>
+      <li><strong>Temperature sampling:</strong> Sample from the distribution, with temperature controlling randomness
       </li>
-      <li><strong>Norm (length):</strong> <code>||v|| = √(v · v)</code></li>
-      <li><strong>Cosine similarity:</strong> <code>cos(θ) = (v · w) / (||v|| ||w||)</code></li>
+      <li><strong>Top-k sampling:</strong> Sample only from the k most likely tokens</li>
+      <li><strong>Nucleus (top-p) sampling:</strong> Sample from the smallest set of tokens whose cumulative
+        probability exceeds p</li>
     </ul>
-
-    <h4>Matrix-Vector Products</h4>
     <p>
-      A matrix <code>M</code> transforms vectors: <code>y = Mx</code><br>
-      Each row of <code>M</code> computes one dot product with <code>x</code>
+      Each strategy affects the diversity, coherence, and randomness of generated text. For benchmarking purposes,
+      greedy decoding or low-temperature sampling provides deterministic, reproducible results.
     </p>
 
-    <h4>Singular Value Decomposition (SVD)</h4>
+    <h3>3. Prompting Strategies for Evaluation</h3>
     <p>
-      Any matrix <code>M</code> can be decomposed as: <code>M = UΣVᵀ</code>
-    </p>
-    <ul>
-      <li><code>U</code>: Left singular vectors (output space basis)</li>
-      <li><code>Σ</code>: Singular values (scaling factors, diagonal matrix)</li>
-      <li><code>V</code>: Right singular vectors (input space basis)</li>
-    </ul>
-
-    <h4>Principal Component Analysis (PCA)</h4>
-    <p>
-      PCA finds the directions of maximum variance in data:
-    </p>
-    <ol>
-      <li>Center the data: subtract the mean</li>
-      <li>Compute SVD of the centered data matrix</li>
-      <li>The columns of <code>V</code> are the principal components</li>
-      <li>Project data onto top k components for dimensionality reduction</li>
-    </ol>
-
-    <p>
-      <strong>Why PCA matters:</strong> It lets us visualize 768-dimensional activation vectors in 2D or 3D while
-      preserving the most important structure.
+      How we prompt the model determines what capabilities we measure. Three fundamental strategies:
     </p>
 
-    <h3>2. Visualizing Activation Vectors with PCA</h3>
+    <h4>Instruction-Following</h4>
     <p>
-      Activation vectors live in high-dimensional space (typically 768-12,288 dimensions). PCA projects them into 2D or
-      3D while preserving as much variance as possible.
-    </p>
-
-    <h4>Example: Visualizing Word Embeddings</h4>
-    <ol>
-      <li>Collect activation vectors for many words</li>
-      <li>Apply PCA to find the top 2 principal components</li>
-      <li>Plot each word at its projected coordinates</li>
-      <li>Observe clusters: animals together, countries together, etc.</li>
-    </ol>
-
-    <p>
-      <strong>What to look for:</strong>
-    </p>
-    <ul>
-      <li>Semantic clusters (related concepts group together)</li>
-      <li>Linear structure (arithmetic relationships visible as parallel arrows)</li>
-      <li>Outliers (unusual or polysemantic words)</li>
-    </ul>
-
-    <h3>3. The Geometry of Truth</h3>
-    <p>
-      A remarkable finding: truth is represented as a <strong>linear direction</strong> in activation space, consistent
-      across diverse contexts.
-    </p>
-
-    <h4>Key Results</h4>
-    <ul>
-      <li>True vs. false statements produce systematically different activations</li>
-      <li>The difference vector (truth direction) generalizes across topics</li>
-      <li>Truth forms a linear subspace that can be found via PCA on contrastive examples</li>
-      <li>This structure emerges without explicit truth training</li>
-    </ul>
-
-    <h4>Mass Mean-Difference Vectors</h4>
-    <p>
-      A simple but powerful technique:
-    </p>
-    <ol>
-      <li>Collect activations for many examples with property A</li>
-      <li>Collect activations for many examples without property A</li>
-      <li>Compute: <code>direction_A = mean(with_A) - mean(without_A)</code></li>
-      <li>This direction captures the essence of property A</li>
-    </ol>
-
-    <p>
-      <strong>Applications:</strong>
-    </p>
-    <ul>
-      <li>Truth vs. false</li>
-      <li>Positive vs. negative sentiment</li>
-      <li>Formal vs. informal language</li>
-      <li>Your concept vs. not-your-concept</li>
-    </ul>
-
-    <h4>Euclidean Classifiers</h4>
-    <p>
-      Use the mass mean-difference vector as a classifier:
-    </p>
-    <div class="diagram">
-      score = activation · direction_vector<br>
-      if score > threshold: predict property A present<br>
-      else: predict property A absent
-    </div>
-
-    <p>
-      This simple linear classifier often works surprisingly well, supporting the linear representation hypothesis.
-    </p>
-
-    <h3>4. The Geometry of Token Embeddings and Unembeddings</h3>
-
-    <h4>Token Embedding Matrix (Encoder)</h4>
-    <p>
-      Converts token IDs to vectors: <code>E[token_id] → vector</code><br>
-      Each row of <code>E</code> is a token's initial representation.
-    </p>
-
-    <h4>Unembedding Matrix (Decoder)</h4>
-    <p>
-      Converts final activations to vocabulary logits: <code>logits = U × activation</code><br>
-      Each row of <code>U</code> is a direction in activation space that "votes" for that token.
-    </p>
-
-    <h4>Geometric Insight</h4>
-    <p>
-      Token embedding and unembedding matrices often share similar geometric structure:
-    </p>
-    <ul>
-      <li>Semantically similar tokens have similar embedding vectors</li>
-      <li>Similar tokens have similar unembedding directions</li>
-      <li>The dot product <code>E[i] · U[j]ᵀ</code> measures how much token i "predicts" token j</li>
-      <li>PCA on embedding/unembedding matrices reveals semantic clusters</li>
-    </ul>
-
-    <h3>5. Semantic-Vector Arithmetic</h3>
-    <p>
-      One of the most striking properties of neural language representations: you can do meaningful arithmetic with
-      concept vectors.
-    </p>
-
-    <h4>Classic Examples</h4>
-    <div class="diagram">
-      king - man + woman ≈ queen<br>
-      Paris - France + Germany ≈ Berlin<br>
-      walking - walk + swim ≈ swimming
-    </div>
-
-    <h4>Why It Works</h4>
-    <p>
-      If concepts are linear directions, then:
-    </p>
-    <ul>
-      <li>"Male" is a direction in embedding space</li>
-      <li>"Royalty" is another direction</li>
-      <li>"King" ≈ "royalty" + "male"</li>
-      <li>"Queen" ≈ "royalty" + "female"</li>
-      <li>Therefore: king - male + female ≈ queen</li>
-    </ul>
-
-    <h4>Limitations</h4>
-    <ul>
-      <li>Works best for simple, compositional relationships</li>
-      <li>Quality depends on training data biases</li>
-      <li>Not all concepts compose linearly</li>
-    </ul>
-
-    <p>
-      We'll see later how <strong>concept-level induction</strong> relies on this arithmetic property.
-    </p>
-
-    <h3>6. The Logit Lens</h3>
-    <p>
-      The <strong>logit lens</strong> is a technique for understanding what the model is "thinking" at intermediate
-      layers, before it reaches the final output.
-    </p>
-
-    <h4>How It Works</h4>
-    <ol>
-      <li>Extract activation vector at layer L</li>
-      <li>Apply the unembedding matrix: <code>intermediate_logits = U × activation_L</code></li>
-      <li>Convert to probabilities: <code>probs = softmax(intermediate_logits)</code></li>
-      <li>Examine top predictions</li>
-    </ol>
-
-    <h4>What You Learn</h4>
-    <p>
-      The logit lens reveals:
-    </p>
-    <ul>
-      <li>How predictions evolve across layers</li>
-      <li>When the model "decides" on its answer (which layer)</li>
-      <li>Whether early layers have different hypotheses than final output</li>
-      <li>How context modifies representations layer by layer</li>
-    </ul>
-
-    <h4>Example: Factual Recall</h4>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Prompt: "The capital of France is"<br><br>
-      Layer 0: (embedding) → "France", "Paris", "the"<br>
-      Layer 3: → "Paris", "a", "the"<br>
-      Layer 6: → "Paris", "Lyon", "Marseille"<br>
-      Layer 12: (final) → "Paris", "the", "France"<br>
-    </code>
-
-    <p>
-      This shows the model refining its prediction across layers, with middle layers strongest on the correct answer.
-    </p>
-
-    <h3>7. Visualizing Attention Patterns</h3>
-    <p>
-      Attention weights tell us which tokens each position is "looking at." Visualizing these patterns reveals
-      interpretable structure.
-    </p>
-
-    <h4>Attention Heatmap</h4>
-    <p>
-      For each head, create a matrix where <code>A[i,j]</code> = attention from position i to position j<br>
-      Plot as a heatmap with tokens on both axes.
-    </p>
-
-    <h4>Common Patterns</h4>
-    <ul>
-      <li><strong>Diagonal:</strong> Attending to same position (self-attention)</li>
-      <li><strong>Previous token:</strong> Strong band just below diagonal</li>
-      <li><strong>Beginning of sequence:</strong> Vertical stripe at position 0</li>
-      <li><strong>Punctuation:</strong> Attending to periods, commas</li>
-      <li><strong>Syntactic dependencies:</strong> Verbs attending to subjects</li>
-    </ul>
-
-    <h3>8. Induction Heads: Visualizing Pattern-Copying</h3>
-    <p>
-      Now we dive deep into <strong>induction heads</strong>, one of the first interpretable circuits discovered in
-      transformers.
-    </p>
-
-    <h4>What Induction Heads Do</h4>
-    <p>
-      Pattern copying: if the model has seen <code>[A][B]</code> earlier, then upon seeing <code>[A]</code> again, it
-      predicts <code>[B]</code>.
-    </p>
-
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Input: "foo bar baz foo bar baz foo"<br>
-      At final "foo", model predicts: "bar" (copying the pattern)
-    </code>
-
-    <h4>How They Work: Two-Head Cooperation</h4>
-    <p>
-      Induction requires <strong>two attention heads working together</strong> across layers:
-    </p>
-
-    <p><strong>Step 1: Previous-Token Head (earlier layer)</strong></p>
-    <ul>
-      <li>Attends to position i-1 from position i</li>
-      <li>Copies information about what came before</li>
-      <li>Writes this to the residual stream</li>
-    </ul>
-
-    <div class="diagram">
-      At "bar": attend to previous token → residual stream now encodes "previous token was foo"
-    </div>
-
-    <p><strong>Step 2: Induction Head (later layer)</strong></p>
-    <ul>
-      <li>Looks for positions where the previous token matches current context</li>
-      <li>When it finds a match, it attends to what came after in the past</li>
-      <li>Promotes that token in its output</li>
-    </ul>
-
-    <div class="diagram">
-      Current: "foo"<br>
-      Induction head: "Find where previous token was 'foo'"<br>
-      → Finds earlier "foo bar"<br>
-      → Attends to "bar" (what came after "foo")<br>
-      → Predicts "bar" for current position
-    </div>
-
-    <h4>Characteristic Attention Pattern</h4>
-    <p>
-      Induction heads have a distinctive "stripe" pattern in attention visualization:
-    </p>
-    <ul>
-      <li>Strong attention to positions where pattern previously occurred</li>
-      <li>Offset by +1 (attending to what came after the match)</li>
-      <li>Creates a characteristic diagonal stripe pattern offset from the main diagonal</li>
-    </ul>
-
-    <h3>9. Token Induction vs. Concept Induction</h3>
-    <p>
-      Not all induction is created equal. Recent work has revealed two fundamentally different types.
-    </p>
-
-    <h4>Token-Level Induction</h4>
-    <p>
-      Copies <strong>literal tokens</strong>:
+      Modern models trained with instruction-tuning respond to direct commands:
     </p>
     <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "Alice went to the store. Bob went to the park. Alice went to the ___"<br>
-      → Predicts "store" (exact token that followed "Alice went to the" before)
+      "Translate the following sentence to French: Hello, how are you?"
     </code>
 
+    <h4>Cloze Prompts</h4>
     <p>
-      <strong>Limitation:</strong> Fails when surface form changes but meaning is the same.
-    </p>
-
-    <h4>Concept-Level Induction</h4>
-    <p>
-      Copies <strong>semantic patterns</strong>:
+      Format the task as text completion, measuring the probability of specific completions:
     </p>
     <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "The capital of France is Paris. The capital of Germany is Berlin. The capital of Italy is ___"<br>
-      → Predicts "Rome" (concept pattern: [country] → [capital])<br>
+      "The capital of France is ___"
     </code>
-
     <p>
-      Even though "France", "Germany", and "Italy" are different tokens, the model recognizes the semantic pattern and
-      applies it.
+      We can evaluate whether "Paris" has higher probability than alternatives. This works even with base models that
+      haven't seen instruction-tuning.
     </p>
 
-    <h4>Key Differences</h4>
-    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-      <tr style="background-color: #f0f0f0;">
-        <th style="border: 1px solid #ccc; padding: 8px;">Property</th>
-        <th style="border: 1px solid #ccc; padding: 8px;">Token Induction</th>
-        <th style="border: 1px solid #ccc; padding: 8px;">Concept Induction</th>
+    <h4>In-Context Learning (ICL)</h4>
+    <p>
+      Provide examples in the prompt to demonstrate the task:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Input: The movie was terrible.<br>
+      Sentiment: Negative<br><br>
+      Input: I loved every minute!<br>
+      Sentiment: Positive<br><br>
+      Input: It was okay, nothing special.<br>
+      Sentiment:
+    </code>
+    <p>
+      ICL allows us to test capabilities without fine-tuning and is particularly powerful for evaluating novel concepts.
+    </p>
+
+    <h3>4. Constraining Outputs for Evaluation</h3>
+    <p>
+      Reliable benchmarking requires outputs in predictable formats. Several approaches:
+    </p>
+    <ul>
+      <li><strong>Multiple choice questions:</strong> Force selection from predefined options by comparing token
+        probabilities for "A", "B", "C", "D"</li>
+      <li><strong>Custom decoding:</strong> Constrain the output vocabulary or use grammar-based sampling to ensure
+        valid formats (e.g., only allowing "Yes"/"No")</li>
+      <li><strong>Few-shot ICL:</strong> Demonstrate the desired format in examples, teaching the model to respond
+        consistently</li>
+      <li><strong>Probability-based evaluation:</strong> Instead of generating text, directly measure P(correct_answer)
+        vs P(incorrect_answer)</li>
+    </ul>
+
+    <h3>5. LLM-as-Judge for Long-Form Outputs</h3>
+    <p>
+      Some capabilities—like writing quality, reasoning coherence, or helpfulness—can't be reduced to multiple choice.
+      LLM-as-judge uses a strong model (often GPT-4) to evaluate outputs:
+    </p>
+    <ul>
+      <li>Provide the judge with evaluation criteria and rubrics</li>
+      <li>Ask for both a score and justification</li>
+      <li>Use pairwise comparison rather than absolute scoring for better reliability</li>
+      <li>Be aware of biases: judges favor longer responses, their own outputs, and certain styles</li>
+    </ul>
+    <p>
+      MT-Bench demonstrated that LLM judges correlate well with human judgments for many tasks, but always validate on
+      a subset with human evaluation.
+    </p>
+
+    <h3>6. Evaluation Metrics Beyond Accuracy</h3>
+    <p>
+      Different tasks require different metrics:
+    </p>
+
+    <h4>Classification Metrics</h4>
+    <ul>
+      <li><strong>Accuracy:</strong> Proportion of correct predictions (good for balanced classes)</li>
+      <li><strong>Precision:</strong> Of predicted positives, what fraction are actually positive? (TP / (TP + FP))
+      </li>
+      <li><strong>Recall:</strong> Of actual positives, what fraction did we find? (TP / (TP + FN))</li>
+      <li><strong>F1 Score:</strong> Harmonic mean of precision and recall: 2 × (precision × recall) / (precision +
+        recall)</li>
+    </ul>
+
+    <h4>Generation Metrics</h4>
+    <ul>
+      <li><strong>Perplexity:</strong> Measures how "surprised" the model is by a sequence. Lower is better. Defined as
+        exp(average negative log probability of tokens)</li>
+      <li><strong>BLEU, ROUGE:</strong> Compare generated text to reference texts (useful for translation, summarization)
+      </li>
+    </ul>
+
+    <h3>7. Statistical Significance and Error Bars</h3>
+    <p>
+      A model scoring 85% vs 83% on a benchmark might not be meaningfully different. We must quantify uncertainty:
+    </p>
+    <ul>
+      <li><strong>Standard error:</strong> For accuracy on n samples, SE = √(p(1-p)/n)</li>
+      <li><strong>Confidence intervals:</strong> 95% CI is approximately ± 2 × SE for large n</li>
+      <li><strong>Bootstrap resampling:</strong> Repeatedly sample (with replacement) from your test set to estimate
+        the distribution of scores</li>
+      <li><strong>Statistical tests:</strong> Use McNemar's test for comparing two models on the same examples</li>
+    </ul>
+    <p>
+      Rule of thumb: differences smaller than 2-3% on typical benchmark sizes often aren't statistically significant.
+    </p>
+
+    <h3>8. Memorization vs. Generalization</h3>
+    <p>
+      A fundamental question: Did the model learn the concept, or did it memorize training examples?
+    </p>
+
+    <h4>Training Data Contamination</h4>
+    <p>
+      If test examples appeared in training data, the model might simply recall them rather than demonstrate true
+      understanding. This is especially problematic because:
+    </p>
+    <ul>
+      <li>Popular benchmarks leak into training corpora (scraped web data, code repositories)</li>
+      <li>Models trained on "the whole internet" likely saw many benchmark examples</li>
+      <li>Paraphrased or slightly modified examples may still trigger memorization</li>
+    </ul>
+
+    <h4>Detecting and Mitigating Contamination</h4>
+    <ul>
+      <li><strong>N-gram overlap:</strong> Search training data for test example substrings</li>
+      <li><strong>Membership inference:</strong> Compare perplexity on test vs similar synthetic examples</li>
+      <li><strong>Rephrased evaluation:</strong> Create novel rewordings of test questions</li>
+      <li><strong>Held-out test sets:</strong> Keep evaluation data truly private until final evaluation</li>
+    </ul>
+
+    <h4>Generalization Tests</h4>
+    <p>
+      Beyond contamination, test for genuine understanding:
+    </p>
+    <ul>
+      <li>Novel compositions of known concepts</li>
+      <li>Out-of-distribution examples</li>
+      <li>Counterfactual variations</li>
+      <li>Transfer to related but different tasks</li>
+    </ul>
+
+    <h3>9. HELM: Holistic Evaluation</h3>
+    <p>
+      The Holistic Evaluation of Language Models (HELM) benchmark exemplifies comprehensive evaluation:
+    </p>
+
+    <h4>Key Principles</h4>
+    <ul>
+      <li><strong>Broad coverage:</strong> 42+ scenarios across question answering, reasoning, generation,
+        classification, etc.</li>
+      <li><strong>Multi-metric:</strong> Evaluates accuracy, calibration, robustness, fairness, bias, toxicity, and
+        efficiency</li>
+      <li><strong>Standardized prompting:</strong> Consistent few-shot examples and formatting across models</li>
+      <li><strong>Transparency:</strong> All prompts, data, and evaluation code are public</li>
+    </ul>
+
+    <h4>Metrics Beyond Accuracy</h4>
+    <ul>
+      <li><strong>Calibration:</strong> Do predicted probabilities match actual correctness rates?</li>
+      <li><strong>Robustness:</strong> Performance under perturbations (typos, paraphrases, contrast sets)</li>
+      <li><strong>Fairness:</strong> Equal performance across demographic groups</li>
+      <li><strong>Efficiency:</strong> Inference cost, carbon footprint</li>
+    </ul>
+
+    <h3>Putting It All Together</h3>
+    <p>
+      Effective benchmarking requires:
+    </p>
+    <ol>
+      <li>Understanding model fundamentals (token probabilities, sampling)</li>
+      <li>Choosing appropriate prompting strategies for your concept</li>
+      <li>Designing tasks with evaluable outputs</li>
+      <li>Selecting metrics that match your research questions</li>
+      <li>Quantifying uncertainty and statistical significance</li>
+      <li>Ruling out memorization through contamination checks and generalization tests</li>
+      <li>Following established best practices (HELM) for reproducible, fair evaluation</li>
+    </ol>
+  </section>
+
+  <section id="dataset-construction">
+    <h2>Dataset Construction for Concept Research</h2>
+
+    <p>
+      For your research project, the quality of your findings depends heavily on your dataset construction. This section
+      covers principles and strategies for building datasets that enable rigorous concept characterization.
+    </p>
+
+    <h3>1. Defining Your Concept Operationally</h3>
+
+    <p>
+      Before constructing a dataset, you must operationalize your concept—make it measurable.
+    </p>
+
+    <h4>From Abstract to Concrete</h4>
+    <ul>
+      <li><strong>Abstract concept:</strong> "politeness"</li>
+      <li><strong>Operational definition:</strong> Text containing please/thank you, formal pronouns, hedging language, indirect requests</li>
+      <li><strong>Measurable examples:</strong> "Could you please..." (polite) vs "Do this now" (direct)</li>
+    </ul>
+
+    <p><strong>Exercise:</strong> For your chosen concept, write down:</p>
+    <ol>
+      <li>3-5 concrete features that characterize it</li>
+      <li>10 clear positive examples</li>
+      <li>10 clear negative examples (concept absent)</li>
+      <li>5 edge cases (ambiguous or borderline)</li>
+    </ol>
+
+    <h3>2. Contrastive Pair Construction</h3>
+
+    <p>
+      The gold standard for concept research: pairs of examples that differ <strong>only</strong> in your target concept.
+    </p>
+
+    <h4>Minimal Pairs Strategy</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Positive: "Could you please pass the salt?"<br>
+      Negative: "Pass the salt."<br><br>
+      What changed: politeness marker ("Could you please")<br>
+      What stayed the same: meaning, length, topic
+    </code>
+
+    <h4>Controlled Variation</h4>
+    <ul>
+      <li><strong>Substitute only concept-relevant words:</strong> polite → rude, formal → casual</li>
+      <li><strong>Keep constant:</strong> sentence structure, length (±2 tokens), topic, complexity</li>
+      <li><strong>Avoid confounds:</strong> Don't change sentiment when studying formality</li>
+    </ul>
+
+    <h4>Methods for Generating Pairs</h4>
+    <ol>
+      <li><strong>Template-based:</strong> "[GREETING], could you [ACTION]?" vs "[ACTION] now"</li>
+      <li><strong>LLM-assisted:</strong> Prompt GPT-4 to paraphrase with/without concept</li>
+      <li><strong>Human-created:</strong> Writers produce matched pairs (expensive but high quality)</li>
+      <li><strong>Found pairs:</strong> Mine existing data for natural contrasts (Reddit posts with different tones)</li>
+    </ol>
+
+    <h3>3. Balancing and Sampling Strategies</h3>
+
+    <h4>Class Balance</h4>
+    <p>
+      For binary concepts (polite/rude, factual/fictional), aim for 50-50 split unless you have specific research reasons.
+    </p>
+    <ul>
+      <li><strong>Imbalanced data risks:</strong> Model might learn "always predict majority class"</li>
+      <li><strong>Probe issues:</strong> Linear probes are especially sensitive to imbalance</li>
+      <li><strong>Evaluation fairness:</strong> Accuracy is misleading with skewed data</li>
+    </ul>
+
+    <h4>Stratified Sampling</h4>
+    <p>Ensure diversity across relevant dimensions:</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+      <tr>
+        <th style="border: 1px solid #ddd; padding: 8px;">Dimension</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Why It Matters</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Example</th>
       </tr>
       <tr>
-        <td style="border: 1px solid #ccc; padding: 8px;">Matching</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Exact token match</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Semantic similarity</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Topic</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Prevent concept from being confounded with domain</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Politeness in: requests, apologies, greetings, refusals</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #ccc; padding: 8px;">Copying</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Literal token</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Semantic role</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Length</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Avoid "polite = longer" spurious correlation</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">5-10 tokens, 10-20 tokens, 20-40 tokens (balanced)</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #ccc; padding: 8px;">Generalization</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Limited</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Strong</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Syntactic structure</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Ensure concept isn't just syntax</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Questions, statements, commands</td>
       </tr>
       <tr>
-        <td style="border: 1px solid #ccc; padding: 8px;">Vector Arithmetic</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Not required</td>
-        <td style="border: 1px solid #ccc; padding: 8px;">Essential</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Formality</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Separate from related concepts</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Formal-polite, informal-polite, formal-rude, informal-rude</td>
       </tr>
     </table>
 
-    <h3>10. The Dual-Route Model of Induction</h3>
-    <p>
-      Research has shown that transformers implement <strong>both routes</strong> simultaneously, with different
-      attention heads specializing in each type.
-    </p>
+    <h3>4. Avoiding Common Pitfalls</h3>
 
-    <h4>Dual-Route Architecture</h4>
+    <h4>Confound: Concept Leakage</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #fff3cd;">
+      <strong>Bad dataset:</strong><br>
+      Positive (polite): "Thank you so much for your help! I really appreciate it."<br>
+      Negative (rude): "Whatever."<br><br>
+      <strong>Problem:</strong> Length, sentiment, and informativeness all vary—not just politeness!
+    </code>
+
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #e8f4f8;">
+      <strong>Better dataset:</strong><br>
+      Positive (polite): "Thanks for your help."<br>
+      Negative (direct): "Got it, bye."<br><br>
+      <strong>Better:</strong> Similar length, neutral tone, only politeness marker differs
+    </code>
+
+    <h4>Pitfall: Lexical Shortcuts</h4>
+    <p>
+      Models might learn "if text contains 'please' → polite" without understanding context.
+    </p>
     <ul>
-      <li><strong>Route 1 (Token):</strong> Fast, exact-match based copying</li>
-      <li><strong>Route 2 (Concept):</strong> Slower, semantic-similarity based copying</li>
-      <li>Both routes contribute to final predictions</li>
-      <li>Model can use whichever is more appropriate for context</li>
+      <li><strong>Test:</strong> Include "please" in rude examples ("Please shut up")</li>
+      <li><strong>Include:</strong> Polite examples without marker words (indirect requests: "I was wondering if you might...")</li>
+      <li><strong>Verify:</strong> Concept isn't just keyword matching</li>
     </ul>
 
-    <h4>Multi-Token Words: A Key Insight</h4>
+    <h4>Pitfall: Training Data Overlap</h4>
     <p>
-      One striking finding: <strong>concept induction heads attend to the last token of multi-token words</strong>.
-    </p>
-
-    <p>
-      Example: "San Francisco" is tokenized as ["San", "Francisco"]
+      If your test examples appeared in the model's training data, you're testing memorization, not understanding.
     </p>
     <ul>
-      <li><strong>Token induction:</strong> Might attend to "San" (first token)</li>
-      <li><strong>Concept induction:</strong> Attends to "Francisco" (last token)</li>
+      <li><strong>Create novel examples:</strong> Don't copy from web datasets</li>
+      <li><strong>Paraphrase significantly:</strong> Change word choice, structure, context</li>
+      <li><strong>Synthetic generation:</strong> Use templates or LLM generation for fresh data</li>
     </ul>
 
+    <h3>5. Dataset Size Guidelines</h3>
+
     <p>
-      <strong>Why?</strong> The last token's representation has accumulated information from previous tokens through
-      attention, creating a more complete semantic representation of "San Francisco" as a city.
+      How much data do you need? It depends on your research method:
     </p>
 
-    <h4>Semantic-Vector Arithmetic in Concept Induction</h4>
+    <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
+      <tr>
+        <th style="border: 1px solid #ddd; padding: 8px;">Method (Week)</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Minimum</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Recommended</th>
+        <th style="border: 1px solid #ddd; padding: 8px;">Purpose</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Benchmarking (Week 2)</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">100</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">500-1000</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Test set for measuring accuracy</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Steering (Week 1)</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">10-20 pairs</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">50-100 pairs</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Contrastive pairs for activation difference</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Probing (Week 5)</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">500</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">2000-5000</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Training set for linear classifier</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Visualization (Week 3)</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">100</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">500-1000</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">Examples to visualize in 2D/3D</td>
+      </tr>
+    </table>
+
+    <h3>6. Documentation and Reproducibility</h3>
+
     <p>
-      Concept induction heads rely on semantic similarity in activation space:
+      Your dataset is a research artifact. Document it properly:
     </p>
+
+    <ul>
+      <li><strong>Datasheet:</strong> Purpose, creation method, annotator info, known limitations</li>
+      <li><strong>Examples:</strong> Show 10-20 representative samples</li>
+      <li><strong>Statistics:</strong> Size, balance, length distribution, vocabulary size</li>
+      <li><strong>Annotation guidelines:</strong> How you (or annotators) decided positive vs negative</li>
+      <li><strong>Version control:</strong> Track changes, note when you add/remove examples</li>
+    </ul>
+
+    <h3>7. Quick Start: Building Your First Dataset</h3>
+
+    <p><strong>Week 2 Goal:</strong> Create a small, high-quality evaluation dataset (100-200 examples) for your concept.</p>
+
     <ol>
-      <li>Represent "France", "Germany", "Italy" as activation vectors</li>
-      <li>These vectors are similar (all countries)</li>
-      <li>Find where vector similar to "France" appeared before</li>
-      <li>Copy what came after (in semantic role space: the capital)</li>
+      <li><strong>Day 1-2:</strong> Write operational definition + 20 manual examples</li>
+      <li><strong>Day 3:</strong> Create 50 contrastive pairs using templates or LLM assistance</li>
+      <li><strong>Day 4:</strong> Balance across topics/lengths, check for confounds</li>
+      <li><strong>Day 5:</strong> Run initial benchmarks, identify dataset weaknesses</li>
+      <li><strong>Day 6-7:</strong> Expand to 100-200 examples, focusing on edge cases and diversity</li>
     </ol>
 
     <p>
-      This enables generalization through vector arithmetic:
-    </p>
-    <div class="diagram">
-      "Italy" ≈ "France" in semantic space<br>
-      → Find context where "France" occurred → [capital]<br>
-      → Apply same semantic relationship to "Italy" → [its capital]
-    </div>
-
-    <p>
-      <strong>Evidence:</strong> Concept induction heads' representations show better semantic-vector arithmetic
-      properties than token induction heads. You can perform operations like "Paris - France + Italy" in their
-      activation space and get "Rome".
+      <strong>Deliverable:</strong> A JSON/CSV file with examples, labels, and metadata (topic, length, etc.) ready for benchmarking.
     </p>
 
-    <h3>Putting It All Together: A Visualization Toolkit</h3>
-    <p>
-      You now have multiple tools for understanding representations:
-    </p>
-    <ol>
-      <li><strong>PCA:</strong> Reduce dimensionality, visualize clusters and structure</li>
-      <li><strong>Mass mean-difference:</strong> Find concept directions</li>
-      <li><strong>Geometric analysis:</strong> Understand truth, token encodings/decodings</li>
-      <li><strong>Vector arithmetic:</strong> Test compositional structure</li>
-      <li><strong>Logit lens:</strong> See intermediate predictions</li>
-      <li><strong>Attention visualization:</strong> Understand information flow</li>
-      <li><strong>Induction analysis:</strong> Distinguish token vs. concept copying</li>
-    </ol>
-
-    <p>
-      These techniques combine to give you a comprehensive view of how language models represent and process
-      information.
-    </p>
+    <h3>Key Takeaways</h3>
+    <ul>
+      <li>Operationalize concepts concretely before collecting data</li>
+      <li>Contrastive pairs are the gold standard—minimize confounds</li>
+      <li>Balance classes and stratify across relevant dimensions</li>
+      <li>Avoid lexical shortcuts and training data overlap</li>
+      <li>Size needs vary by method: 100 for benchmarking, 2000+ for probing</li>
+      <li>Document your dataset as a research artifact</li>
+    </ul>
   </section>
 
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>
-      This week's exercise provides hands-on practice with visualization techniques:
+      This week's exercise will give you hands-on experience with the core concepts:
     </p>
     <ul>
-      <li>Apply PCA to activation vectors and create 2D/3D visualizations</li>
-      <li>Compute and visualize mass mean-difference vectors</li>
-      <li>Explore token embedding and unembedding geometry</li>
-      <li>Perform semantic-vector arithmetic</li>
-      <li>Implement and apply the logit lens</li>
-      <li>Visualize attention patterns as heatmaps</li>
-      <li>Find and visualize induction heads</li>
-      <li>Test token vs. concept induction</li>
-      <li>Analyze multi-token word processing in concept induction</li>
+      <li>Load a small language model (GPT-2 or similar)</li>
+      <li>Examine token probability distributions</li>
+      <li>Implement different sampling strategies</li>
+      <li>Test cloze, ICL, and instruction prompts</li>
+      <li>Calculate precision, recall, F1, and perplexity</li>
+      <li>Perform statistical significance testing</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
@@ -723,82 +652,66 @@
     <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <p><strong>Due: Thursday of Week 3</strong></p>
+      <p><strong>Due: Thursday of Week 2</strong></p>
       <p>
-        Now that you've selected your model and built a benchmark, dive deep into how the model represents your concept
-        internally. Use visualization techniques to examine geometric structure across layers and token positions.
+        Now that you've identified a promising concept through steering, it's time to formalize it with a systematic benchmark
+        and test it across multiple models to find the best target for deep investigation.
       </p>
 
-      <h4>Part 1: Logit Lens Analysis (Qualitative)</h4>
+      <h4>Part 1: Design Your Benchmark</h4>
       <ul>
-        <li><strong>Apply logit lens:</strong> Project activations to vocabulary space at each layer
+        <li><strong>Operational definition:</strong> Translate your concept into measurable, concrete criteria (see dataset construction section above)</li>
+        <li><strong>Contrastive pairs:</strong> Create 50-100 minimal pairs that differ primarily in your concept
           <ul>
-            <li>Track how predictions evolve for concept-relevant prompts</li>
-            <li>Which layer first shows strong signal for your concept?</li>
-            <li>Does the concept emerge gradually or suddenly?</li>
+            <li>Example (formality): "Could you help me?" vs "Help me"</li>
+            <li>Control for confounds (length, topic, sentiment, etc.)</li>
           </ul>
         </li>
-        <li><strong>Analyze multiple token positions:</strong> Not just the final token
+        <li><strong>Test set:</strong> Build a held-out test set of 500-1000 examples
           <ul>
-            <li>How does concept representation vary by position?</li>
-            <li>Where in the sequence does the model "realize" the concept?</li>
+            <li>Use stratified sampling (see guidelines above)</li>
+            <li>Document data sources and collection methods</li>
+            <li>Ensure balanced classes</li>
           </ul>
         </li>
-        <li><strong>Create visualizations:</strong> Show prediction evolution across layers
+        <li><strong>Evaluation metric:</strong> Define how you'll measure concept understanding
           <ul>
-            <li>Heatmaps, line plots, or trajectory visualizations</li>
-            <li>Compare examples with vs. without your concept</li>
+            <li>Probability differences, accuracy, linear separability, etc.</li>
+            <li>Statistical significance thresholds</li>
           </ul>
         </li>
       </ul>
 
-      <h4>Part 2: Geometric Structure Analysis</h4>
+      <h4>Part 2: Test Across Models</h4>
       <ul>
-        <li><strong>Examine multiple layers:</strong> Don't just look at one layer
+        <li><strong>Model selection:</strong> Test at least 3 models of varying sizes
           <ul>
-            <li>Apply PCA or t-SNE to activations from layers 0, 25%, 50%, 75%, 100%</li>
-            <li>Do concept examples cluster? Is there clear separation?</li>
-            <li>Which layer has the cleanest geometric structure?</li>
+            <li>Include at least one small model (e.g., GPT-2, Pythia-1B, Llama-7B)</li>
+            <li>Include at least one large model (e.g., GPT-3.5, Llama-70B)</li>
+            <li>Consider models from different families if relevant</li>
           </ul>
         </li>
-        <li><strong>Analyze multiple token positions:</strong> Final token, subject token, verb token, etc.
+        <li><strong>Identify smallest capable model:</strong> Find the smallest model that demonstrates robust understanding of your concept
           <ul>
-            <li>Does geometric structure vary by position?</li>
-            <li>Where is the concept most clearly encoded?</li>
-          </ul>
-        </li>
-        <li><strong>Test linear separability:</strong>
-          <ul>
-            <li>Train simple linear classifiers on different (layer, position) combinations</li>
-            <li>Report accuracy to quantify geometric structure quality</li>
-            <li>Create heatmap showing separability across layers × positions</li>
+            <li>This will be your primary target for deep investigation in Weeks 3-11</li>
+            <li>Smaller models = faster experiments, easier to interpret, more publishable insights</li>
+            <li>Document performance across all tested models</li>
           </ul>
         </li>
       </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Logit lens visualizations:</strong> Prediction evolution across layers for 5-10 examples</li>
-        <li><strong>Geometric structure analysis:</strong>
-          <ul>
-            <li>PCA/t-SNE plots for multiple (layer, position) combinations</li>
-            <li>Heatmap of linear separability across layers and positions</li>
-            <li>Identification of optimal layer(s) and position(s) for your concept</li>
-          </ul>
-        </li>
-        <li><strong>Written summary:</strong> Key observations about how and where your concept is represented
-          <ul>
-            <li>At which layer does the concept emerge?</li>
-            <li>Is it localized to specific positions or distributed?</li>
-            <li>Is the representation linear/geometric or more complex?</li>
-          </ul>
-        </li>
-        <li><strong>Code:</strong> Notebook with all analysis and visualizations</li>
+        <li><strong>Dataset:</strong> Contrastive pairs (50-100) and test set (500-1000), documented with collection methodology</li>
+        <li><strong>Benchmark results:</strong> Performance table showing all tested models and metrics</li>
+        <li><strong>Model selection rationale:</strong> Which model did you choose for deep study and why?</li>
+        <li><strong>Initial findings:</strong> Does the concept exist across models? Any surprising patterns?</li>
+        <li><strong>Code:</strong> Benchmark evaluation code (notebook or script)</li>
       </ul>
 
       <p><em>
-        This analysis will guide your next steps: if you find a strong linear representation at specific layers/positions,
-        that's where you'll focus causal interventions (Week 4) and probe training (Week 5).
+        Tip: Don't overthink the "perfect" dataset at this stage. You'll refine it throughout the semester.
+        Focus on getting a solid baseline that lets you move forward with confidence.
       </em></p>
     </div>
   </section>

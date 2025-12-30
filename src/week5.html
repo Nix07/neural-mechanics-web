@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 5: Probes and Masks (+ TCAV/CBMs) - Neural Mechanics</title>
+  <title>Week 5: Causal Localization - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -147,13 +147,6 @@
     th {
       background-color: #f0f0f0;
     }
-
-    .warning-box {
-      background-color: #fff3cd;
-      border-left: 4px solid #ff9800;
-      padding: 15px;
-      margin: 20px 0;
-    }
   </style>
 </head>
 
@@ -161,7 +154,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 5: Probes and Masks (+ TCAV/CBMs)</h1>
+    <h1>Week 5: Causal Localization</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -171,10 +164,10 @@
   <section id="overview">
     <h2>Overview</h2>
     <p>
-      Previous weeks focused on direct intervention: patching activations, tracing circuits, measuring causal effects.
-      This week introduces <strong>auxiliary models</strong>—small models trained to help us understand larger ones.
-      Probes extract specific information from representations, while masks identify which components matter. These
-      methods are faster and differentiable, but require careful interpretation to avoid spurious conclusions.
+      Understanding what a model computes is one thing; understanding <em>how</em> it computes it is another. This week
+      introduces causal intervention techniques that let you test hypotheses about which components are responsible for
+      specific behaviors. Through activation patching, causal tracing, and attribution methods, you'll learn to
+      identify the mechanisms that matter, moving from correlation to causation in interpretability research.
     </p>
   </section>
 
@@ -182,1032 +175,837 @@
     <h2>Learning Objectives</h2>
     <p>By the end of this week, you should be able to:</p>
     <ul>
-      <li>Explain the role of auxiliary models in interpretability and when to use them vs direct intervention methods
-      </li>
-      <li>Implement linear probes to extract specific information from model representations</li>
-      <li>Compare linear vs nonlinear (MLP) probes and explain the interpretability tradeoff</li>
-      <li>Design probe training protocols: dataset construction, train/test splits, and control tasks</li>
-      <li>Interpret probe accuracy: distinguish between "information is present" vs "information is used causally"</li>
-      <li>Use control tasks to validate that probes measure intended concepts (e.g., selectivity tests)</li>
-      <li>Implement learned masks to identify important components (neurons, heads, layers)</li>
-      <li>Explain the difference between hard ablation, soft masking, and learned masks</li>
-      <li>Apply regularization techniques (L0, L1) to encourage sparse, interpretable masks</li>
-      <li>Compare probing results with causal intervention results: when do they agree/disagree?</li>
-      <li>Identify probe pitfalls: overfitting (learning spurious correlations), underfitting (probe too simple), and the
-        "information presence ≠ causal use" fallacy</li>
-      <li>Use masking for automated component selection and pruning</li>
+      <li>Set up and execute activation patching experiments between two prompts</li>
+      <li>Explain the difference between noise patching and clean (counterfactual) patching</li>
+      <li>Define and compute average causal effect (ACE), total effect, and indirect effect</li>
+      <li>Explain how ROME uses causal tracing to localize factual knowledge in networks</li>
+      <li>Contrast ROME's findings with entity tracking and binding vector discoveries</li>
+      <li>Apply gradient-based attribution patching to identify important activations</li>
+      <li>Use Average Indirect Effect (AIE) to systematically identify causally important components</li>
+      <li>Design effective counterfactual datasets for patching experiments</li>
+      <li>Find and use function vectors and their associated attention heads</li>
     </ul>
   </section>
 
   <section id="readings">
-    <h2>Readings</h2>
+    <h2>Required Readings</h2>
 
-    <h3>Core Readings</h3>
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/1905.06316" target="_blank">What do you learn from context? Probing for
-            sentence structure in contextualized word representations</a>
+          <a href="https://arxiv.org/abs/2202.05262" target="_blank">Locating and Editing Factual Associations in GPT</a>
         </div>
-        <div class="reading-description">Tenney et al. (2019). Foundational paper on edge probing methodology</div>
+        <div class="reading-description">Meng et al. (2022). Introduces causal tracing to localize where factual knowledge is stored. The foundational ROME paper.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/1909.03368" target="_blank">Designing and Interpreting Probes with Control
-            Tasks</a>
+          <a href="https://arxiv.org/abs/2310.15213" target="_blank">Function Vectors in Large Language Models</a>
         </div>
-        <div class="reading-description">Hewitt & Liang (2019). How to validate probes with proper control experiments</div>
+        <div class="reading-description">Todd et al. (2023). Extends localization from facts to functions. Shows task-specific vectors are localized and transferable.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2212.03827" target="_blank">Discovering Latent Knowledge in Language Models
-            Without Supervision</a>
+          <a href="https://arxiv.org/abs/2402.14811" target="_blank">Fine-Tuning Enhances Existing Mechanisms: A Case Study on Entity Tracking</a>
         </div>
-        <div class="reading-description">Burns et al. (2022). CCS method: contrast-consistent search for truthful probes</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/1803.03635" target="_blank">The Lottery Ticket Hypothesis: Finding Sparse,
-            Trainable Neural Networks</a>
-        </div>
-        <div class="reading-description">Frankle & Carbin (2019). Finding important subnetworks via masking</div>
-      </div>
-    </div>
-
-    <h3>Supplementary Readings</h3>
-    <div class="reading-list">
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2004.03061" target="_blank">Information-Theoretic Probing with Minimum
-            Description Length</a>
-        </div>
-        <div class="reading-description">Voita & Titov (2020). MDL framework for evaluating probe complexity</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/1907.07355" target="_blank">Probing Neural Network Comprehension of Natural
-            Language Arguments</a>
-        </div>
-        <div class="reading-description">Niven & Kao (2019). Case study on probing for reasoning and argumentation</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/1909.00512" target="_blank">Language Models as Knowledge Bases?</a>
-        </div>
-        <div class="reading-description">Petroni et al. (2019). Probing for factual knowledge in LMs</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://arxiv.org/abs/2004.12265" target="_blank">A Primer in BERTology: What We Know About How
-            BERT Works</a>
-        </div>
-        <div class="reading-description">Rogers et al. (2020). Survey of probing results and BERT interpretability</div>
+        <div class="reading-description">Prakash et al. (2024). How models bind properties to entities and how these mechanisms localize through training.</div>
       </div>
     </div>
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: Auxiliary Models for Interpretability</h2>
+    <h2>Tutorial: From Observation to Causation</h2>
 
-    <h3>1. Why Use Auxiliary Models?</h3>
+    <h3>1. The Challenge: Correlation vs. Causation</h3>
     <p>
-      In previous weeks, we used <strong>direct intervention</strong>: patching activations, ablating components,
-      tracing circuits. These methods are powerful but have limitations:
+      Visualization shows us <em>what</em> is represented. Steering shows us we can <em>change</em> behavior. But
+      neither tells us which specific components are <strong>causally responsible</strong> for a behavior.
     </p>
 
+    <p>
+      <strong>Example:</strong> If a model correctly answers "The capital of France is Paris," we might observe:
+    </p>
     <ul>
-      <li><strong>Expensive:</strong> Testing every component requires many forward passes</li>
-      <li><strong>Discrete:</strong> Hard ablations aren't differentiable</li>
-      <li><strong>Hypothesis-driven:</strong> You need to know what to look for</li>
+      <li>Certain neurons activate strongly for "France"</li>
+      <li>Attention heads attend from "capital" to "France"</li>
+      <li>MLP layers at certain positions have high activation</li>
     </ul>
 
     <p>
-      <strong>Auxiliary models</strong> offer complementary benefits:
+      But which of these are <strong>necessary</strong> for the correct answer? Which are merely correlated? Causal
+      intervention lets us test this.
     </p>
 
-    <ul>
-      <li><strong>Efficient:</strong> Train once, test anywhere</li>
-      <li><strong>Differentiable:</strong> Can use gradient-based optimization</li>
-      <li><strong>Exploratory:</strong> Can discover patterns you didn't expect</li>
-    </ul>
-
-    <h4>Two Main Types</h4>
-    <p><strong>Probes:</strong> Small models that read information from representations</p>
-    <div class="diagram">
-      Hidden State → [Probe] → Predicted Concept
-    </div>
-
-    <p><strong>Masks:</strong> Learned parameters that identify important components</p>
-    <div class="diagram">
-      Component × [Mask Weight] → Masked Component → Output
-    </div>
-
-    <h4>Key Question: What Do They Tell Us?</h4>
+    <h3>2. Activation Patching: The Core Technique</h3>
     <p>
-      <strong>Critical distinction:</strong> Probes and masks show what <em>could be done</em> with representations,
-      not necessarily what the model <em>actually does</em>. Always validate with causal interventions.
+      <strong>Activation patching</strong> is the fundamental intervention method: replace activations from one forward
+      pass with activations from another, then measure the effect.
     </p>
 
-    <h3>2. Linear Probes: Reading Out Information</h3>
-    <p>
-      A <strong>linear probe</strong> is the simplest auxiliary model: a linear classifier trained to extract specific
-      information from hidden states.
-    </p>
-
-    <h4>The Setup</h4>
-    <p>
-      Given hidden states <code>h</code> at some layer, train a linear classifier to predict concept <code>y</code>:
-    </p>
-
-    <div class="math">
-      ŷ = Wh + b
-    </div>
-
-    <p>
-      Where <code>W</code> is a weight matrix and <code>b</code> is a bias vector.
-    </p>
-
-    <h4>Training Procedure</h4>
+    <h4>Basic Setup</h4>
     <ol>
-      <li><strong>Extract representations:</strong> Run model on labeled data, save hidden states</li>
-      <li><strong>Freeze main model:</strong> Don't update the main model's weights</li>
-      <li><strong>Train classifier:</strong> Optimize <code>W</code> and <code>b</code> to predict labels</li>
-      <li><strong>Evaluate:</strong> Test on held-out data</li>
+      <li><strong>Clean run:</strong> Run the model on a prompt where it behaves correctly<br>
+        <code>"The capital of France is" → "Paris" ✓</code>
+      </li>
+      <li><strong>Corrupted run:</strong> Run on a prompt where behavior differs<br>
+        <code>"The capital of Germany is" → "Berlin"</code>
+      </li>
+      <li><strong>Patch:</strong> In a new run on the corrupted prompt, replace specific activations with those from
+        the clean run</li>
+      <li><strong>Measure:</strong> Does the model now produce the clean run's output?</li>
     </ol>
-
-    <h4>What High Probe Accuracy Means</h4>
-    <p>
-      If a linear probe achieves high accuracy, it tells us:
-    </p>
-    <ul>
-      <li>✓ The information is <strong>linearly accessible</strong> in the representation</li>
-      <li>✓ A simple linear transformation can extract it</li>
-      <li>✗ Does NOT prove the model uses this information causally</li>
-      <li>✗ Does NOT prove the model uses it in this way</li>
-    </ul>
-
-    <h4>Example: Probing for Sentiment</h4>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Text: "This movie was terrible"<br>
-      Hidden state at layer 8: [h₁, h₂, ..., h₇₆₈]<br>
-      Linear probe: ŷ = W·h + b<br>
-      Prediction: Negative sentiment (98% confidence)
-    </code>
-
-    <p>
-      <strong>Interpretation:</strong> Layer 8 contains linearly accessible sentiment information. But does the model
-      actually <em>use</em> this information? Need to verify with interventions.
-    </p>
-
-    <h3>3. Nonlinear Probes: MLP Probes</h3>
-    <p>
-      Sometimes information isn't linearly accessible. <strong>MLP probes</strong> (multi-layer perceptrons) can
-      extract nonlinear patterns.
-    </p>
-
-    <h4>Architecture</h4>
-    <div class="math">
-      ŷ = W₂ · ReLU(W₁h + b₁) + b₂
-    </div>
-
-    <p>
-      This adds a hidden layer with nonlinear activation, allowing more complex transformations.
-    </p>
-
-    <h4>The Interpretability Tradeoff</h4>
-    <table>
-      <tr>
-        <th>Aspect</th>
-        <th>Linear Probe</th>
-        <th>MLP Probe</th>
-      </tr>
-      <tr>
-        <td>Expressiveness</td>
-        <td>Limited (linear only)</td>
-        <td>High (nonlinear patterns)</td>
-      </tr>
-      <tr>
-        <td>Interpretability</td>
-        <td>Clear (linear direction)</td>
-        <td>Opaque (nonlinear transformation)</td>
-      </tr>
-      <tr>
-        <td>What it measures</td>
-        <td>Linearly accessible info</td>
-        <td>Computationally accessible info</td>
-      </tr>
-      <tr>
-        <td>Overfitting risk</td>
-        <td>Lower</td>
-        <td>Higher</td>
-      </tr>
-    </table>
-
-    <h4>When to Use Each</h4>
-    <ul>
-      <li><strong>Start with linear:</strong> Simpler, more interpretable, sufficient for many concepts</li>
-      <li><strong>Try MLP if:</strong> Linear probe fails but you believe information is present</li>
-      <li><strong>Compare both:</strong> Gap between linear and MLP performance reveals nonlinearity</li>
-    </ul>
-
-    <div class="warning-box">
-      <strong>Warning:</strong> High MLP probe accuracy with low linear probe accuracy suggests information is present
-      but not in a simple, interpretable form. The model may not use it the way your MLP probe does.
-    </div>
-
-    <h3>4. Probe Training: Methodology and Best Practices</h3>
-
-    <h4>Dataset Construction</h4>
-    <p><strong>1. Balanced classes:</strong></p>
-    <ul>
-      <li>Equal (or known) distribution of labels</li>
-      <li>Prevents probe from learning spurious correlations</li>
-      <li>Example: 50% positive, 50% negative sentiment</li>
-    </ul>
-
-    <p><strong>2. Minimal confounds:</strong></p>
-    <ul>
-      <li>Control for other variables that correlate with target</li>
-      <li>Example: If probing for tense, balance for sentiment</li>
-      <li>Otherwise probe might learn sentiment instead of tense</li>
-    </ul>
-
-    <p><strong>3. Diverse examples:</strong></p>
-    <ul>
-      <li>Different sentence structures, lengths, vocabularies</li>
-      <li>Test generalization, not memorization</li>
-    </ul>
-
-    <h4>Train/Test Splits</h4>
-    <ul>
-      <li><strong>Standard split:</strong> 80% train, 10% validation, 10% test</li>
-      <li><strong>Cross-validation:</strong> For small datasets, use k-fold CV</li>
-      <li><strong>Distribution shift test:</strong> Create test set from different domain</li>
-    </ul>
-
-    <h4>Training Hyperparameters</h4>
-    <ul>
-      <li><strong>Learning rate:</strong> Start with 1e-3, tune if needed</li>
-      <li><strong>Regularization:</strong> L2 penalty to prevent overfitting</li>
-      <li><strong>Early stopping:</strong> Stop when validation accuracy plateaus</li>
-      <li><strong>Batch size:</strong> 32-128 typically works well</li>
-    </ul>
-
-    <h3>5. Control Tasks: Validating Probe Behavior</h3>
-    <p>
-      <strong>Control tasks</strong> verify that probes actually measure what you think they measure, not spurious
-      correlations.
-    </p>
-
-    <h4>Selectivity Test</h4>
-    <p>
-      <strong>Question:</strong> Does the probe specifically extract your target concept, or does it respond to other
-      properties?
-    </p>
-
-    <p><strong>Method:</strong></p>
-    <ol>
-      <li>Train probe on your concept (e.g., "is sentence past tense?")</li>
-      <li>Create control dataset with different concept (e.g., "is sentence negative?")</li>
-      <li>Test probe on control dataset</li>
-      <li>Probe should have ~random accuracy on control task</li>
-    </ol>
-
-    <p>
-      <strong>If probe succeeds on control:</strong> It's not specifically measuring your concept, it's picking up a
-      confound.
-    </p>
-
-    <h4>Random Label Test</h4>
-    <p>
-      <strong>Question:</strong> Is the probe overfitting to training data?
-    </p>
-
-    <p><strong>Method:</strong></p>
-    <ol>
-      <li>Randomize labels in training set</li>
-      <li>Train probe on random labels</li>
-      <li>If probe achieves high accuracy, it's overfitting</li>
-      <li>Real patterns should not be learnable from random labels</li>
-    </ol>
-
-    <h4>Layer Progression Test</h4>
-    <p>
-      <strong>Question:</strong> Which layers contain the information?
-    </p>
-
-    <p><strong>Method:</strong></p>
-    <ol>
-      <li>Train probes at every layer</li>
-      <li>Plot accuracy vs layer</li>
-      <li>Reveals where information emerges and flows</li>
-    </ol>
-
-    <h3>6. Probe Pitfalls: What Can Go Wrong</h3>
-
-    <h4>Pitfall 1: Overfitting</h4>
-    <p>
-      <strong>Problem:</strong> Probe learns spurious patterns specific to training data.
-    </p>
-
-    <p><strong>Symptoms:</strong></p>
-    <ul>
-      <li>High training accuracy, low test accuracy</li>
-      <li>Probe uses many parameters (high capacity)</li>
-      <li>Works on training distribution, fails on shifted distribution</li>
-    </ul>
-
-    <p><strong>Solutions:</strong></p>
-    <ul>
-      <li>Regularization (L2 penalty, dropout)</li>
-      <li>More training data</li>
-      <li>Simpler probe (linear instead of MLP)</li>
-      <li>Early stopping based on validation set</li>
-      <li>Cross-validation</li>
-    </ul>
-
-    <h4>Pitfall 2: Underfitting</h4>
-    <p>
-      <strong>Problem:</strong> Probe is too simple to extract available information.
-    </p>
-
-    <p><strong>Symptoms:</strong></p>
-    <ul>
-      <li>Low accuracy on both training and test sets</li>
-      <li>Linear probe fails but concept seems extractable</li>
-      <li>Gap between human intuition and probe performance</li>
-    </ul>
-
-    <p><strong>Solutions:</strong></p>
-    <ul>
-      <li>Try nonlinear probe (MLP)</li>
-      <li>Increase probe capacity</li>
-      <li>Check if information is actually present (use intervention)</li>
-      <li>Try different layers</li>
-      <li>Verify data quality and labels</li>
-    </ul>
-
-    <h4>Pitfall 3: The "Information Presence ≠ Causal Use" Fallacy</h4>
-    <p>
-      <strong>Problem:</strong> High probe accuracy doesn't prove the model uses that information.
-    </p>
 
     <div class="diagram">
-      Probe success: Information is ACCESSIBLE<br>
-      ≠<br>
-      Model uses it: Information is USED CAUSALLY
+      Corrupted: "Germany" → activations → "Berlin"<br>
+      Clean: "France" → activations → "Paris"<br><br>
+      Patched: "Germany" + [patched activations from "France"] → ???<br><br>
+      If output → "Paris": patched component was causally important!
     </div>
-
-    <p><strong>Example:</strong></p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      You can probe for "number of vowels in sentence"<br>
-      Probe achieves 95% accuracy<br>
-      → Information is linearly accessible<br>
-      <br>
-      But does the model use vowel count for predictions?<br>
-      → Probably not! It's likely a spurious byproduct
-    </code>
-
-    <p><strong>Solution: Validate with interventions</strong></p>
-    <ul>
-      <li>Use activation patching to modify the probed direction</li>
-      <li>If output changes as expected, information is causally used</li>
-      <li>If output unchanged, information is merely present</li>
-    </ul>
-
-    <h4>Pitfall 4: Confounds and Spurious Correlations</h4>
-    <p>
-      <strong>Problem:</strong> Probe learns correlated features instead of target concept.
-    </p>
-
-    <p><strong>Example:</strong></p>
-    <ul>
-      <li>Goal: Probe for whether sentence mentions "France"</li>
-      <li>Confound: Most France examples also mention "Paris"</li>
-      <li>Probe might learn to detect "Paris" instead of "France"</li>
-    </ul>
-
-    <p><strong>Solutions:</strong></p>
-    <ul>
-      <li>Use control tasks to test selectivity</li>
-      <li>Balance confounds in training data</li>
-      <li>Test on adversarial examples (France without Paris)</li>
-    </ul>
-
-    <h3>7. Learned Masks: Identifying Important Components</h3>
-    <p>
-      Instead of hard ablation, <strong>learned masks</strong> use continuous parameters to identify which components
-      matter.
-    </p>
-
-    <h4>The Setup</h4>
-    <p>
-      Each component (neuron, head, layer) gets a mask parameter <code>m ∈ [0, 1]</code>:
-    </p>
-
-    <div class="math">
-      output = m × component_activation
-    </div>
-
-    <p>
-      Where <code>m=1</code> means "keep component" and <code>m=0</code> means "ablate component".
-    </p>
-
-    <h4>Training Objective</h4>
-    <p>
-      Optimize masks to maintain model performance while minimizing mask sum:
-    </p>
-
-    <div class="math">
-      Loss = Task_Loss + λ · Σ(mask_weights)
-    </div>
-
-    <ul>
-      <li><strong>Task_Loss:</strong> Keep model predictions accurate</li>
-      <li><strong>Σ(mask_weights):</strong> Prefer sparse masks (fewer active components)</li>
-      <li><strong>λ:</strong> Regularization strength (controls sparsity)</li>
-    </ul>
 
     <h4>Interpretation</h4>
     <ul>
-      <li><strong>High mask weight (m ≈ 1):</strong> Component is important for task</li>
-      <li><strong>Low mask weight (m ≈ 0):</strong> Component is not necessary</li>
-      <li><strong>Intermediate weights:</strong> Component has some effect</li>
+      <li><strong>If patching restores clean behavior:</strong> The patched component is causally sufficient (in this
+        context)</li>
+      <li><strong>If patching has no effect:</strong> The component is not necessary for the behavior</li>
+      <li><strong>Partial restoration:</strong> Component plays a role but is not solely responsible</li>
     </ul>
 
-    <h3>8. Hard Ablation vs Soft Masking vs Learned Masks</h3>
+    <h3>3. Noise Patching vs. Clean Patching</h3>
+    <p>
+      There are two main patching strategies, each answering different questions:
+    </p>
 
+    <h4>Noise Patching (Ablation)</h4>
+    <p>
+      Replace activations with random noise or zeros:
+    </p>
+    <div class="diagram">
+      Original: "The capital of France is" → "Paris"<br>
+      Noise patched: "The capital of France is" + [noise] → ???
+    </div>
+
+    <p>
+      <strong>Question answered:</strong> Is this component <em>necessary</em> for the behavior?<br>
+      <strong>Interpretation:</strong> If performance degrades, the component was contributing.
+    </p>
+
+    <h4>Clean (Counterfactual) Patching</h4>
+    <p>
+      Replace activations with those from a different, meaningful prompt:
+    </p>
+    <div class="diagram">
+      Corrupted: "The capital of Germany is" → "Berlin"<br>
+      Clean: "The capital of France is" → "Paris"<br>
+      Patched: "Germany" + [France activations] → "Paris"?
+    </div>
+
+    <p>
+      <strong>Question answered:</strong> Is this component <em>sufficient</em> to change behavior from corrupted to
+      clean?<br>
+      <strong>Interpretation:</strong> If behavior changes, this component causally mediates the difference.
+    </p>
+
+    <h4>Choosing Your Strategy</h4>
     <table>
       <tr>
-        <th>Method</th>
-        <th>How it Works</th>
-        <th>Advantages</th>
-        <th>Disadvantages</th>
+        <th>Use Case</th>
+        <th>Strategy</th>
+        <th>Why</th>
       </tr>
       <tr>
-        <td><strong>Hard Ablation</strong></td>
-        <td>Set activation to zero</td>
-        <td>
-          • Clear interpretation<br>
-          • Causal claim<br>
-          • No training needed
-        </td>
-        <td>
-          • Not differentiable<br>
-          • Expensive (test each)<br>
-          • Binary (on/off)
-        </td>
+        <td>Find necessary components</td>
+        <td>Noise patching</td>
+        <td>See what breaks when removed</td>
       </tr>
       <tr>
-        <td><strong>Soft Masking</strong></td>
-        <td>Multiply by weight m ∈ [0,1]</td>
-        <td>
-          • Differentiable<br>
-          • Continuous effect<br>
-          • Can interpolate
-        </td>
-        <td>
-          • Still need to set m<br>
-          • Interpretation less clear<br>
-          • Not truly causal
-        </td>
+        <td>Find sufficient components</td>
+        <td>Clean patching</td>
+        <td>See what can transfer behavior</td>
       </tr>
       <tr>
-        <td><strong>Learned Masks</strong></td>
-        <td>Train m to optimize objective</td>
-        <td>
-          • Automated discovery<br>
-          • Differentiable<br>
-          • Finds importance jointly
-        </td>
-        <td>
-          • Requires training<br>
-          • Task-specific<br>
-          • Correlation not causation
-        </td>
+        <td>Understand factual recall</td>
+        <td>Clean patching</td>
+        <td>Isolate subject-specific processing</td>
+      </tr>
+      <tr>
+        <td>Test robustness</td>
+        <td>Noise patching</td>
+        <td>Find critical dependencies</td>
       </tr>
     </table>
 
-    <h4>When to Use Each</h4>
-    <ul>
-      <li><strong>Hard ablation:</strong> Testing specific hypotheses, validating causal claims</li>
-      <li><strong>Soft masking:</strong> Analyzing effect magnitude, interpolating between states</li>
-      <li><strong>Learned masks:</strong> Exploratory discovery, automated pruning, gradient-based search</li>
-    </ul>
-
-    <h3>9. Sparse Regularization for Interpretable Masks</h3>
+    <h3>4. Causal Effects: Formal Definitions</h3>
     <p>
-      Without regularization, learned masks tend to keep most components active (not interpretable). <strong>Sparsity
-        regularization</strong> encourages simpler solutions.
+      To reason precisely about interventions, we need formal definitions from causal inference.
     </p>
 
-    <h4>L1 Regularization</h4>
+    <h4>Average Causal Effect (ACE)</h4>
     <p>
-      Add sum of absolute mask weights to loss:
+      The effect of changing one variable while holding others constant:
     </p>
-
     <div class="math">
-      Loss = Task_Loss + λ · Σ|mᵢ|
+      ACE = E[Y | do(X=x₁)] - E[Y | do(X=x₀)]
     </div>
 
-    <p><strong>Effect:</strong> Drives small weights to exactly zero (sparse solution)</p>
-
-    <h4>L0 Regularization (Approximate)</h4>
     <p>
-      Penalize the <em>number</em> of non-zero weights:
+      <strong>In neural networks:</strong> The difference in output when we intervene to set a component's activation to
+      x₁ vs x₀.
     </p>
 
+    <h4>Total Effect</h4>
+    <p>
+      The overall impact of X on Y, including all paths (direct and indirect):
+    </p>
+    <div class="diagram">
+      X → Y (direct)<br>
+      X → Z → Y (indirect through Z)<br><br>
+      Total Effect = Direct Effect + Indirect Effects
+    </div>
+
+    <h4>Indirect Effect</h4>
+    <p>
+      The effect of X on Y that flows <em>through</em> intermediate variable Z:
+    </p>
     <div class="math">
-      Loss = Task_Loss + λ · ||m||₀
+      Indirect Effect = E[Y | do(Z = value_when_X=x₁), X=x₀] - E[Y | X=x₀]
     </div>
 
     <p>
-      Since L0 norm is non-differentiable, use continuous relaxations:
+      <strong>Example:</strong> How much does changing "France" to "Germany" at position 5 affect the output through its
+      effect on layer 10's MLP?
     </p>
-    <ul>
-      <li><strong>Hard concrete distribution:</strong> Samples binary masks during training</li>
-      <li><strong>Sigmoid with temperature:</strong> Sharp sigmoid approximates step function</li>
-    </ul>
 
-    <h4>Choosing Regularization Strength (λ)</h4>
-    <ul>
-      <li><strong>Too low:</strong> Dense masks (many components active), not interpretable</li>
-      <li><strong>Too high:</strong> Over-pruning, task performance degrades</li>
-      <li><strong>Sweet spot:</strong> Maximum sparsity while maintaining performance</li>
-    </ul>
+    <h3>5. ROME: Causal Tracing for Knowledge Localization</h3>
+    <p>
+      The ROME paper uses causal tracing to answer: <strong>Where is factual knowledge stored in GPT models?</strong>
+    </p>
 
-    <p><strong>Practical approach:</strong></p>
+    <h4>The Experiment</h4>
     <ol>
-      <li>Train with multiple λ values</li>
-      <li>Plot: task accuracy vs number of active components</li>
-      <li>Choose λ at the "elbow" of the curve</li>
+      <li><strong>Clean prompt:</strong> "The Space Needle is located in the city of" → "Seattle"</li>
+      <li><strong>Corrupted prompt:</strong> Add noise to all token embeddings</li>
+      <li><strong>Systematic patching:</strong> Restore clean activations one component at a time</li>
+      <li><strong>Measure:</strong> Does the model recover the correct answer?</li>
     </ol>
 
-    <h4>Benefits of Sparse Masks</h4>
+    <h4>Key Findings</h4>
     <ul>
-      <li><strong>Interpretability:</strong> Easier to understand with fewer components</li>
-      <li><strong>Efficiency:</strong> Can actually remove components (pruning)</li>
-      <li><strong>Generalization:</strong> Simpler models often generalize better</li>
-      <li><strong>Falsifiability:</strong> Clear claims about which components matter</li>
+      <li><strong>Critical window:</strong> Restoring the <em>last subject token</em> ("Needle") at <em>middle MLP
+          layers</em> (layers 5-10 in GPT-2 XL) is sufficient to recover factual recall</li>
+      <li><strong>Localized storage:</strong> Factual associations are stored in specific MLP weights, not distributed
+        across the network</li>
+      <li><strong>Layer specificity:</strong> Early layers encode syntax/position, middle layers store facts, late
+        layers decode to vocabulary</li>
     </ul>
 
-    <h3>10. Comparing Probes with Causal Interventions</h3>
+    <div class="diagram">
+      Subject: "Space Needle"<br>
+      ↓<br>
+      Middle MLP layers (5-10) at last subject token<br>
+      ↓<br>
+      Retrieve: "located in Seattle"<br>
+      ↓<br>
+      Output: "Seattle"
+    </div>
+
+    <h4>Methodology: Average Indirect Effect (AIE)</h4>
     <p>
-      Probes and interventions often give different answers. Understanding when and why reveals what each method
-      measures.
+      ROME measures the <strong>indirect effect</strong> of the subject through each component:
+    </p>
+    <ol>
+      <li>Run corrupted prompt (all noise)</li>
+      <li>Patch clean activations at state S (e.g., layer 8, position "Needle")</li>
+      <li>Measure: how much does this restore correct output?</li>
+      <li>Repeat for all states S</li>
+      <li>States with high AIE are causally important</li>
+    </ol>
+
+    <h3>6. Entity Tracking and Binding Vectors</h3>
+    <p>
+      The entity tracking work (finetuning.baulab.info) studied a different question: <strong>How do models track which
+        attributes belong to which entities?</strong>
     </p>
 
-    <h4>Case 1: Agreement (Best Case)</h4>
-    <div class="diagram">
-      Probe: Concept X is linearly accessible at layer 8<br>
-      Intervention: Patching layer 8 transfers concept X<br>
-      → Information is both PRESENT and CAUSALLY USED
-    </div>
+    <h4>The Setup</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The tall person and the short person walked into the room.<br>
+      The tall person sat down."
+    </code>
 
-    <p><strong>Interpretation:</strong> Strong evidence that layer 8 processes concept X.</p>
+    <p>
+      Question: How does the model remember "tall" is bound to the first person when processing "The tall person sat
+      down"?
+    </p>
 
-    <h4>Case 2: Probe Succeeds, Intervention Fails</h4>
-    <div class="diagram">
-      Probe: 95% accuracy for concept X<br>
-      Intervention: Patching has no effect on X-related outputs<br>
-      → Information is PRESENT but NOT CAUSALLY USED
-    </div>
-
-    <p><strong>Interpretation:</strong> The model computes X but doesn't use it for this task. It might be:</p>
+    <h4>Findings: Binding Vectors</h4>
     <ul>
-      <li>A byproduct of other computations</li>
-      <li>Used for different tasks/contexts</li>
-      <li>Spuriously correlated information</li>
+      <li><strong>Binding information</strong> is stored in attention head outputs, not MLPs</li>
+      <li>Specific attention heads maintain <strong>binding vectors</strong> that associate attributes with entities
+      </li>
+      <li>These binding vectors can be <strong>extracted and reused</strong> across contexts</li>
+      <li>Patching binding vectors transfers attribute associations</li>
     </ul>
 
-    <h4>Case 3: Probe Fails, Intervention Succeeds</h4>
-    <div class="diagram">
-      Probe: Low accuracy (random guessing)<br>
-      Intervention: Patching strongly affects X-related outputs<br>
-      → Information is USED but NOT LINEARLY ACCESSIBLE
-    </div>
-
-    <p><strong>Interpretation:</strong> The model uses X in a nonlinear or distributed way that linear probes can't
-      extract. Try:</p>
-    <ul>
-      <li>Nonlinear (MLP) probes</li>
-      <li>Different layers</li>
-      <li>Multiple layers combined</li>
-    </ul>
-
-    <h4>Case 4: Both Fail</h4>
-    <div class="diagram">
-      Probe: Low accuracy<br>
-      Intervention: No effect<br>
-      → Information is ABSENT (or you're looking in the wrong place)
-    </div>
-
-    <h4>Best Practice: Use Both Methods</h4>
-    <ol>
-      <li><strong>Start with probes:</strong> Fast exploration, identify candidate layers</li>
-      <li><strong>Validate with interventions:</strong> Test causal role of high-probe layers</li>
-      <li><strong>Investigate disagreements:</strong> Learn about representational structure</li>
-    </ol>
-
-    <h3>11. Using Masks for Automated Discovery</h3>
-    <p>
-      Learned masks can automate component selection, complementing manual circuit discovery.
-    </p>
-
-    <h4>Workflow</h4>
-    <ol>
-      <li><strong>Define task:</strong> What behavior are you studying?</li>
-      <li><strong>Initialize masks:</strong> One parameter per component (all start at 1.0)</li>
-      <li><strong>Train masks:</strong> Optimize to maintain behavior with sparsity penalty</li>
-      <li><strong>Threshold:</strong> Components with high masks are important</li>
-      <li><strong>Validate:</strong> Use ablation to verify causal importance</li>
-    </ol>
-
-    <h4>Hierarchical Masking</h4>
-    <p>
-      Progressively narrow down from coarse to fine-grained:
-    </p>
-    <ol>
-      <li><strong>Layer-level masks:</strong> Which layers matter?</li>
-      <li><strong>Head-level masks:</strong> Within important layers, which heads?</li>
-      <li><strong>Neuron-level masks:</strong> Within important heads, which neurons?</li>
-    </ol>
-
-    <p>
-      This reduces search space and computational cost.
-    </p>
-
-    <h4>Comparison with ACDC (Week 5)</h4>
+    <h4>Contrast with ROME</h4>
     <table>
       <tr>
         <th>Aspect</th>
-        <th>ACDC (Path Patching)</th>
-        <th>Learned Masks</th>
+        <th>ROME (Factual Knowledge)</th>
+        <th>Entity Tracking (Bindings)</th>
       </tr>
       <tr>
-        <td>Method</td>
-        <td>Ablation-based</td>
-        <td>Gradient-based</td>
+        <td>Storage</td>
+        <td>MLP layers</td>
+        <td>Attention heads</td>
       </tr>
       <tr>
-        <td>Causal claim</td>
-        <td>Strong (actual intervention)</td>
-        <td>Weak (correlation)</td>
+        <td>Layer</td>
+        <td>Middle layers (5-10)</td>
+        <td>Various layers, task-dependent</td>
       </tr>
       <tr>
-        <td>Speed</td>
-        <td>Slow (test each edge)</td>
-        <td>Fast (parallel gradient)</td>
+        <td>What's stored</td>
+        <td>Long-term facts ("Seattle")</td>
+        <td>Context-specific bindings ("tall" ↔ person 1)</td>
       </tr>
       <tr>
-        <td>Granularity</td>
-        <td>Edges between components</td>
-        <td>Individual components</td>
-      </tr>
-      <tr>
-        <td>Best for</td>
-        <td>Validating specific circuits</td>
-        <td>Exploratory discovery</td>
+        <td>Localization</td>
+        <td>Highly localized (specific MLPs)</td>
+        <td>More distributed (multiple heads)</td>
       </tr>
     </table>
 
-    <h3>12. Research Workflow: Combining Probes and Interventions</h3>
-    <ol>
-      <li><strong>Explore with probes:</strong>
-        <ul>
-          <li>Train probes at all layers for your concept</li>
-          <li>Identify candidate layers with high accuracy</li>
-          <li>Fast, covers entire model</li>
-        </ul>
-      </li>
+    <p>
+      <strong>Lesson:</strong> Different types of information are stored in different architectural components. Facts go
+      in MLPs, bindings in attention.
+    </p>
 
-      <li><strong>Discover with masks:</strong>
-        <ul>
-          <li>Train learned masks on concept-relevant task</li>
-          <li>Identify important components (high mask weights)</li>
-          <li>Hierarchical: layers → heads → neurons</li>
-        </ul>
-      </li>
+    <h3>7. Gradient-Based Attribution Patching</h3>
+    <p>
+      Testing every possible component via patching is expensive. <strong>Gradient-based attribution</strong> estimates
+      causal importance efficiently using gradients.
+    </p>
 
-      <li><strong>Validate with interventions:</strong>
-        <ul>
-          <li>Use activation patching on probe-identified layers</li>
-          <li>Ablate mask-identified components</li>
-          <li>Verify causal role</li>
-        </ul>
-      </li>
+    <h4>The Idea</h4>
+    <p>
+      Instead of actually patching every activation, approximate the effect using gradients:
+    </p>
 
-      <li><strong>Investigate disagreements:</strong>
-        <ul>
-          <li>If probe succeeds but intervention fails: information present but unused</li>
-          <li>If intervention succeeds but probe fails: nonlinear or distributed representation</li>
-          <li>Both reveal important properties of how the model works</li>
-        </ul>
-      </li>
-
-      <li><strong>Iterate:</strong>
-        <ul>
-          <li>Use findings to refine hypotheses</li>
-          <li>Design better probes based on intervention results</li>
-          <li>Test new components suggested by masks</li>
-        </ul>
-      </li>
-    </ol>
+    <div class="math">
+      Attribution(activation) ≈ gradient(loss w.r.t. activation) × (clean_value - corrupted_value)
+    </div>
 
     <p>
-      <strong>Goal:</strong> Triangulate understanding using multiple methods. No single technique tells the whole
-      story.
+      This gives a first-order approximation of how much patching that activation would change the output.
     </p>
+
+    <h4>Algorithm</h4>
+    <ol>
+      <li>Run clean and corrupted forward passes, save all activations</li>
+      <li>Run corrupted pass again, computing gradients w.r.t. output loss</li>
+      <li>For each activation: <code>attribution = gradient × Δactivation</code></li>
+      <li>Activations with high attribution are predicted to be important</li>
+    </ol>
+
+    <h4>Advantages</h4>
+    <ul>
+      <li><strong>Speed:</strong> One backward pass instead of thousands of forward passes</li>
+      <li><strong>Fine-grained:</strong> Can attribute to individual neurons, not just layers</li>
+      <li><strong>Actionable:</strong> Identifies specific interventions to test</li>
+    </ul>
+
+    <h4>Limitations</h4>
+    <ul>
+      <li>Linear approximation may miss nonlinear effects</li>
+      <li>Doesn't account for interactions between components</li>
+      <li>Should be validated with actual patching on top candidates</li>
+    </ul>
+
+    <h3>8. Average Indirect Effect (AIE) for Systematic Search</h3>
+    <p>
+      AIE provides a systematic framework for finding all causally important components.
+    </p>
+
+    <h4>The Method</h4>
+    <p>
+      For each component (layer, head, neuron):
+    </p>
+    <ol>
+      <li>Start with corrupted run</li>
+      <li>Patch only that component with clean activations</li>
+      <li>Measure effect on output: <code>AIE = P(correct | patch) - P(correct | no patch)</code></li>
+      <li>Repeat across many examples</li>
+      <li>Components with high average AIE are important</li>
+    </ol>
+
+    <h4>Hierarchical Search</h4>
+    <p>
+      Use AIE hierarchically to narrow down:
+    </p>
+    <ol>
+      <li>Test each layer → find important layers</li>
+      <li>Test each component in important layers → find important heads/neurons</li>
+      <li>Test positions × components → find spatiotemporal importance</li>
+    </ol>
+
+    <h4>Interpretation</h4>
+    <ul>
+      <li><strong>High AIE:</strong> Component mediates the causal effect (is in the causal path)</li>
+      <li><strong>Zero AIE:</strong> Component is not in the causal path for this behavior</li>
+      <li><strong>Negative AIE:</strong> Component actually suppresses the behavior (inhibitory)</li>
+    </ul>
+
+    <h3>9. Function Vectors: Elegant Application of Patching</h3>
+    <p>
+      <strong>Function vectors</strong> encode specific computational functions (like "negate" or "compare") and can be
+      extracted through causal intervention.
+    </p>
+
+    <h4>Core Idea</h4>
+    <p>
+      If a function is represented as a vector, adding/subtracting it should enable/disable that function:
+    </p>
+
+    <div class="diagram">
+      Original: "The tower is tall" → "tall"<br>
+      + Negation vector: "The tower is tall" → "short"<br>
+      - Negation vector: (might enhance affirmation)
+    </div>
+
+    <h4>Finding Function Vectors</h4>
+    <ol>
+      <li><strong>Create pairs:</strong> Sentences that differ only in the target function
+        <ul>
+          <li>"The tower is tall" / "The tower is short" (negation)</li>
+          <li>"Paris is larger than Lyon" / "Lyon is smaller than Paris" (comparison reversal)</li>
+        </ul>
+      </li>
+      <li><strong>Extract activations:</strong> Get activation differences at various layers/heads</li>
+      <li><strong>Find direction:</strong> Compute mean difference across pairs</li>
+      <li><strong>Test causally:</strong> Add vector to new examples, verify it performs the function</li>
+    </ol>
+
+    <h4>Function Vector Attention Heads</h4>
+    <p>
+      Some attention heads specialize in computing specific functions. You can identify them by:
+    </p>
+    <ul>
+      <li>High AIE when patching for function-related tasks</li>
+      <li>Attention patterns consistent with the function (e.g., comparison heads attend between compared entities)</li>
+      <li>Output vectors aligned with the function vector</li>
+    </ul>
+
+    <h4>Applications</h4>
+    <ul>
+      <li><strong>Negation:</strong> "NOT" function, flips sentiment/truth</li>
+      <li><strong>Comparison:</strong> "greater than", "less than"</li>
+      <li><strong>Temporal:</strong> "past", "future", "present"</li>
+      <li><strong>Modality:</strong> "possible", "necessary", "actual"</li>
+    </ul>
+
+    <h3>10. Designing Counterfactual Datasets</h3>
+    <p>
+      Effective causal experiments require carefully designed counterfactual pairs.
+    </p>
+
+    <h4>Principles</h4>
+
+    <p><strong>1. Minimal Pairs:</strong> Change only the target variable</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "France" / "Germany" (minimal change)<br>
+      Bad: "France" / "The United States of America" (length differs)
+    </code>
+
+    <p><strong>2. Matched Structure:</strong> Keep syntax and structure identical</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "The capital of France" / "The capital of Germany"<br>
+      Bad: "France's capital" / "The capital of Germany" (different structure)
+    </code>
+
+    <p><strong>3. Clear Causation:</strong> The changed variable should clearly cause the output difference</p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Good: "happy" / "sad" → sentiment changes<br>
+      Bad: "happy Tuesday" / "sad Wednesday" → multiple changes
+    </code>
+
+    <p><strong>4. Sufficient Diversity:</strong> Test across varied contexts</p>
+    <ul>
+      <li>Different sentence structures</li>
+      <li>Different positions of target variable</li>
+      <li>Different surrounding context</li>
+    </ul>
+
+    <h4>Common Patterns</h4>
+
+    <p><strong>Subject Substitution:</strong></p>
+    <code>The [subject] is located in [object]</code>
+
+    <p><strong>Attribute Swapping:</strong></p>
+    <code>The [adjective] person walked / The [different adjective] person walked</code>
+
+    <p><strong>Negation Toggle:</strong></p>
+    <code>The tower is tall / The tower is not tall</code>
+
+    <p><strong>Relation Reversal:</strong></p>
+    <code>A is greater than B / A is less than B</code>
+
+    <h4>Validation</h4>
+    <p>
+      Test your dataset:
+    </p>
+    <ul>
+      <li>Does the model produce different outputs for each pair?</li>
+      <li>Are the outputs consistent with your hypothesis?</li>
+      <li>Do results generalize across multiple examples?</li>
+      <li>Are there confounds (other variables that changed)?</li>
+    </ul>
+
+    <h3>Putting It All Together: A Research Workflow</h3>
+    <ol>
+      <li><strong>Hypothesis:</strong> Formulate what you think the model is doing</li>
+      <li><strong>Dataset:</strong> Design counterfactual pairs testing your hypothesis</li>
+      <li><strong>Baseline:</strong> Verify the model shows the target behavior</li>
+      <li><strong>Coarse search:</strong> Use AIE to find important layers/components</li>
+      <li><strong>Gradient attribution:</strong> Narrow down to specific activations</li>
+      <li><strong>Causal validation:</strong> Patch top candidates, measure effects</li>
+      <li><strong>Interpretation:</strong> Build mechanistic story from findings</li>
+      <li><strong>Generalization:</strong> Test on new examples/tasks</li>
+    </ol>
   </section>
 
+  <section id="validation-framework">
+    <h2>Part 2: Validation Framework for Interpretability</h2>
 
-  <section id="tcav-cbms">
-    <h2>Extension: Concept-Based Methods (TCAV and Concept Bottleneck Models)</h2>
-
-    <h3>Beyond Token-Level Probes: Concept Activation Vectors</h3>
+    <h3>The Need for Rigorous Validation</h3>
     <p>
-      Probes answer: "Is information X encoded at layer L?" But what if you want to test for higher-level concepts like
-      "politeness," "factual knowledge," or "sentiment"? <strong>Testing with Concept Activation Vectors (TCAV)</strong>
-      extends probing to human-interpretable concepts.
+      Causal intervention gives us powerful tools to test mechanistic hypotheses. But how do we know our interpretations
+      are actually correct? This section establishes a comprehensive validation framework that will be critical throughout
+      the course—especially as we encounter potential illusions and failure modes in Weeks 6, 7, and 10.
     </p>
 
-    <h3>1. TCAV: Testing with Concept Activation Vectors (Kim et al., 2018)</h3>
-
-    <h4>The Core Idea</h4>
+    <h3>1. Levels of Validation (Doshi-Velez & Kim, 2017)</h3>
     <p>
-      Instead of training a probe on labeled data, TCAV uses <strong>user-provided examples</strong> to define concepts:
+      <strong>Doshi-Velez and Kim (2017)</strong> propose three levels of evaluation for interpretability methods:
+    </p>
+
+    <h4>Application-Grounded Evaluation</h4>
+    <p>
+      Test interpretations with real users performing real tasks in the actual application domain.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Have doctors use model explanations to make diagnoses, measure accuracy improvement</li>
+      <li><strong>Pros:</strong> Highest ecological validity, tests real-world utility</li>
+      <li><strong>Cons:</strong> Expensive, requires domain experts, slow iteration</li>
+      <li><strong>When to use:</strong> Final validation before deployment, high-stakes applications</li>
+    </ul>
+
+    <h4>Human-Grounded Evaluation</h4>
+    <p>
+      Test with lay users on simplified tasks that capture the essence of the real application.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Show users attention visualizations, ask if they make sense</li>
+      <li><strong>Pros:</strong> Faster than application-grounded, can use larger samples</li>
+      <li><strong>Cons:</strong> May not generalize to real application, subjective judgments</li>
+      <li><strong>When to use:</strong> Iterative development, when domain experts are unavailable</li>
+    </ul>
+
+    <h4>Functionally-Grounded Evaluation</h4>
+    <p>
+      Test interpretations using quantitative metrics without human subjects.
+    </p>
+    <ul>
+      <li><strong>Example:</strong> Measure if high-importance features (by attribution) actually change outputs when intervened on</li>
+      <li><strong>Pros:</strong> Fast, reproducible, scalable, no human subjects needed</li>
+      <li><strong>Cons:</strong> May miss aspects that matter to humans</li>
+      <li><strong>When to use:</strong> Initial validation, debugging, comparing methods</li>
+    </ul>
+
+    <h3>2. Faithfulness: The Core Requirement (Jacovi & Goldberg, 2020)</h3>
+    <p>
+      <strong>Jacovi and Goldberg (2020)</strong> argue that faithfulness is the fundamental property interpretations must satisfy:
     </p>
 
     <div class="diagram">
-      <strong>Traditional Probe:</strong> "Is part-of-speech encoded?" → Need labeled POS data<br><br>
-      <strong>TCAV:</strong> "Does the model use 'politeness'?" → Provide examples of polite/rude text
+      <strong>Faithfulness:</strong> An explanation is faithful if it accurately represents the model's true decision-making process.
     </div>
 
-    <h4>The TCAV Method</h4>
+    <h4>Why Faithfulness Matters</h4>
+    <p>
+      An explanation can be:
+    </p>
+    <ul>
+      <li><strong>Plausible but unfaithful:</strong> Makes intuitive sense but doesn't reflect what the model actually does</li>
+      <li><strong>Faithful but implausible:</strong> Accurately describes the model but is hard to understand</li>
+    </ul>
+    <p>
+      <strong>Goal:</strong> Faithful AND plausible explanations. But when forced to choose, <em>faithfulness must come first</em>.
+    </p>
+
+    <h4>Testing Faithfulness</h4>
+    <p>The causal intervention methods from Part 1 are key faithfulness tests:</p>
     <ol>
-      <li><strong>Collect concept examples:</strong>
-        <ul>
-          <li>Positive examples: sentences exhibiting your concept (e.g., polite requests)</li>
-          <li>Negative examples: random or concept-absent sentences</li>
-        </ul>
-      </li>
-
-      <li><strong>Extract activations:</strong>
-        <ul>
-          <li>Run model on all examples</li>
-          <li>Collect activations at target layer(s)</li>
-        </ul>
-      </li>
-
-      <li><strong>Train linear classifier:</strong>
-        <ul>
-          <li>Separate positive from negative examples</li>
-          <li>The decision boundary normal vector is the <strong>Concept Activation Vector (CAV)</strong></li>
-        </ul>
-      </li>
-
-      <li><strong>Compute TCAV score:</strong>
-        <ul>
-          <li>For a given prediction task, measure: <code>TCAV = fraction of examples where gradient aligns with CAV</code></li>
-          <li>High TCAV → model uses this concept for predictions</li>
-        </ul>
-      </li>
+      <li><strong>Forward simulation:</strong> If explanation says X causes Y, intervening on X should change Y</li>
+      <li><strong>Backward verification:</strong> If explanation highlights component C, ablating C should break the behavior</li>
+      <li><strong>Sufficiency test:</strong> Patching only the explained components should recover the behavior</li>
     </ol>
 
-    <h4>Example: Detecting Sentiment Concepts</h4>
-    <div class="diagram">
-      <strong>Concept:</strong> "Positive sentiment"<br>
-      <strong>Positive examples:</strong> "Great!", "I love this", "Excellent work"<br>
-      <strong>Negative examples:</strong> Random sentences<br><br>
+    <h3>3. Multi-Method Validation</h3>
+    <p>
+      No single interpretability method is perfect. Robust findings require convergent evidence from multiple independent methods.
+    </p>
 
-      <strong>Train CAV</strong> → direction in layer 10 that separates these<br><br>
-
-      <strong>Test:</strong> For sentiment classification task, do gradients point toward CAV?<br>
-      → If TCAV = 0.82, then 82% of examples use "positive sentiment" concept
-    </div>
-
-    <h4>TCAV vs Standard Probes</h4>
+    <h4>Method Triangulation</h4>
     <table>
       <tr>
-        <th>Aspect</th>
-        <th>Standard Probe</th>
-        <th>TCAV</th>
+        <th>Method Category</th>
+        <th>Example Methods</th>
+        <th>What It Tests</th>
       </tr>
       <tr>
-        <td><strong>Data needed</strong></td>
-        <td>Labeled dataset</td>
-        <td>Concept examples (no labels needed)</td>
+        <td><strong>Causal Intervention</strong></td>
+        <td>Patching, ablation, steering</td>
+        <td>Which components are necessary/sufficient</td>
       </tr>
       <tr>
-        <td><strong>Question</strong></td>
-        <td>"Is X encoded?"</td>
-        <td>"Is X used causally?"</td>
+        <td><strong>Attribution</strong></td>
+        <td>Gradients, IG, SHAP, attention (Week 6)</td>
+        <td>Which inputs are important</td>
       </tr>
       <tr>
-        <td><strong>Measure</strong></td>
-        <td>Probe accuracy</td>
-        <td>TCAV score (gradient alignment)</td>
+        <td><strong>Probing</strong></td>
+        <td>Linear probes, logistic regression (Week 5)</td>
+        <td>What information is encoded</td>
       </tr>
       <tr>
-        <td><strong>Concept flexibility</strong></td>
-        <td>Fixed to dataset labels</td>
-        <td>User-defined concepts</td>
+        <td><strong>Feature Discovery</strong></td>
+        <td>SAEs, dictionary learning (Week 7)</td>
+        <td>What features are represented</td>
       </tr>
       <tr>
-        <td><strong>Causal claim</strong></td>
-        <td>Weaker (encoding ≠ use)</td>
-        <td>Stronger (tests gradient direction)</td>
+        <td><strong>Behavioral Testing</strong></td>
+        <td>Adversarial examples, edge cases</td>
+        <td>When does the interpretation fail</td>
       </tr>
     </table>
 
-    <h4>Limitations of TCAV</h4>
-    <ul>
-      <li><strong>Concept definition:</strong> Results depend on how you define concept examples</li>
-      <li><strong>Linear assumption:</strong> Assumes concept is a linear direction (may miss nonlinear concepts)</li>
-      <li><strong>Statistical testing:</strong> Requires enough examples for reliable CAV</li>
-      <li><strong>Confounds:</strong> Concept examples may differ in unintended ways (length, frequency, structure)</li>
-    </ul>
+    <p><strong>Validation strategy:</strong> Use at least 3 independent methods. If they agree, confidence increases. If they disagree, investigate why.</p>
 
-    <h3>2. Concept Bottleneck Models (CBMs)</h3>
-
+    <h3>4. Sanity Checks: Catching Illusions Early</h3>
     <p>
-      While TCAV tests concepts <em>post-hoc</em> in trained models, <strong>Concept Bottleneck Models (CBMs)</strong>
-      build concepts <em>into</em> the architecture during training.
+      Before trusting any interpretation, run basic sanity checks. These will be critical in Week 10 (Skepticism) when we study interpretability failures.
     </p>
 
-    <h4>The CBM Architecture</h4>
-    <div class="diagram">
-      Input → Concept Layer (interpretable) → Prediction Layer<br><br>
+    <h4>Model Randomization Test</h4>
+    <p>
+      <strong>Test:</strong> Does your interpretation change when applied to a randomly initialized model?
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      interpretation_trained = analyze(trained_model)<br>
+      interpretation_random = analyze(random_model)<br>
+      <br>
+      assert interpretation_trained != interpretation_random
+    </code>
+    <p>
+      <strong>Why it matters:</strong> If interpretations look the same for trained and random models, your method might just be detecting network architecture, not learned behavior.
+    </p>
 
-      <strong>Example (image classification):</strong><br>
-      Image → [has_beak, has_wings, is_colorful, ...] → Bird species
+    <h4>Data Randomization Test</h4>
+    <p>
+      <strong>Test:</strong> Train a model on data with random labels. Does your interpretation change?
+    </p>
+    <ul>
+      <li>A model trained on random labels should have different (probably nonsensical) internal mechanisms</li>
+      <li>If interpretation looks the same, it's not capturing what the model learned</li>
+    </ul>
+
+    <h4>Ablation Completeness Test</h4>
+    <p>
+      <strong>Test:</strong> If you ablate all "important" components identified by your method, does the behavior break?
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      important_components = find_important_components(model)<br>
+      ablated_performance = test(model, ablate=important_components)<br>
+      <br>
+      assert ablated_performance << baseline_performance
+    </code>
+
+    <h4>Sign Test (for attribution methods)</h4>
+    <p>
+      <strong>Test:</strong> Do positive attributions actually help the predicted class?
+    </p>
+    <ul>
+      <li>Remove features with high positive attribution → performance should drop</li>
+      <li>Remove features with high negative attribution → performance might improve</li>
+      <li>If removing "important" features doesn't change output, attribution is unfaithful</li>
+    </ul>
+
+    <h3>5. Baseline Comparisons</h3>
+    <p>
+      Always compare your interpretability findings against appropriate baselines:
+    </p>
+
+    <h4>Random Baseline</h4>
+    <p>
+      Is your method better than random selection?
+    </p>
+    <ul>
+      <li>For component importance: Compare AIE of identified components vs. random components</li>
+      <li>For attribution: Compare removal of high-attribution features vs. random features</li>
+      <li><strong>Minimum bar:</strong> Your method must beat random</li>
+    </ul>
+
+    <h4>Frequency Baseline</h4>
+    <p>
+      Is your method just detecting frequent patterns?
+    </p>
+    <ul>
+      <li>For text: High-attribution words might just be common words</li>
+      <li>Test: Does attribution correlate with word frequency? If yes, consider TF-IDF weighting</li>
+    </ul>
+
+    <h4>Input × Gradient Baseline</h4>
+    <p>
+      For complex attribution methods, compare against simple Input × Gradient:
+    </p>
+    <ul>
+      <li>Does your expensive method (IG, SHAP) actually perform better?</li>
+      <li>By how much? Is the computational cost worth it?</li>
+    </ul>
+
+    <h3>6. Counterfactual Testing</h3>
+    <p>
+      The strongest validation: <strong>predict what will happen, then intervene and verify</strong>.
+    </p>
+
+    <h4>The Counterfactual Validation Loop</h4>
+    <ol>
+      <li><strong>Interpret:</strong> "Component C computes function F for concept X"</li>
+      <li><strong>Predict:</strong> "If I intervene on C, behavior related to X should change in way Y"</li>
+      <li><strong>Intervene:</strong> Actually modify C (patch, ablate, steer)</li>
+      <li><strong>Measure:</strong> Did Y happen?</li>
+      <li><strong>Iterate:</strong> If not, revise interpretation</li>
+    </ol>
+
+    <h4>Example: Validating a Factual Association</h4>
+    <div class="diagram">
+      <strong>Interpretation:</strong> "Layer 8 MLP at position 'Needle' stores the fact that Space Needle is in Seattle"<br><br>
+
+      <strong>Prediction 1:</strong> Ablating this component should make model fail to recall "Seattle"<br>
+      → Test: Ablate → measure accuracy drop ✓<br><br>
+
+      <strong>Prediction 2:</strong> Patching from "Eiffel Tower → Paris" should make model say "Paris"<br>
+      → Test: Patch → check output ✓<br><br>
+
+      <strong>Prediction 3:</strong> This component should activate for other factual recall tasks<br>
+      → Test: Check AIE on "The Colosseum is in...", "The Parthenon is in..." ✓
     </div>
 
+    <h3>7. Validation Checklist for Your Research</h3>
     <p>
-      The middle layer is constrained to represent <strong>predefined concepts</strong> (e.g., object attributes). This
-      makes the model inherently interpretable.
+      Before claiming you've discovered something about how a model works, verify:
     </p>
 
-    <h4>Advantages of CBMs</h4>
-    <ul>
-      <li><strong>Interpretability by design:</strong> Predictions explicitly flow through concepts</li>
-      <li><strong>Human intervention:</strong> Users can correct concept predictions at test time</li>
-      <li><strong>Debugging:</strong> If model fails, inspect which concept was wrong</li>
-      <li><strong>Transfer:</strong> Concept representations can transfer to new tasks</li>
-    </ul>
-
-    <h4>Challenges with CBMs</h4>
-    <ul>
-      <li><strong>Concept annotation:</strong> Requires labeled concept data (expensive)</li>
-      <li><strong>Concept completeness:</strong> Must define all relevant concepts upfront</li>
-      <li><strong>Performance tradeoff:</strong> May sacrifice accuracy vs end-to-end models</li>
-      <li><strong>Concept leakage:</strong> Information may bypass concept bottleneck through residual connections</li>
-    </ul>
-
-    <h4>CBMs for LLMs</h4>
-    <p>
-      While CBMs originated in vision, they're being adapted for NLP:
-    </p>
-    <ul>
-      <li><strong>Text classification:</strong> Route through semantic concepts (topic, sentiment, formality)</li>
-      <li><strong>Question answering:</strong> Explicitly extract relevant facts before answering</li>
-      <li><strong>Controllable generation:</strong> Condition on concept activations</li>
-    </ul>
-
-    <h3>3. Validating Concept Methods</h3>
-
-    <p>
-      Concept-based methods inherit validation challenges from probes, plus additional concerns:
-    </p>
-
-    <h4>Validation Checklist for TCAV/CBMs</h4>
     <div class="assignment-box">
+      <h4>Validation Checklist</h4>
       <ol>
-        <li><strong>Concept definition:</strong>
+        <li><strong>✓ Sanity checks passed:</strong>
           <ul>
-            <li>Are positive examples truly representative of the concept?</li>
-            <li>Do negative examples appropriately contrast?</li>
-            <li>Test on held-out concept examples</li>
+            <li>Random model gives different interpretation</li>
+            <li>Random labels give different interpretation</li>
+            <li>Ablating "important" components breaks behavior</li>
           </ul>
         </li>
 
-        <li><strong>Confound control:</strong>
+        <li><strong>✓ Causal validation:</strong>
           <ul>
-            <li>Do concept examples differ only in the target concept?</li>
-            <li>Test with minimal pairs (Week 4 counterfactuals)</li>
-            <li>Check for length, frequency, and structural confounds</li>
+            <li>Intervention on identified components changes behavior as predicted</li>
+            <li>Effect size is substantial (not just statistically significant)</li>
+            <li>Results replicate across multiple examples</li>
           </ul>
         </li>
 
-        <li><strong>Causal validation (TCAV):</strong>
+        <li><strong>✓ Multi-method agreement:</strong>
           <ul>
-            <li>High TCAV score suggests concept is used, but verify with intervention</li>
-            <li>Try steering along CAV direction - does behavior change as predicted?</li>
-            <li>Ablate CAV direction - does it break concept-related predictions?</li>
+            <li>At least 3 independent methods point to same components/features</li>
+            <li>If methods disagree, you understand why</li>
           </ul>
         </li>
 
-        <li><strong>Completeness (CBMs):</strong>
+        <li><strong>✓ Baseline comparisons:</strong>
           <ul>
-            <li>Measure concept leakage: does model bypass concept bottleneck?</li>
-            <li>Test with concept interventions: manually set concept values</li>
-            <li>Verify predictions change appropriately</li>
+            <li>Performance beats random baseline</li>
+            <li>Results aren't explained by simple heuristics (frequency, position)</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Generalization:</strong>
+          <ul>
+            <li>Findings hold on held-out test set</li>
+            <li>Findings transfer to related tasks/prompts</li>
+            <li>You've characterized when the interpretation fails</li>
+          </ul>
+        </li>
+
+        <li><strong>✓ Negative results reported:</strong>
+          <ul>
+            <li>You've documented what doesn't work</li>
+            <li>You've shown edge cases where interpretation breaks</li>
           </ul>
         </li>
       </ol>
+
+      <p><strong>Remember:</strong> This validation framework will be crucial as we study attribution methods (Week 6), SAEs (Week 7),
+      and especially when we examine interpretability illusions (Week 10). The methods that seem most convincing are often the ones
+      that need the most rigorous validation.</p>
     </div>
 
-    <h3>4. Integrating TCAV with Other Methods</h3>
-
+    <h3>8. Validation in the Wild: What Can Go Wrong</h3>
     <p>
-      TCAV is most powerful when combined with other interpretability techniques:
-    </p>
-
-    <table>
-      <tr>
-        <th>Combine With</th>
-        <th>What You Learn</th>
-        <th>Example</th>
-      </tr>
-      <tr>
-        <td><strong>Probes (this week)</strong></td>
-        <td>Is concept encoded AND used?</td>
-        <td>Probe shows "politeness" is encoded in layer 8.<br>TCAV shows it's used for formality predictions.</td>
-      </tr>
-      <tr>
-        <td><strong>Patching (Week 4)</strong></td>
-        <td>Which components implement the concept?</td>
-        <td>TCAV identifies concept direction.<br>Patch along that direction to verify causality.</td>
-      </tr>
-      <tr>
-        <td><strong>Circuits (Week 8)</strong></td>
-        <td>What circuit computes the concept?</td>
-        <td>TCAV finds concept, circuits show how it's computed.</td>
-      </tr>
-      <tr>
-        <td><strong>SAEs (Week 7)</strong></td>
-        <td>Do discovered features align with concepts?</td>
-        <td>Compare SAE features with CAVs for same concept.</td>
-      </tr>
-    </table>
-
-    <h3>5. Application to Your Project</h3>
-
-    <p>
-      If your concept is high-level or domain-specific, TCAV may be more appropriate than standard probes:
-    </p>
-
-    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
-      <p><strong>Example: Musical Key</strong></p>
-      <ul>
-        <li><strong>Standard probe:</strong> Need labeled dataset of texts annotated with musical keys (hard to get)</li>
-        <li><strong>TCAV:</strong> Provide examples of texts in C major, D major, etc. → easier</li>
-        <li>Train CAV, test if model uses "key" concept for music-related predictions</li>
-      </ul>
-
-      <p><strong>Example: Scientific Reasoning</strong></p>
-      <ul>
-        <li><strong>Concept:</strong> "Causal reasoning" in scientific texts</li>
-        <li>Collect examples with causal language ("because," "leads to," "causes")</li>
-        <li>Train CAV, measure TCAV score for scientific QA task</li>
-        <li>High score → model relies on causal reasoning; Low score → uses other heuristics</li>
-      </ul>
-    </div>
-
-    <h3>Looking Ahead: Validation and Skepticism</h3>
-    <p>
-      Like standard probes, concept methods can mislead if not carefully validated. We'll see in <strong>Week 6
-      (Skepticism)</strong> that even compelling concept interpretations can be illusory. Apply the validation
-      framework from Week 4 rigorously:
+      Preview of Week 10 issues to watch for:
     </p>
 
     <ul>
-      <li>Run sanity checks (random model test)</li>
-      <li>Test on multiple concept example sets</li>
-      <li>Validate with causal interventions</li>
-      <li>Compare TCAV with probe results</li>
-      <li>Report when concept detection fails</li>
+      <li><strong>Confirmation bias:</strong> Finding what you expect to find, ignoring contradictory evidence</li>
+      <li><strong>Cherry-picking:</strong> Showing only examples that support your interpretation</li>
+      <li><strong>P-hacking:</strong> Testing many hypotheses, reporting only significant ones without correction</li>
+      <li><strong>Overfitting:</strong> Interpretation works on training data but not test data</li>
+      <li><strong>Confounds:</strong> Attributed importance is actually due to correlated features</li>
+      <li><strong>Visualization artifacts:</strong> Patterns in visualization don't reflect model computation</li>
+    </ul>
+
+    <p>
+      <strong>The solution:</strong> Rigorous application of this validation framework. We'll return to these issues in depth in Week 10.
+    </p>
+
+    <h3>Looking Ahead</h3>
+    <p>
+      This validation framework will be your foundation for the rest of the course:
+    </p>
+    <ul>
+      <li><strong>Week 5 (Probes):</strong> How do we validate that probes are faithful?</li>
+      <li><strong>Week 6 (Attribution):</strong> Which attribution methods pass sanity checks?</li>
+      <li><strong>Week 7 (SAEs):</strong> Are discovered features robust and meaningful?</li>
+      <li><strong>Week 8 (Circuits + Causal Abstraction):</strong> Formal frameworks for causal validation</li>
+      <li><strong>Week 10 (Skepticism):</strong> Detailed study of validation failures and how to avoid them</li>
     </ul>
   </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>
-      This week's exercise provides hands-on experience with probes and masks:
+      This week's exercise provides hands-on experience with causal intervention:
     </p>
     <ul>
-      <li>Train linear probes for concept detection across layers</li>
-      <li>Compare linear vs MLP probe performance</li>
-      <li>Implement control tasks to validate probes</li>
-      <li>Test for overfitting and underfitting</li>
-      <li>Train learned masks with L1/L0 regularization</li>
-      <li>Compare probe findings with intervention results</li>
-      <li>Identify and interpret disagreements between methods</li>
+      <li>Implement basic activation patching</li>
+      <li>Compare noise vs. clean patching</li>
+      <li>Compute causal effects (ACE, total effect, indirect effect)</li>
+      <li>Replicate ROME-style causal tracing on a small scale</li>
+      <li>Apply gradient-based attribution</li>
+      <li>Calculate AIE across components</li>
+      <li>Extract and test function vectors</li>
+      <li>Design and evaluate counterfactual datasets</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
@@ -1223,87 +1021,74 @@
     <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <p><strong>Due: Thursday of Week 5</strong></p>
+      <p><strong>Due: Thursday of Week 4</strong></p>
       <p>
-        Train linear probes to extract your concept from model activations. Analyze probe weights and decision boundaries
-        to understand how the concept is encoded, and test where the concept is linearly accessible.
+        Use activation patching and causal intervention techniques to localize where your concept is computed.
+        Move beyond correlation to establish causal relationships between components and concept processing.
       </p>
 
-      <h4>Probe Training and Analysis</h4>
+      <h4>Causal Intervention Experiments</h4>
       <ul>
-        <li><strong>Prepare training data:</strong>
+        <li><strong>Prepare counterfactual examples:</strong>
           <ul>
-            <li>Use your benchmark dataset (minimum 2000-5000 examples recommended)</li>
-            <li>Ensure balanced classes (equal positive and negative examples)</li>
-            <li>Split into train/validation/test sets (70/15/15 or similar)</li>
+            <li>Select 15-25 minimal pairs from your benchmark dataset</li>
+            <li>One version exhibits your concept, one doesn't (everything else constant)</li>
+            <li>Validate that model behavior differs as expected</li>
           </ul>
         </li>
-        <li><strong>Train probes across layers:</strong>
+        <li><strong>Activation patching:</strong> Systematically swap activations between paired examples
           <ul>
-            <li>Train linear probes at every layer (or every N layers for large models)</li>
-            <li>Focus especially on layers identified as important in Week 4's causal analysis</li>
-            <li>Train on the same token positions you identified as critical in Week 4</li>
+            <li>Test each layer: does patching activations from concept→no-concept change behavior?</li>
+            <li>Test both attention and MLP components separately</li>
+            <li>Test different token positions (subject, verb, final, etc.)</li>
           </ul>
         </li>
-        <li><strong>Evaluate probe performance:</strong>
+        <li><strong>Identify critical layers and positions:</strong>
           <ul>
-            <li>Report accuracy, precision, recall, F1 for each layer</li>
-            <li>Create layer-wise accuracy plot to visualize where concept is most accessible</li>
-            <li>Compare across different token positions</li>
+            <li>Which layers have the largest causal effect when patched?</li>
+            <li>Which token positions are critical?</li>
+            <li>Are attention or MLP layers more important?</li>
           </ul>
         </li>
-        <li><strong>Analyze probe weights and decision boundaries:</strong>
+        <li><strong>Validate findings:</strong>
           <ul>
-            <li>Examine probe weight vectors: what directions do they learn?</li>
-            <li>Compare to steering vectors from Week 1: are they similar?</li>
-            <li>Visualize decision boundaries in PCA space (from Week 3)</li>
-            <li>Are decision boundaries clean and linear, or complex?</li>
-          </ul>
-        </li>
-        <li><strong>Control experiments:</strong>
-          <ul>
-            <li>Random label baseline: does probe learn structure or just memorize?</li>
-            <li>Compare linear vs nonlinear (MLP) probes: is concept linearly represented?</li>
-            <li>Selectivity test: does probe respond to related but distinct concepts?</li>
+            <li>Run multiple trials to ensure effects are consistent</li>
+            <li>Test on held-out examples</li>
+            <li>Check that effects are concept-specific (not generic)</li>
           </ul>
         </li>
       </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Probe performance results:</strong>
+        <li><strong>Causal localization results:</strong>
           <ul>
-            <li>Layer-wise accuracy plot</li>
-            <li>Performance table (accuracy/F1) for key layers</li>
-            <li>Comparison across token positions</li>
+            <li>Heatmap showing patching effects across layers × positions</li>
+            <li>Identification of critical layers (top 3-5 most important)</li>
+            <li>Identification of critical token positions</li>
+            <li>Comparison of attention vs MLP importance</li>
           </ul>
         </li>
-        <li><strong>Probe analysis:</strong>
+        <li><strong>Statistical validation:</strong>
           <ul>
-            <li>Weight vector analysis and comparison to steering vectors</li>
-            <li>Decision boundary visualizations</li>
-            <li>Linear vs nonlinear probe comparison</li>
+            <li>Effect sizes and significance tests</li>
+            <li>Consistency checks across examples</li>
+            <li>Control experiments (random patching baselines)</li>
           </ul>
         </li>
-        <li><strong>Control experiment results:</strong>
+        <li><strong>Mechanistic interpretation:</strong>
           <ul>
-            <li>Random baseline performance</li>
-            <li>Selectivity test results</li>
+            <li>Is your concept processed locally (specific layers) or distributed?</li>
+            <li>Where in the computation does the concept emerge?</li>
+            <li>Does the causal structure match your geometric analysis from Week 3?</li>
           </ul>
         </li>
-        <li><strong>Interpretation:</strong>
-          <ul>
-            <li>Where is your concept most linearly accessible?</li>
-            <li>Does this match causal findings from Week 4?</li>
-            <li>Is the representation truly linear or does it require nonlinearity?</li>
-          </ul>
-        </li>
-        <li><strong>Code:</strong> Notebook with probe training, evaluation, and analysis</li>
+        <li><strong>Code:</strong> Notebook with patching experiments and analysis</li>
       </ul>
 
       <p><em>
-        Strong probe performance with clean linear decision boundaries suggests your concept has a simple geometric structure
-        that can be reliably extracted—ideal for building explanations and interventions.
+        These causal findings will guide Week 5's probe training: you'll focus on the layers and positions
+        identified as causally important here.
       </em></p>
     </div>
   </section>

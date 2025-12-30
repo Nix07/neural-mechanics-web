@@ -4,16 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Week 11: Human Understanding</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body);"></script>
+  <title>Week 11: Writing Your Paper - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
-      max-width: 900px;
+      max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
       color: #333;
@@ -53,13 +49,6 @@
       margin: 20px 0;
     }
 
-    .key-insight {
-      background-color: #fff3cd;
-      border-left: 4px solid #ffc107;
-      padding: 15px;
-      margin: 20px 0;
-    }
-
     .example-box {
       background-color: #f9f9f9;
       border: 1px solid #ddd;
@@ -68,29 +57,28 @@
       margin: 20px 0;
     }
 
-    .comparison-box {
-      background-color: #f0f7ff;
-      border: 1px solid #3498db;
-      border-radius: 5px;
+    .discussion-box {
+      background-color: #fff9e6;
+      border-left: 4px solid #f39c12;
       padding: 15px;
       margin: 20px 0;
     }
 
-    .paper-card {
-      background-color: #fff;
-      border: 2px solid #3498db;
-      border-radius: 8px;
-      padding: 20px;
+    .assignment-box {
+      background-color: #e8f8f5;
+      border-left: 4px solid #27ae60;
+      padding: 15px;
       margin: 20px 0;
     }
 
-    .paper-card h4 {
-      margin-top: 0;
-      color: #2c3e50;
+    .warning-box {
+      background-color: #fdecea;
+      border-left: 4px solid #e74c3c;
+      padding: 15px;
+      margin: 20px 0;
     }
 
-    ul,
-    ol {
+    ul {
       margin: 10px 0;
     }
 
@@ -103,6 +91,13 @@
       padding: 2px 6px;
       border-radius: 3px;
       font-family: 'Courier New', monospace;
+    }
+
+    .objectives {
+      background-color: #f0f7ff;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
     }
 
     table {
@@ -123,865 +118,430 @@
       font-weight: bold;
     }
 
-    .objectives {
-      background-color: #f0f7ff;
-      padding: 15px;
-      border-radius: 5px;
+    blockquote {
+      border-left: 4px solid #3498db;
       margin: 20px 0;
-    }
-
-    img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #f9f9f9;
+      font-style: italic;
     }
   </style>
 </head>
 
 <body>
-  <h1>Week 11: Human Understanding</h1>
+  <h1>Week 11: Writing Your Paper</h1>
+
+  <div class="info-box">
+    <p><strong>The transition from research to communication.</strong> You've spent ten weeks exploring interpretability methods and applying them to your concept. Now it's time to communicate your findings in the form of a research paper suitable for submission to a machine learning venue like NeurIPS.</p>
+  </div>
 
   <div class="objectives">
     <h3>Learning Objectives</h3>
     <ul>
-      <li>Understand the human-AI knowledge gap and why it matters</li>
-      <li>Distinguish active vs passive knowledge transfer from superhuman AI</li>
-      <li>Apply teachability and novelty criteria to evaluate discovered concepts</li>
-      <li>Design human studies to validate interpretability findings</li>
-      <li>Implement concept discovery methods (convex optimization)</li>
-      <li>Measure human improvement from AI exposure</li>
-      <li>Build concept taxonomies and organize your findings</li>
-      <li>Validate your project's interpretability claims</li>
-      <li>Assess knowledge transfer potential of your concept</li>
+      <li>Understand how readers actually engage with papers (and write for them)</li>
+      <li>Structure a machine learning research paper effectively</li>
+      <li>Write a compelling introduction that motivates your research question</li>
+      <li>Describe methods clearly enough for reproducibility</li>
+      <li>Present results with appropriate visualizations and statistical analysis</li>
+      <li>Discuss limitations honestly and position your contribution</li>
+      <li>Develop a reputation for clarity and reliability</li>
     </ul>
   </div>
 
-  <h2>1. The Human-AI Knowledge Gap</h2>
+  <h2>1. The Reality of How Papers Are Read</h2>
 
-  <h3>What Is the Knowledge Gap?</h3>
   <p>
-    Modern AI systems achieve <strong>superhuman performance</strong> on many tasks: AlphaZero dominates chess champions,
-    AlphaGo defeated the world's best Go players, and large language models process text at scales no human can match.
+    You might imagine your readers as scholars with plenty of time on their hands, carefully poring over your manuscript in quiet contemplation. <strong>The reality is more like a large, crowded marketplace.</strong> Reviewers are busy. Readers are skimming. Everyone is overwhelmed with papers to read.
   </p>
 
   <p>
-    But a fundamental question remains: <em>Do these AI systems know something we don't?</em>
+    Understanding this reality should shape how you write. Your paper competes for attention with hundreds of others. You must make it easy for anyone to quickly tell:
   </p>
 
-  <div class="key-insight">
-    <p><strong>The Knowledge Gap Problem:</strong></p>
-    <p>
-      AI systems learn from vast amounts of self-play or data, exploring strategy spaces far beyond human experience.
-      They may discover <strong>novel concepts, strategies, or patterns</strong> that humans haven't recognized. If
-      these discoveries remain hidden inside neural networks, we lose the opportunity to:
-    </p>
-    <ul>
-      <li>Improve human expertise in the domain</li>
-      <li>Validate that AI reasoning aligns with human values</li>
-      <li>Understand failure modes and limitations</li>
-      <li>Transfer insights across domains</li>
-    </ul>
-  </div>
+  <ul>
+    <li>What your paper is about</li>
+    <li>What problem it solves</li>
+    <li>Why the problem is interesting</li>
+    <li>What is really new (and what isn't)</li>
+    <li>Why your solution is compelling</li>
+  </ul>
 
-  <h3>Two Modes of Learning from Superhuman AI</h3>
+  <h3>The Readership Pyramid</h3>
 
-  <p>
-    This week explores two complementary approaches to bridging the knowledge gap:
-  </p>
+  <p>Different readers engage with your paper at different levels of depth:</p>
 
   <table>
     <tr>
-      <th>Aspect</th>
-      <th>Passive Learning (Shin et al.)</th>
-      <th>Active Teaching (Schut et al.)</th>
+      <th>Level of Engagement</th>
+      <th>Number of Readers</th>
+      <th>What They Need</th>
     </tr>
     <tr>
-      <td><strong>Mechanism</strong></td>
-      <td>Humans observe AI play and spontaneously adopt novel strategies</td>
-      <td>Explicitly extract concepts from AI, filter, and teach humans</td>
+      <td>Glance at title</td>
+      <td>Many</td>
+      <td>Clear, informative title</td>
     </tr>
     <tr>
-      <td><strong>Scale</strong></td>
-      <td>Population-level (all players improve)</td>
-      <td>Individual-level (train specific experts)</td>
+      <td>Skim abstract</td>
+      <td>Moderate</td>
+      <td>Concise summary of contribution</td>
     </tr>
     <tr>
-      <td><strong>Evidence</strong></td>
-      <td>5.8M Go moves over 71 years</td>
-      <td>4 grandmasters, controlled study</td>
+      <td>Look at figures and captions</td>
+      <td>Moderate</td>
+      <td>Self-contained visual story</td>
     </tr>
     <tr>
-      <td><strong>Control</strong></td>
-      <td>Observational (AI exists in environment)</td>
-      <td>Interventional (deliberate concept transfer)</td>
-    </tr>
-    <tr>
-      <td><strong>Novelty role</strong></td>
-      <td>Novel moves correlate with improvement</td>
-      <td>Novelty is a filter criterion</td>
+      <td>Read every word</td>
+      <td>Few</td>
+      <td>Full technical detail</td>
     </tr>
   </table>
 
-  <h2>2. Passive Learning: The Go Revolution (Shin et al., 2023)</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Superhuman Artificial Intelligence Can Improve Human Decision Making by Increasing Novelty"</h4>
-    <p><strong>Authors:</strong> Minkyu Shin, Jin Kim, Bas van Opheusden, Tom Griffiths</p>
-    <p><strong>Published:</strong> PNAS, 2023</p>
-    <p><strong>Key contribution:</strong> Quantitative evidence that superhuman AI improves human decision-making at scale
-    </p>
-  </div>
-
-  <h3>The Natural Experiment</h3>
-
   <p>
-    In 2016, <strong>AlphaGo defeated Lee Sedol</strong>, the world champion Go player. This marked a turning point:
-    AI became superhuman in a game with more possible board states than atoms in the universe.
+    The "read every word" readers are your most important ones&mdash;they include your reviewers. But you should make the paper work for all levels. <strong>The figures and captions alone should tell the main story.</strong>
   </p>
 
-  <p>
-    Shin et al. asked: <em>Did human players improve after witnessing superhuman AI?</em>
-  </p>
-
-  <h3>Methodology</h3>
-
-  <div class="example-box">
-    <p><strong>Data:</strong></p>
-    <ul>
-      <li><strong>5.8 million moves</strong> by professional Go players</li>
-      <li><strong>71 years</strong> of gameplay (1950-2021)</li>
-      <li><strong>Before vs After AlphaGo</strong> comparison</li>
-    </ul>
-
-    <p><strong>Evaluation:</strong></p>
-    <ul>
-      <li>Used a <strong>superhuman AI</strong> to evaluate move quality</li>
-      <li>Compared win rates of actual moves vs AI-suggested alternatives</li>
-      <li>Generated <strong>58 billion counterfactual game patterns</strong></li>
-    </ul>
-
-    <p><strong>Novelty metric:</strong></p>
-    <ul>
-      <li>Classified moves as <em>novel</em> (never seen before in professional play) or <em>traditional</em></li>
-      <li>Tracked novelty rates and quality over time</li>
-    </ul>
-  </div>
-
-  <h3>Key Findings</h3>
-
-  <div class="key-insight">
-    <p><strong>1. Humans improved significantly after AlphaGo</strong></p>
-    <p>
-      Human decision quality increased measurably after 2016. Players made moves closer to what superhuman AI would
-      choose.
-    </p>
-
-    <p><strong>2. Novel moves drove improvement</strong></p>
-    <ul>
-      <li>Novel moves occurred <strong>more frequently</strong> after AlphaGo</li>
-      <li>Novel moves became associated with <strong>higher decision quality</strong></li>
-      <li>Before AlphaGo: novelty ≠ better; After AlphaGo: novelty = better</li>
-    </ul>
-
-    <p><strong>3. Breaking from tradition works</strong></p>
-    <p>
-      Superhuman AI prompted players to <strong>explore beyond traditional strategies</strong>. This wasn't just
-      imitation—players discovered their own novel approaches, inspired by AI's creativity.
-    </p>
-  </div>
-
-  <h3>Example: Move 37</h3>
-
-  <div class="example-box">
-    <p><strong>The most famous move in AI history:</strong></p>
-    <p>
-      In Game 2 of the AlphaGo vs Lee Sedol match, AlphaGo played <strong>Move 37</strong>—placing a stone on the 5th
-      line from the edge. Human commentators were shocked: "I thought it was a mistake."
-    </p>
-    <p>
-      This move violated centuries of Go wisdom. Yet it was <strong>exceptionally strong</strong>. Move 37 demonstrated
-      that AI had explored beyond human knowledge.
-    </p>
-    <p>
-      After witnessing this, professional players began experimenting with similar unconventional moves, many of which
-      proved effective.
-    </p>
-  </div>
-
-  <h3>Implications</h3>
-
-  <ul>
-    <li><strong>Superhuman AI can teach without explicit instruction:</strong> Simply existing in the environment
-      inspires humans to explore</li>
-    <li><strong>Novelty is learnable:</strong> Humans can recognize and adopt AI-discovered innovations</li>
-    <li><strong>Traditional knowledge isn't optimal:</strong> Conventions may persist due to lack of exploration, not
-      superiority</li>
-    <li><strong>Population-level effects:</strong> Impact extends beyond direct AI users to entire communities</li>
-  </ul>
-
-  <h2>3. Active Teaching: Extracting Chess Concepts (Schut et al., 2023/2025)</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer in AlphaZero"</h4>
-    <p><strong>Authors:</strong> Lisa Schut, Nenad Tomasev, Tom McGrath, Demis Hassabis, Ulrich Paquet, Been Kim</p>
-    <p><strong>Published:</strong> arXiv 2023, PNAS 2025</p>
-    <p><strong>Key contribution:</strong> Systematic method to extract, filter, and teach novel concepts from superhuman
-      AI</p>
-  </div>
-
-  <h3>The Challenge</h3>
+  <h2>2. The Adelson Formula for Paper Structure</h2>
 
   <p>
-    Unlike Shin et al.'s observational study, Schut et al. sought to <strong>actively extract</strong> knowledge from
-    AlphaZero and transfer it to human experts through deliberate training.
-  </p>
-
-  <p><strong>Key questions:</strong></p>
-  <ul>
-    <li>What concepts has AlphaZero learned that humans haven't?</li>
-    <li>Can we extract these concepts in human-understandable form?</li>
-    <li>Are they teachable to even the world's best players?</li>
-  </ul>
-
-  <h3>Methodology: Four-Stage Pipeline</h3>
-
-  <h4>Stage 1: Concept Discovery</h4>
-
-  <p>
-    Use <strong>convex optimization</strong> to find concept vectors in AlphaZero's latent space.
-  </p>
-
-  <div class="example-box">
-    <p><strong>How it works:</strong></p>
-    <ol>
-      <li>Collect chess positions where a concept might be relevant</li>
-      <li>Extract AlphaZero's internal representations (activations) for these positions</li>
-      <li>Find a <strong>direction in activation space</strong> that separates concept-present from concept-absent
-        positions</li>
-      <li>This direction is the <strong>Concept Activation Vector (CAV)</strong></li>
-    </ol>
-
-    <p><strong>Technical detail:</strong></p>
-    <p>
-      Train a linear classifier to distinguish concept examples from random counterexamples. The vector orthogonal to
-      the decision boundary is the CAV.
-    </p>
-  </div>
-
-  <h4>Stage 2: Filtering by Teachability</h4>
-
-  <p>
-    Not all extracted concepts are learnable by humans or other agents. <strong>Teachability test:</strong>
+    Ted Adelson, a renowned vision scientist, offers a simple formula that captures the essential structure of a good paper:
   </p>
 
   <div class="info-box">
-    <p><strong>Definition:</strong> A concept is <em>teachable</em> if another AI agent (student) can learn it from
-      examples.</p>
-
-    <p><strong>Procedure:</strong></p>
+    <p><strong>The Adelson Formula:</strong></p>
     <ol>
-      <li>Generate prototype positions that strongly activate the concept vector</li>
-      <li>Train a student AI on these prototypes</li>
-      <li>Test if the student can generalize the concept to new positions</li>
-      <li>Measure improvement: Does the student now select the same moves as AlphaZero?</li>
+      <li><strong>State the problem</strong>, keeping the audience in mind. They must care about it&mdash;which means sometimes you must tell them why they should care.</li>
+      <li><strong>State what other solutions exist</strong> and why they aren't satisfactory. If they were satisfactory, you wouldn't need to do the work.</li>
+      <li><strong>Explain your solution</strong>, compare it with other solutions, and say why it's better.</li>
+      <li><strong>Talk about related work</strong> where similar techniques have been used, but applied to different problems.</li>
     </ol>
-
-    <p><strong>Why this matters:</strong> If even an AI student can't learn the concept, a human likely can't either.</p>
   </div>
 
-  <h4>Stage 3: Filtering by Novelty</h4>
-
   <p>
-    A teachable concept might still be something humans already know. <strong>Novelty test:</strong>
+    This formula works because it answers the reader's natural questions in sequence: <em>What problem?</em> <em>Why is it hard?</em> <em>What's your approach?</em> <em>Why should I believe it works?</em>
   </p>
 
-  <div class="info-box">
-    <p><strong>Definition:</strong> A concept is <em>novel</em> if it's not present in human chess games.</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li>Collect a large database of human chess games</li>
-      <li>Test if the concept vector activates on human games</li>
-      <li>Low activation → concept is novel to humans</li>
-      <li>High activation → concept already exists in human play</li>
-    </ol>
-
-    <p><strong>Why this matters:</strong> We want to teach humans something <em>new</em>, not rediscover known
-      principles.</p>
-  </div>
-
-  <h4>Stage 4: Human Validation Study</h4>
+  <h2>3. Write a Dynamite Introduction</h2>
 
   <p>
-    The ultimate test: Can <strong>world chess champions</strong> learn these concepts?
+    Jim Kajiya, former SIGGRAPH papers chair, put it simply:
+  </p>
+
+  <blockquote>
+    You must make your paper easy to read. You've got to make it easy for anyone to tell what your paper is about, what problem it solves, why the problem is interesting, what is really new in your paper (and what isn't), why it's so neat. And you must do it <strong>up front</strong>. In other words, you must write a dynamite introduction.
+  </blockquote>
+
+  <p>
+    The introduction is where most papers succeed or fail. A reader who is confused or bored after the introduction will not give your methods section a fair reading.
+  </p>
+
+  <h3>Elements of a Strong Introduction</h3>
+
+  <div class="example-box">
+    <p><strong>Opening hook:</strong> Why does your concept matter? For interpretability papers, this often connects to AI safety, scientific understanding, or practical applications.</p>
+    <p><strong>The gap:</strong> What don't we currently understand? What has previous work failed to address?</p>
+    <p><strong>Your contribution:</strong> What do you do? State it clearly and specifically.</p>
+    <p><strong>Preview of findings:</strong> What did you discover? Don't make readers wait until page 6 to learn your results.</p>
+    <p><strong>Paper roadmap:</strong> Brief guide to what follows (optional but helpful).</p>
+  </div>
+
+  <h3>A Simple Toy Example Goes a Long Way</h3>
+
+  <p>
+    An underutilized technique: <strong>explain your main idea with a simple, toy example</strong> early in the paper. Before diving into the full complexity of your method, show readers a minimal case that captures the essence of what you're doing.
+  </p>
+
+  <p>
+    For interpretability research, this might mean showing your technique on a single neuron, a single prompt, or a simplified model before presenting the full results. Readers who understand the toy example will follow the complex version much more easily.
+  </p>
+
+  <h2>4. Paper Organization</h2>
+
+  <p>A typical interpretability paper follows this structure:</p>
+
+  <table>
+    <tr>
+      <th>Section</th>
+      <th>Length</th>
+      <th>Purpose</th>
+    </tr>
+    <tr>
+      <td>Abstract</td>
+      <td>150-250 words</td>
+      <td>Complete summary: problem, approach, results, implications</td>
+    </tr>
+    <tr>
+      <td>Introduction</td>
+      <td>1-2 pages</td>
+      <td>Motivation, gap, contribution, preview of findings</td>
+    </tr>
+    <tr>
+      <td>Related Work</td>
+      <td>0.5-1 page</td>
+      <td>Position relative to prior work; what's new</td>
+    </tr>
+    <tr>
+      <td>Methods</td>
+      <td>1-2 pages</td>
+      <td>Model, dataset, techniques, evaluation metrics</td>
+    </tr>
+    <tr>
+      <td>Results</td>
+      <td>2-3 pages</td>
+      <td>Findings with visualizations and quantitative analysis</td>
+    </tr>
+    <tr>
+      <td>Discussion</td>
+      <td>0.5-1 page</td>
+      <td>Interpretation, limitations, broader implications</td>
+    </tr>
+  </table>
+
+  <h3>Experimental Results Are Critical</h3>
+
+  <p>
+    Gone are the days of "We think this is a great idea and we expect it will be very useful. See how it works on this meaningless, contrived problem?" Modern ML venues expect rigorous experimental validation:
+  </p>
+
+  <ul>
+    <li>Quantitative metrics with appropriate baselines</li>
+    <li>Error bars or confidence intervals</li>
+    <li>Ablation studies showing which components matter</li>
+    <li>Multiple models or datasets when feasible</li>
+    <li>Representative examples that illustrate successes <em>and</em> failures</li>
+  </ul>
+
+  <h3>How to End a Paper</h3>
+
+  <p>
+    End with conclusions about what your work means, what it opens up, or how it changes how we think about the problem. Summarize your key findings and their implications.
+  </p>
+
+  <div class="warning-box">
+    <p><strong>Avoid weak "Future Work" sections.</strong> A list of things you wanted to do but couldn't get to work reads as: "Here are all the ideas we didn't have time to pursue before the deadline." You get no credit for things you didn't do. If you have genuinely promising directions, mention them briefly in the discussion, but don't end your paper with a to-do list.</p>
+  </div>
+
+  <h2>5. General Writing Principles</h2>
+
+  <h3>Keep the Reader Uppermost in Mind</h3>
+
+  <p>
+    Donald Knuth offers the most important principle of good writing:
+  </p>
+
+  <blockquote>
+    Perhaps the most important principle of good writing is to keep the reader uppermost in mind: What does the reader know so far? What does the reader expect next and why?
+  </blockquote>
+
+  <p>
+    <strong>Treat the reader as you would a guest in your house.</strong> Anticipate their needs. Would they like some context before this technical section? Perhaps now, after the heavy math, they'd appreciate a concrete example? Guide them through your paper as a gracious host guides a visitor through their home.
+  </p>
+
+  <h3>Omit Needless Words</h3>
+
+  <p>
+    Strunk and White's famous advice: Vigorous writing is concise. A sentence should contain no unnecessary words, a paragraph no unnecessary sentences. This requires not that you make all sentences short, but that <strong>every word tell</strong>.
   </p>
 
   <div class="example-box">
-    <p><strong>Study design:</strong></p>
-
-    <p><strong>Participants:</strong> 4 top chess grandmasters (all former or current world champions)</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li><strong>Pre-test:</strong> Grandmasters solve concept prototype positions (no instruction)</li>
-      <li><strong>Learning phase:</strong> Grandmasters study the positions with explanations</li>
-      <li><strong>Post-test:</strong> Grandmasters solve new positions involving the same concepts</li>
-    </ol>
-
-    <p><strong>Measurement:</strong> Improvement from pre-test to post-test</p>
-  </div>
-
-  <h3>Key Findings</h3>
-
-  <div class="key-insight">
-    <p><strong>All four grandmasters improved after the learning phase.</strong></p>
-
-    <p>
-      This demonstrates that:
-    </p>
-    <ul>
-      <li>AlphaZero encodes knowledge <strong>beyond existing human understanding</strong></li>
-      <li>This knowledge is <strong>not beyond human grasp</strong>—it can be learned</li>
-      <li>Even elite experts can learn from AI</li>
-    </ul>
-
-    <p><strong>Types of concepts discovered:</strong></p>
-    <ul>
-      <li><strong>Quiet moves to provoke long-term weaknesses</strong> (counterintuitive to classical principles)</li>
-      <li><strong>Strategic queen sacrifices</strong> in unexpected contexts</li>
-      <li><strong>Positional imbalances</strong> that traditional evaluation undervalues</li>
-    </ul>
-  </div>
-
-  <h3>Example Concept</h3>
-
-  <div class="example-box">
-    <p><strong>Concept: "Provoke Weakness Through Quiet Moves"</strong></p>
-
-    <p><strong>Classical chess principle:</strong> Active, forcing moves (checks, captures) are strong.</p>
-
-    <p><strong>AlphaZero's insight:</strong> Sometimes a quiet, non-forcing move creates <em>zugzwang</em>—opponent must
-      worsen their position.</p>
-
-    <p><strong>Why it's novel:</strong> Human games rarely show this pattern (low activation on human database).</p>
-
-    <p><strong>Why it's teachable:</strong> Student AI improved 15% on test positions after training.</p>
-
-    <p><strong>Human validation:</strong> Grandmasters improved from 40% to 65% accuracy on these positions after
-      studying examples.</p>
-  </div>
-
-  <h2>4. Comparing the Two Approaches</h2>
-
-  <div class="comparison-box">
+    <p><strong>Wordy vs. Concise:</strong></p>
     <table>
       <tr>
-        <th>Dimension</th>
-        <th>Shin et al. (Passive)</th>
-        <th>Schut et al. (Active)</th>
+        <th>Wordy</th>
+        <th>Concise</th>
       </tr>
       <tr>
-        <td><strong>Research Question</strong></td>
-        <td>Do humans improve from AI exposure?</td>
-        <td>Can we extract and teach AI concepts?</td>
+        <td>"the question as to whether"</td>
+        <td>"whether"</td>
       </tr>
       <tr>
-        <td><strong>Scale</strong></td>
-        <td>Population (thousands of players)</td>
-        <td>Individual (4 grandmasters)</td>
+        <td>"there is no doubt but that"</td>
+        <td>"doubtless"</td>
       </tr>
       <tr>
-        <td><strong>Evidence Type</strong></td>
-        <td>Observational (71 years)</td>
-        <td>Experimental (controlled study)</td>
+        <td>"this is a method which"</td>
+        <td>"this method"</td>
       </tr>
       <tr>
-        <td><strong>Novelty Role</strong></td>
-        <td>Outcome (novel moves = better)</td>
-        <td>Filter (select novel concepts)</td>
-      </tr>
-      <tr>
-        <td><strong>Teaching Method</strong></td>
-        <td>Implicit (watch AI play)</td>
-        <td>Explicit (study concept prototypes)</td>
-      </tr>
-      <tr>
-        <td><strong>Interpretability</strong></td>
-        <td>Black box (don't know what changed)</td>
-        <td>White box (extract specific concepts)</td>
-      </tr>
-      <tr>
-        <td><strong>Measurement</strong></td>
-        <td>Move quality via AI evaluation</td>
-        <td>Accuracy on concept test positions</td>
-      </tr>
-      <tr>
-        <td><strong>Strength</strong></td>
-        <td>Ecological validity (real-world effect)</td>
-        <td>Causal clarity (know what's taught)</td>
+        <td>"in a rapid manner"</td>
+        <td>"rapidly"</td>
       </tr>
     </table>
+    <p><em>Cutting wordiness benefits you twice: you have more space to tell your story, and the text is easier for readers to understand.</em></p>
   </div>
 
-  <h3>Complementary Insights</h3>
+  <h3>Figures and Captions</h3>
 
   <p>
-    Together, these papers show that superhuman AI can improve humans through:
+    Many readers will skim your paper by looking only at the figures and captions. Make this path through your paper work:
   </p>
-  <ul>
-    <li><strong>Inspiration (Shin):</strong> Seeing AI play prompts exploration of novel strategies</li>
-    <li><strong>Instruction (Schut):</strong> Explicitly teaching extracted concepts</li>
-  </ul>
-
-  <p>
-    Both require <strong>novelty</strong>—humans learn by going beyond traditional knowledge.
-  </p>
-
-  <h2>5. Designing Human Studies for Interpretability</h2>
-
-  <p>
-    How do you validate that your interpretability findings are meaningful? Human studies provide the gold standard.
-  </p>
-
-  <h3>Three Types of Evaluation (Doshi-Velez & Kim, 2017)</h3>
-
-  <table>
-    <tr>
-      <th>Type</th>
-      <th>When to Use</th>
-      <th>Example</th>
-    </tr>
-    <tr>
-      <td><strong>Application-Grounded</strong></td>
-      <td>Real-world task with domain experts</td>
-      <td>Schut's grandmaster study</td>
-    </tr>
-    <tr>
-      <td><strong>Human-Grounded</strong></td>
-      <td>Simplified task with lay users</td>
-      <td>Show concept examples, ask "Does this make sense?"</td>
-    </tr>
-    <tr>
-      <td><strong>Functionally-Grounded</strong></td>
-      <td>No humans, use proxy metrics</td>
-      <td>Teachability test (AI student learns)</td>
-    </tr>
-  </table>
-
-  <h3>Key Considerations for Study Design</h3>
-
-  <div class="info-box">
-    <p><strong>1. Who are your participants?</strong></p>
-    <ul>
-      <li><strong>Domain experts</strong> (like grandmasters): High validity, but expensive and small sample</li>
-      <li><strong>Lay users:</strong> Larger sample, but may lack necessary background</li>
-      <li><strong>Trade-off:</strong> Schut used 4 experts; Shin used population-level data</li>
-    </ul>
-
-    <p><strong>2. What do you measure?</strong></p>
-    <ul>
-      <li><strong>Performance:</strong> Can they solve tasks better? (Schut: accuracy on test positions)</li>
-      <li><strong>Understanding:</strong> Can they explain the concept? (Free-response questions)</li>
-      <li><strong>Trust:</strong> Do they believe the explanation? (Likert scales)</li>
-      <li><strong>Warning:</strong> Trust ≠ utility (Bansal et al., Week 10)</li>
-    </ul>
-
-    <p><strong>3. Control conditions?</strong></p>
-    <ul>
-      <li><strong>Pre-post design:</strong> Measure before and after learning (Schut)</li>
-      <li><strong>Comparison group:</strong> Concept group vs baseline explanation</li>
-      <li><strong>Temporal controls:</strong> Before vs after AI release (Shin)</li>
-    </ul>
-
-    <p><strong>4. Avoiding pitfalls (from Week 10):</strong></p>
-    <ul>
-      <li>Don't cherry-pick examples that support your hypothesis</li>
-      <li>Use multiple evaluation metrics (accuracy, confidence, explanation quality)</li>
-      <li>Test robustness: Do concepts transfer to new contexts?</li>
-      <li>Report negative results: Which concepts weren't learnable?</li>
-    </ul>
-  </div>
-
-  <h2>6. Building a Concept Atlas</h2>
-
-  <p>
-    As you discover concepts in your project, you need to <strong>organize them systematically</strong>. A concept
-    atlas maps the landscape of what your model knows.
-  </p>
-
-  <h3>Why Build an Atlas?</h3>
 
   <ul>
-    <li><strong>Locate your concept:</strong> How does your project concept relate to known concepts?</li>
-    <li><strong>Avoid redundancy:</strong> Is your "novel" concept actually a rediscovery?</li>
-    <li><strong>Find relationships:</strong> Do concepts compose, interfere, or prerequisite each other?</li>
-    <li><strong>Assess coverage:</strong> What fraction of model behavior do identified concepts explain?</li>
+    <li><strong>Figure captions should be self-contained.</strong> A reader should understand what the figure shows without reading the main text.</li>
+    <li><strong>Tell readers what to notice.</strong> Don't just describe the figure; explain what it means and what conclusion to draw.</li>
+    <li><strong>Make figures large enough to read.</strong> Tiny fonts in figures are a common problem.</li>
   </ul>
 
-  <h3>Organizing Dimensions</h3>
-
-  <div class="example-box">
-    <p><strong>1. Abstraction Level</strong></p>
-    <ul>
-      <li><strong>Low-level:</strong> "Edges," "colors," "individual words"</li>
-      <li><strong>Mid-level:</strong> "Object parts," "syntactic roles," "local patterns"</li>
-      <li><strong>High-level:</strong> "Objects," "semantic concepts," "strategic plans"</li>
-    </ul>
-
-    <p><strong>2. Domain Specificity</strong></p>
-    <ul>
-      <li><strong>Universal:</strong> Position, number, negation (across tasks)</li>
-      <li><strong>Domain-specific:</strong> "Zugzwang" (chess), "ko threat" (Go)</li>
-    </ul>
-
-    <p><strong>3. Complexity</strong></p>
-    <ul>
-      <li><strong>Atomic:</strong> Single feature</li>
-      <li><strong>Compositional:</strong> Combination of concepts (e.g., "quiet move that provokes weakness")</li>
-    </ul>
-
-    <p><strong>4. Novelty (from Schut)</strong></p>
-    <ul>
-      <li><strong>Known:</strong> Present in human data</li>
-      <li><strong>Novel:</strong> Absent from human data</li>
-    </ul>
-
-    <p><strong>5. Teachability (from Schut)</strong></p>
-    <ul>
-      <li><strong>Teachable:</strong> Student AI or humans can learn</li>
-      <li><strong>Unteachable:</strong> Too complex or ill-defined</li>
-    </ul>
-  </div>
-
-  <h3>Building Your Project Atlas</h3>
-
-  <div class="info-box">
-    <p><strong>Step 1: Inventory</strong></p>
-    <p>List all concepts you've encountered in Weeks 1-10:</p>
-    <ul>
-      <li>From Week 5 (circuits): Which operations did you find?</li>
-      <li>From Week 6 (probes): What information is encoded where?</li>
-      <li>From Week 7 (SAEs): What features did the autoencoder discover?</li>
-      <li>From Week 9 (attribution): Which inputs matter for your concept?</li>
-    </ul>
-
-    <p><strong>Step 2: Characterize</strong></p>
-    <p>For each concept, assess:</p>
-    <ul>
-      <li>Abstraction level</li>
-      <li>Domain specificity</li>
-      <li>Novelty (is it in your training data?)</li>
-      <li>Teachability (could a human learn it?)</li>
-    </ul>
-
-    <p><strong>Step 3: Map Relationships</strong></p>
-    <ul>
-      <li><strong>Prerequisite:</strong> Does concept A require understanding concept B?</li>
-      <li><strong>Composition:</strong> Is concept C = A + B?</li>
-      <li><strong>Interference:</strong> Do A and B conflict?</li>
-    </ul>
-
-    <p><strong>Step 4: Assess Coverage</strong></p>
-    <ul>
-      <li>What fraction of model behavior do your concepts explain?</li>
-      <li>Where are the gaps?</li>
-    </ul>
-  </div>
-
-  <h2>7. Applying to Your Research Project</h2>
-
-  <h3>Validating Your Interpretability Claims</h3>
+  <h3>Writing About Equations</h3>
 
   <p>
-    By Week 11, you should have discovered something about how your model represents your concept. Now validate it:
+    Knuth's advice: Many readers will skim over formulas on their first reading. Therefore, your sentences should flow smoothly when all but the simplest formulas are replaced by "blah."
   </p>
 
-  <div class="info-box">
-    <p><strong>Checklist for Rigorous Validation:</strong></p>
+  <p>
+    David Mermin's "Good Samaritan rule": When referring to an equation, identify it by a phrase as well as a number. Don't write "substituting (2.47) into (3.51)..." when you can write "substituting the loss function (2.47) into the gradient expression (3.51)..."
+  </p>
 
-    <p><strong>✓ Sanity Checks (Week 10)</strong></p>
-    <ul>
-      <li>Did you run model/data randomization tests?</li>
-      <li>Is your interpretation robust to methodological choices?</li>
-    </ul>
+  <h2>6. Tone: Be Kind, Gracious, and Honest</h2>
 
-    <p><strong>✓ Multiple Methods (Weeks 5-9)</strong></p>
-    <ul>
-      <li>Did circuits, probes, SAEs, and attribution agree?</li>
-      <li>If not, why? (Disagreement can be informative)</li>
-    </ul>
-
-    <p><strong>✓ Causal Validation (Week 8)</strong></p>
-    <ul>
-      <li>Did IIA confirm that your identified components are causal?</li>
-      <li>Can you intervene to change the concept?</li>
-    </ul>
-
-    <p><strong>✓ Novelty Assessment (Schut)</strong></p>
-    <ul>
-      <li>Is your concept in the training data?</li>
-      <li>If yes: rediscovery (still valid!)</li>
-      <li>If no: potential superhuman insight</li>
-    </ul>
-
-    <p><strong>✓ Teachability Assessment (Schut)</strong></p>
-    <ul>
-      <li>Can you explain the concept to a colleague?</li>
-      <li>Can they use it to improve their understanding?</li>
-      <li>If you trained a simple model on concept examples, does it generalize?</li>
-    </ul>
-
-    <p><strong>✓ Human Study (if feasible)</strong></p>
-    <ul>
-      <li>Even a small study (n=3-5) is valuable</li>
-      <li>Pre-post design or comparison with baseline</li>
-      <li>Measure performance, not just trust</li>
-    </ul>
-  </div>
-
-  <h3>Knowledge Transfer Potential</h3>
+  <h3>Write from a Position of Security</h3>
 
   <p>
-    Ask: <strong>Could a domain expert learn from your finding?</strong>
+    When discussing related work, be generous. Acknowledge the strengths of prior approaches before explaining how yours differs. Write from a position of security, not competition.
   </p>
 
   <div class="example-box">
-    <p><strong>Example: Musical Key Representation</strong></p>
+    <p><strong>Example of gracious related work discussion:</strong></p>
+    <p>"A number of papers to be published this year, all developed independently, are closely related to our work. The idea of [approach X] has been proposed by several authors [9, 1, 11] (in particular, see the elegant paper by Hertzmann et al. [11]). The reader is urged to review these works for a more complete picture of the field."</p>
+  </div>
 
-    <p><strong>Finding:</strong> LLM uses specific attention heads to track musical key.</p>
+  <h3>Be Scrupulously Honest</h3>
 
-    <p><strong>Novelty check:</strong> Is key tracking in music theory textbooks? (Yes → not novel)</p>
+  <p>
+    There are perceived pressures to oversell, hide drawbacks, and disparage others' work. <strong>Don't succumb.</strong> This is in both your long-term and short-term interests.
+  </p>
 
-    <p><strong>Teachability check:</strong> Could a musician learn which contexts activate key tracking? (Possibly)</p>
+  <ul>
+    <li><strong>Convey the right impression of performance.</strong> If your method works well in some cases but not others, say so clearly.</li>
+    <li><strong>Report negative results.</strong> If something you expected to work didn't, that's valuable information.</li>
+    <li><strong>Acknowledge limitations.</strong> Every method has them. Reviewers will find them anyway.</li>
+  </ul>
 
-    <p><strong>Knowledge transfer value:</strong> Moderate—validates human understanding but doesn't extend it.</p>
+  <div class="info-box">
+    <p><strong>Reputation matters.</strong> "Because the author was [trusted researcher], I knew I could trust the results." Develop a reputation for being clear and reliable. The benefit compounds over your career.</p>
+  </div>
 
-    <hr>
+  <h2>7. Common Reasons Papers Get Rejected</h2>
 
-    <p><strong>Example: Protein Stability Representations</strong></p>
+  <p>
+    With acceptance rates around 25%, reviewers are looking for reasons to reject. Avoid giving them easy ones:
+  </p>
 
-    <p><strong>Finding:</strong> LLM predicts protein mutations that improve stability using a novel attention pattern.
+  <ul>
+    <li><strong>Not delivering what you promise.</strong> If your title claims X, your paper must demonstrate X.</li>
+    <li><strong>Missing important references.</strong> This suggests you don't know the state of the art.</li>
+    <li><strong>Results too incremental.</strong> Too similar to previous work.</li>
+    <li><strong>Results not believable.</strong> Too different from previous work without adequate explanation.</li>
+    <li><strong>Poorly written.</strong> Hard to follow, grammatical errors, unclear figures.</li>
+    <li><strong>Technical mistakes.</strong> Incorrect statements, flawed methodology.</li>
+  </ul>
+
+  <h3>The Two Types of Borderline Papers</h3>
+
+  <div class="discussion-box">
+    <p><strong>The Cockroach:</strong> You try, but you can't find a way to kill this paper. Nothing too exciting, but well-written, decent reviews, incremental improvement. These often get accepted.</p>
+    <p><strong>The Puppy with Six Toes:</strong> A delightful paper with some easy-to-point-to flaw. The flaw may not be important, but it makes it easy to reject despite the freshness and originality. Many of these get rejected. <em>If you have a rejected "puppy," address the flaws and resubmit&mdash;it may become an oral presentation next time.</em></p>
+  </div>
+
+  <h2>8. For Your Interpretability Paper Specifically</h2>
+
+  <p>
+    Interpretability papers have some special considerations:
+  </p>
+
+  <h3>The "So What?" Question</h3>
+
+  <p>
+    Reviewers will ask: Why does localizing this concept matter? Be prepared to answer:
+  </p>
+
+  <ul>
+    <li><strong>Scientific understanding:</strong> What does this teach us about how models work?</li>
+    <li><strong>Safety implications:</strong> How does understanding this concept help with alignment or control?</li>
+    <li><strong>Practical applications:</strong> Can this knowledge improve model behavior or debugging?</li>
+    <li><strong>Domain relevance:</strong> Why does this matter for medicine/law/science/etc.?</li>
+  </ul>
+
+  <h3>Validation Is Crucial</h3>
+
+  <p>
+    Interpretability research is sometimes criticized for "just finding patterns." Your paper needs strong validation:
+  </p>
+
+  <ul>
+    <li><strong>Causal evidence:</strong> Show that intervening on your identified components changes behavior as predicted.</li>
+    <li><strong>Generalization:</strong> Does your finding hold across different prompts, models, or domains?</li>
+    <li><strong>Comparison:</strong> How does your approach compare to baselines or alternative explanations?</li>
+    <li><strong>Negative controls:</strong> Show that your method doesn't find spurious "concepts" in control conditions.</li>
+  </ul>
+
+  <h2>9. The Title Matters</h2>
+
+  <p>
+    Your title is the first (and sometimes only) thing people see. Make it count.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Consider the difference:</strong></p>
+    <p><em>Was:</em> "Shiftable Multiscale Transforms" (technical but obscure)</p>
+    <p><em>Should have been:</em> "What's Wrong with Wavelets?" (poses a question, creates intrigue)</p>
+  </div>
+
+  <p>
+    Good titles for interpretability papers often:
+  </p>
+  <ul>
+    <li>Name the phenomenon you're studying</li>
+    <li>Hint at the finding or method</li>
+    <li>Are memorable and searchable</li>
+  </ul>
+
+  <h2>References & Further Reading</h2>
+
+  <h3>On Writing Technical Papers</h3>
+  <ul>
+    <li>Freeman, W. & Isola, P. (2021). <a href="papers/freeman-2021-how-to-write-papers.pdf">"How to Write Papers and Give Talks"</a>. MIT 6.869 Lecture. <em>The source for much of this tutorial.</em></li>
+    <li>Kajiya, J. (1993). <a href="http://www.siggraph.org/publications/instructions/rejected.html">"How to Get Your SIGGRAPH Paper Rejected"</a>. <em>Classic advice from a papers chair.</em></li>
+    <li>Knuth, D. (1989). <a href="http://www.ai.mit.edu/courses/6.899/papers/knuthAll.pdf">"Notes on Technical Writing"</a>. <em>Timeless principles from a master.</em></li>
+    <li>Mermin, D. (1989). <a href="http://www.ai.mit.edu/courses/6.899/papers/mermin.pdf">"What's Wrong with These Equations?"</a>. Physics Today. <em>On writing mathematics clearly.</em></li>
+    <li>Strunk, W. & White, E.B. <em>The Elements of Style</em>. <em>The classic guide to concise writing.</em></li>
+  </ul>
+
+  <h3>On Giving Talks</h3>
+  <ul>
+    <li>Winston, P. <a href="https://vimeo.com/101543862">"How to Speak"</a>. MIT IAP Lecture. <em>Annual talk on presentation skills.</em></li>
+  </ul>
+
+  <h2>Deliverables</h2>
+
+  <div class="assignment-box">
+    <h3 style="margin-top: 0;">Week 11: Introduction + Methods Draft</h3>
+    <p>
+      <strong>Due: Thursday of Week 11</strong>
+    </p>
+    <p>
+      Submit your paper's introduction and methods sections. The introduction should clearly motivate your research question and position it in the literature. The methods section should be complete enough that a reader could reproduce your experiments.
     </p>
 
-    <p><strong>Novelty check:</strong> Pattern not present in biochemistry literature? (Novel)</p>
+    <h4>Checklist:</h4>
+    <ul>
+      <li>Clear, informative title</li>
+      <li>Research question stated clearly in introduction</li>
+      <li>Motivation for why this concept matters (to interpretability and to the domain)</li>
+      <li>Brief preview of main findings</li>
+      <li>Model and dataset fully described</li>
+      <li>All interpretability methods explained with citations</li>
+      <li>Evaluation metrics and validation approach defined</li>
+      <li>At least one figure with a self-contained caption</li>
+    </ul>
 
-    <p><strong>Teachability check:</strong> Can a biologist learn to recognize this pattern? (Test needed)</p>
-
-    <p><strong>Knowledge transfer value:</strong> High—could guide wet-lab experiments.</p>
+    <p><strong>Format:</strong> NeurIPS style, approximately 4-5 pages for these sections.</p>
   </div>
 
-  <h2>8. Limitations and Open Questions</h2>
-
-  <h3>Limitations of Current Approaches</h3>
-
-  <div class="info-box">
-    <p><strong>From Shin et al.:</strong></p>
-    <ul>
-      <li>Can't identify <em>which</em> concepts humans learned (black box improvement)</li>
-      <li>Correlation, not causation (did AlphaGo cause the improvement or just coincide?)</li>
-      <li>Domain-specific (Go); generalizes to other domains?</li>
-    </ul>
-
-    <p><strong>From Schut et al.:</strong></p>
-    <ul>
-      <li>Linear concept assumption (CAVs are linear directions)</li>
-      <li>Small sample (4 grandmasters, but they're world champions)</li>
-      <li>Chess-specific; method complexity for other domains?</li>
-      <li>Doesn't extract <em>all</em> concepts, just some filtered subset</li>
-    </ul>
-  </div>
-
-  <h3>Open Research Questions</h3>
-
-  <ul>
-    <li><strong>Completeness:</strong> How do we know we've found all the important concepts?</li>
-    <li><strong>Compositionality:</strong> How do simple concepts combine into complex strategies?</li>
-    <li><strong>Transfer across models:</strong> Are concepts universal or model-specific?</li>
-    <li><strong>Long-term retention:</strong> Do humans retain AI-taught concepts over months/years?</li>
-    <li><strong>Misalignment detection:</strong> What if AI discovers <em>harmful</em> concepts?</li>
-    <li><strong>Scaling:</strong> Can these methods work for domains more complex than chess/Go?</li>
-  </ul>
-
-  <h2>9. Best Practices for Your Paper</h2>
-
-  <div class="info-box">
-    <h3>Making Rigorous Claims</h3>
-
-    <p><strong>✓ DO:</strong></p>
-    <ul>
-      <li>Use multiple validation methods (circuits + probes + SAEs + IIA)</li>
-      <li>Report which concepts were teachable and which weren't</li>
-      <li>Assess novelty (compare with training data or domain literature)</li>
-      <li>Design human studies, even small ones</li>
-      <li>Show when your interpretation fails (edge cases)</li>
-      <li>Compare your concepts to known domain knowledge</li>
-    </ul>
-
-    <p><strong>✗ DON'T:</strong></p>
-    <ul>
-      <li>Claim "superhuman" insight without novelty evidence</li>
-      <li>Cherry-pick examples that support your interpretation</li>
-      <li>Rely on single method (e.g., only probes)</li>
-      <li>Assume teachability without testing</li>
-      <li>Over-generalize from one model or task</li>
-      <li>Ignore Week 10's skepticism lessons</li>
-    </ul>
-  </div>
-
-  <h2>10. Summary and Integration</h2>
-
-  <h3>Key Takeaways</h3>
-
-  <ul>
-    <li><strong>The knowledge gap is real:</strong> AI systems learn beyond human knowledge (Shin: novelty improves
-      humans; Schut: extractable novel concepts)</li>
-    <li><strong>Two pathways:</strong> Passive (observation) and active (explicit teaching) knowledge transfer</li>
-    <li><strong>Novelty + teachability:</strong> Framework for filtering valuable concepts</li>
-    <li><strong>Human studies matter:</strong> Validate interpretability claims with human performance</li>
-    <li><strong>Concept atlases:</strong> Organize findings systematically</li>
-    <li><strong>Integration:</strong> Combine methods from Weeks 1-10 for rigorous validation</li>
-  </ul>
-
-  <h3>Your Research Workflow</h3>
-
-  <ol>
-    <li><strong>Weeks 1-9:</strong> Discover concepts using multiple methods</li>
-    <li><strong>Week 10:</strong> Apply skepticism—run sanity checks</li>
-    <li><strong>Week 9:</strong>
-      <ul>
-        <li>Assess novelty (is it in training data?)</li>
-        <li>Assess teachability (can humans/students learn it?)</li>
-        <li>Design human study (even small)</li>
-        <li>Build concept atlas (organize findings)</li>
-        <li>Validate with multiple methods</li>
-      </ul>
-    </li>
-    <li><strong>Week 12:</strong> Present findings with rigorous evidence</li>
-  </ol>
-
-  <h3>Looking Ahead</h3>
-
-  <p>
-    The field of interpretability is moving toward <strong>actionable insights</strong>—not just understanding what
-    models do, but using that understanding to improve human knowledge, align AI systems, and enable human-AI
-    collaboration.
-  </p>
-
-  <p>
-    Your project contributes to this by characterizing how LLMs represent non-CS concepts—a crucial step toward AI
-    systems that can truly collaborate with domain experts across all fields.
-  </p>
-
-  <h2>References & Resources</h2>
-
-  <h3>Core Papers</h3>
-  <ul>
-    <li><strong>Shin et al. (2023):</strong> "Superhuman Artificial Intelligence Can Improve Human Decision Making by
-      Increasing Novelty." <em>PNAS</em>, 120(12), e2214840120. <a
-        href="https://www.pnas.org/doi/full/10.1073/pnas.2214840120" target="_blank">Link</a></li>
-    <li><strong>Schut et al. (2023/2025):</strong> "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer
-      in AlphaZero." <em>PNAS</em>, 122, e2406675122. <a href="https://arxiv.org/abs/2310.16410"
-        target="_blank">arXiv:2310.16410</a></li>
-  </ul>
-
-  <h3>Related Work</h3>
-  <ul>
-    <li><strong>AlphaGo:</strong> Silver et al. (2016). "Mastering the game of Go with deep neural networks and tree
-      search." <em>Nature</em>, 529, 484-489.</li>
-    <li><strong>AlphaZero:</strong> Silver et al. (2018). "A general reinforcement learning algorithm that masters
-      chess, shogi, and Go through self-play." <em>Science</em>, 362(6419), 1140-1144.</li>
-    <li><strong>TCAV:</strong> Kim et al. (2018). "Interpretability Beyond Feature Attribution: Quantitative Testing
-      with Concept Activation Vectors." <em>ICML</em>. (If moved from Week 6)</li>
-    <li><strong>Doshi-Velez & Kim (2017):</strong> "Towards A Rigorous Science of Interpretable Machine Learning." <a
-        href="https://arxiv.org/abs/1702.08608" target="_blank">arXiv:1702.08608</a></li>
-  </ul>
-
-  <h3>Supplementary Reading</h3>
-  <ul>
-    <li>Atanasova et al. (2020). "A Diagnostic Study of Explainability Techniques for Text Classification."
-      <em>EMNLP</em>.</li>
-    <li>Bansal et al. (2021). "Does the Whole Exceed its Parts?" <em>CHI</em>. (From Week 10)</li>
-    <li>AlphaStar case study: DeepMind blog on discovering novel StarCraft strategies</li>
-  </ul>
-
-  <section id="milestone">
-    <h2>Project Milestone</h2>
-
-    <div class="assignment-box">
-      <p><strong>Due: Thursday of Week 11</strong></p>
-      <p>
-        Design and conduct a human validation study to test whether your interpretability findings
-        help humans understand or predict model behavior related to your concept.
-      </p>
-
-      <h4>Human Validation Study</h4>
-      <ul>
-        <li><strong>Design study:</strong>
-          <ul>
-            <li>What is your research question? (e.g., "Do explanations help humans predict model errors?")</li>
-            <li>What will you show participants? (explanations, examples, circuit diagrams)</li>
-            <li>What will you ask them to do? (predict behavior, identify errors, categorize examples)</li>
-            <li>How will you measure understanding? (accuracy, confidence, response time)</li>
-          </ul>
-        </li>
-        <li><strong>Create materials:</strong>
-          <ul>
-            <li>Control condition: humans with no explanation</li>
-            <li>Experimental condition: humans with your interpretability findings</li>
-            <li>Test cases: mix of typical and edge cases</li>
-            <li>Instructions and training examples</li>
-          </ul>
-        </li>
-        <li><strong>Recruit participants:</strong>
-          <ul>
-            <li>Target: 10-20 participants minimum</li>
-            <li>Consider expertise level: domain experts vs novices</li>
-            <li>Randomize assignment to conditions</li>
-          </ul>
-        </li>
-        <li><strong>Run study and analyze:</strong>
-          <ul>
-            <li>Collect responses</li>
-            <li>Compare performance: explanation vs no-explanation</li>
-            <li>Statistical significance testing</li>
-            <li>Qualitative feedback: what was helpful? confusing?</li>
-          </ul>
-        </li>
-      </ul>
-
-      <h4>Deliverables:</h4>
-      <ul>
-        <li><strong>Study design document:</strong>
-          <ul>
-            <li>Research question and hypotheses</li>
-            <li>Methods: participants, materials, procedure</li>
-            <li>Planned analyses</li>
-          </ul>
-        </li>
-        <li><strong>Results:</strong>
-          <ul>
-            <li>Quantitative: performance comparison with statistical tests</li>
-            <li>Qualitative: participant feedback and observations</li>
-            <li>Visualization: accuracy, confidence, or other metrics by condition</li>
-          </ul>
-        </li>
-        <li><strong>Interpretation:</strong>
-          <ul>
-            <li>Do your explanations help humans?</li>
-            <li>What aspects are most/least helpful?</li>
-            <li>What does this reveal about the quality of your interpretability work?</li>
-          </ul>
-        </li>
-        <li><strong>Materials:</strong> Study materials, data, and analysis code</li>
-      </ul>
-
-      <p><em>
-        The ultimate test of interpretability: do your findings help humans understand the model?
-        Even small, well-designed studies can provide valuable validation.
-      </em></p>
-    </div>
-  </section>
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">&larr; Back to Course Home</a></p>
+  </footer>
 
 </body>
 

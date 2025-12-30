@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Week 7: Unsupervised Feature Discovery (SAEs) + Interpretability Illusions and Superposition - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    .math {
+      font-style: italic;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    .research-box {
+      background-color: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 7: Unsupervised Feature Discovery (SAEs) + Interpretability Illusions</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">← Back to Course Home</a>
+  </nav>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Previous weeks used supervision (probes) or hypotheses (circuits) to find features. But what if we don't know
+      which features to look for? This week addresses the fundamental challenge of <strong>unsupervised feature
+        discovery</strong>: finding interpretable units without labels or prior hypotheses. We'll explore why this is
+      hard (superposition), how sparse autoencoders offer a solution, and how to validate that discovered features are
+      "real."
+    </p>
+  </section>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
+    <ul>
+      <li>Explain the superposition hypothesis and why linear probes are insufficient for finding all features</li>
+      <li>Understand toy models of superposition and how features interfere in linear representations</li>
+      <li>Explain how sparse autoencoders perform unsupervised feature discovery</li>
+      <li>Distinguish between feature discovery (SAEs), feature reading (probes), and mechanism discovery (circuits)
+      </li>
+      <li>Interpret SAE features using automated labeling methods</li>
+      <li>Validate feature quality: monosemanticity, consistency, and causal effects</li>
+      <li>Understand transcoders as tools for decomposing computation (not just representation)</li>
+      <li>Compare SAE-discovered features with steering vectors and probe directions</li>
+      <li>Identify when features split or merge across different SAE capacities</li>
+      <li>Evaluate open research questions: feature completeness, universality, and causality</li>
+    </ul>
+  </section>
+
+  <section id="readings">
+    <h2>Readings</h2>
+
+    <h3>Core Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://transformer-circuits.pub/2022/toy_model/index.html" target="_blank">Toy Models of
+            Superposition</a>
+        </div>
+        <div class="reading-description">Elhage et al. (2022). Foundational work on why features interfere in neural networks</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://transformer-circuits.pub/2023/monosemantic-features/index.html" target="_blank">Towards
+            Monosemanticity: Decomposing Language Models With Dictionary Learning</a>
+        </div>
+        <div class="reading-description">Bricken et al. (2023). First large-scale SAE applied to transformers, introducing the approach</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/index.html" target="_blank">Scaling
+            Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet</a>
+        </div>
+        <div class="reading-description">Templeton et al. (2024). Scaling SAEs to production models, feature quality at scale</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2406.11944" target="_blank">Transcoders Find Interpretable LLM Feature
+            Circuits</a>
+        </div>
+        <div class="reading-description">Dunefsky et al. (2024). Using SAEs to decompose computation between layers</div>
+      </div>
+    </div>
+
+    <h3>Supplementary Readings</h3>
+    <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2410.13928" target="_blank">Automatically Interpreting Millions of Features in
+            Large Language Models</a>
+        </div>
+        <div class="reading-description">Gao et al. (2024). Automated feature labeling at scale using LLMs</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2404.16014" target="_blank">Improving Dictionary Learning with Gated Sparse
+            Autoencoders</a>
+        </div>
+        <div class="reading-description">Rajamanoharan et al. (2024). Technical improvements to SAE architecture</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://www.lesswrong.com/posts/z6QQJbtpkEAX3Aojj/interim-research-report-taking-features-out-of-superposition"
+            target="_blank">Taking Features Out of Superposition with Sparse Autoencoders</a>
+        </div>
+        <div class="reading-description">Sharkey et al. (2023). Research report on SAE effectiveness and limitations</div>
+      </div>
+
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="https://arxiv.org/abs/2406.01506" target="_blank">The Geometry of Categorical and Hierarchical
+            Concepts in Large Language Models</a>
+        </div>
+        <div class="reading-description">Park et al. (2024). Understanding feature geometry (bonus topic)</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tutorial">
+    <h2>Tutorial: From Superposition to Discovery</h2>
+
+    <h3>1. The Feature Discovery Problem</h3>
+    <p>
+      So far, we've found features in three ways:
+    </p>
+
+    <ul>
+      <li><strong>Probes (Week 6):</strong> Supervised—requires labeled data for specific concepts</li>
+      <li><strong>Circuits (Week 5):</strong> Hypothesis-driven—requires knowing what mechanism to look for</li>
+      <li><strong>Steering (Week 2):</strong> Contrastive—requires paired examples</li>
+    </ul>
+
+    <p>
+      But what if we want to discover <em>all</em> the features a model uses, without prior knowledge? This is the
+      <strong>unsupervised feature discovery problem</strong>.
+    </p>
+
+    <h4>Why This Matters</h4>
+    <ul>
+      <li><strong>Unknown concepts:</strong> Models may use features we haven't thought to look for</li>
+      <li><strong>Comprehensive understanding:</strong> Need the full feature repertoire, not cherry-picked examples
+      </li>
+      <li><strong>Novel domains:</strong> For non-CS concepts, we may not know what features exist</li>
+      <li><strong>Safety:</strong> Dangerous capabilities might use unexpected features</li>
+    </ul>
+
+    <h4>The Naive Approach Fails</h4>
+    <p>
+      Why not just treat each neuron as a feature?
+    </p>
+
+    <div class="diagram">
+      Neuron 47 activates for:<br>
+      • Base64 strings<br>
+      • DNA sequences<br>
+      • URLs<br>
+      • Canadian place names<br>
+      → Polysemantic (responds to unrelated concepts)
+    </div>
+
+    <p>
+      Individual neurons are <strong>polysemantic</strong>—they respond to multiple, unrelated concepts. Why?
+    </p>
+
+    <h3>2. The Superposition Hypothesis</h3>
+    <p>
+      <strong>Superposition hypothesis:</strong> Neural networks represent more features than they have dimensions by
+      allowing features to <em>interfere</em> with each other in superposition.
+    </p>
+
+    <h4>The Core Intuition</h4>
+    <p>
+      Imagine you have 100 dimensions but want to represent 1000 features. If most features are rarely active
+      (sparse), you can "pack" multiple features into each dimension, accepting that when they're simultaneously active
+      they'll interfere.
+    </p>
+
+    <div class="diagram">
+      2D space, but 4 features:<br>
+      Feature A: [1.0, 0.1]<br>
+      Feature B: [0.1, 1.0]<br>
+      Feature C: [-1.0, 0.1]<br>
+      Feature D: [0.1, -1.0]<br><br>
+      If only one is active at a time → no interference<br>
+      If multiple active → they interfere
+    </div>
+
+    <p>
+      This is efficient but makes features hard to read out linearly. A single neuron detects multiple overlapping
+      features.
+    </p>
+
+    <h4>Toy Model of Superposition</h4>
+    <p>
+      Anthropic's toy model demonstrates this clearly:
+    </p>
+
+    <ol>
+      <li><strong>Setup:</strong> Train autoencoder with bottleneck smaller than input</li>
+      <li><strong>Sparsity:</strong> Most input features are zero most of the time</li>
+      <li><strong>Result:</strong> Network learns to pack features in superposition</li>
+      <li><strong>Evidence:</strong> Reconstructions show feature interference patterns</li>
+    </ol>
+
+    <p><strong>Key finding:</strong> The level of superposition increases with:</p>
+    <ul>
+      <li>More features than dimensions (higher compression)</li>
+      <li>Sparser features (lower interference cost)</li>
+      <li>Features with varying importance (pack less important features more densely)</li>
+    </ul>
+
+    <h4>Implications for Interpretability</h4>
+    <table>
+      <tr>
+        <th>Approach</th>
+        <th>Problem with Superposition</th>
+      </tr>
+      <tr>
+        <td>Reading neurons</td>
+        <td>Each neuron is polysemantic</td>
+      </tr>
+      <tr>
+        <td>Linear probes</td>
+        <td>Can only find features in linear subspaces</td>
+      </tr>
+      <tr>
+        <td>Activation patching</td>
+        <td>Ablating one neuron affects multiple features</td>
+      </tr>
+      <tr>
+        <td>Circuits</td>
+        <td>Hard to trace feature-specific pathways</td>
+      </tr>
+    </table>
+
+    <p>
+      <strong>Bottom line:</strong> We need a method that can disentangle superposed features.
+    </p>
+
+    <h3>3. Sparse Autoencoders as Solution</h3>
+    <p>
+      <strong>Sparse autoencoders (SAEs)</strong> decompose model activations into a sparse, overcomplete basis—reversing
+      superposition.
+    </p>
+
+    <h4>The Core Idea</h4>
+    <p>
+      If the network compresses features into superposition, we can "uncompress" them with a sparse autoencoder:
+    </p>
+
+    <div class="diagram">
+      Model activation: [768 dims]<br>
+      ↓ SAE Encoder<br>
+      Sparse code: [16384 dims, mostly zeros]<br>
+      ↓ SAE Decoder<br>
+      Reconstructed: [768 dims]
+    </div>
+
+    <h4>Architecture</h4>
+    <div class="math">
+      h = activations from model (d dimensions)<br>
+      f = ReLU(W_enc · h + b_enc) (d_hidden dimensions)<br>
+      ĥ = W_dec · f + b_dec<br><br>
+      Loss = ||h - ĥ||² + λ||f||₁
+    </div>
+
+    <p><strong>Key components:</strong></p>
+    <ul>
+      <li><strong>Overcomplete:</strong> d_hidden >> d (e.g., 16k features for 768 dims)</li>
+      <li><strong>Sparsity penalty:</strong> λ||f||₁ encourages few active features</li>
+      <li><strong>Reconstruction:</strong> ||h - ĥ||² ensures we don't lose information</li>
+    </ul>
+
+    <h4>Why This Works</h4>
+    <ol>
+      <li><strong>Overcomplete basis:</strong> More features than dimensions, room to separate superposed features</li>
+      <li><strong>Sparsity:</strong> Forces clean separation (can't just rotate the basis)</li>
+      <li><strong>Learned:</strong> Discovers natural feature boundaries from data</li>
+    </ol>
+
+    <h4>What SAEs Find</h4>
+    <p>
+      Examples from Claude 3 Sonnet SAEs:
+    </p>
+    <ul>
+      <li>Feature 34M: "Arabic script and Islamic religious concepts"</li>
+      <li>Feature 2.1M: "Code errors and debugging"</li>
+      <li>Feature 7.3M: "Sarcasm and irony"</li>
+      <li>Feature 12M: "Mathematical proofs"</li>
+    </ul>
+
+    <p>
+      These are <strong>monosemantic</strong>—each feature responds to one coherent concept.
+    </p>
+
+    <h3>4. Three Types of Feature Discovery</h3>
+    <p>
+      Let's clarify how SAEs differ from previous methods:
+    </p>
+
+    <table>
+      <tr>
+        <th>Method</th>
+        <th>Supervision</th>
+        <th>What It Finds</th>
+        <th>Strength</th>
+        <th>Limitation</th>
+      </tr>
+      <tr>
+        <td><strong>Probes</strong><br>(Week 6)</td>
+        <td>Supervised labels</td>
+        <td>Known concepts you test for</td>
+        <td>Validates specific hypotheses</td>
+        <td>Only finds what you look for</td>
+      </tr>
+      <tr>
+        <td><strong>Circuits</strong><br>(Week 5)</td>
+        <td>Hypothesis-driven</td>
+        <td>Mechanisms for specific behaviors</td>
+        <td>Causal, interpretable</td>
+        <td>Requires knowing the task</td>
+      </tr>
+      <tr>
+        <td><strong>SAEs</strong><br>(This week)</td>
+        <td>Unsupervised</td>
+        <td>All features used by model</td>
+        <td>Discovers unknown features</td>
+        <td>Not guaranteed causal</td>
+      </tr>
+    </table>
+
+    <div class="research-box">
+      <strong>Research Insight:</strong> These methods are complementary, not competing. SAEs discover features →
+      Probes validate they're used → Circuits explain how they're computed.
+    </div>
+
+    <h3>5. Transcoders: Decomposing Computation</h3>
+    <p>
+      Standard SAEs decompose <em>representations</em> (activations at one layer). <strong>Transcoders</strong>
+      decompose <em>computation</em> (transformations between layers).
+    </p>
+
+    <h4>The Motivation</h4>
+    <p>
+      In transformers, layers communicate through the residual stream. A transcoder learns:
+    </p>
+
+    <div class="math">
+      Layer N output → [Sparse features] → Layer N+1 input
+    </div>
+
+    <h4>Architecture</h4>
+    <p>
+      Instead of reconstructing the same layer:
+    </p>
+    <div class="diagram">
+      h_n = activations from layer n<br>
+      f = ReLU(W_enc · h_n + b_enc)<br>
+      ĥ_{n+1} = W_dec · f + b_dec<br><br>
+      Loss = ||h_{n+1} - ĥ_{n+1}||² + λ||f||₁
+    </div>
+
+    <p>
+      The sparse features <code>f</code> now represent the <strong>computational pathway</strong> from layer n to n+1.
+    </p>
+
+    <h4>What Transcoders Reveal</h4>
+    <ul>
+      <li><strong>Feature circuits:</strong> Which features in layer n activate which features in layer n+1</li>
+      <li><strong>Information flow:</strong> How concepts are processed and transformed</li>
+      <li><strong>Layer specialization:</strong> What computation each layer performs</li>
+    </ul>
+
+    <h4>Comparison: SAEs vs Transcoders</h4>
+    <table>
+      <tr>
+        <th>Aspect</th>
+        <th>SAE</th>
+        <th>Transcoder</th>
+      </tr>
+      <tr>
+        <td>Decomposes</td>
+        <td>Representations (within layer)</td>
+        <td>Computation (between layers)</td>
+      </tr>
+      <tr>
+        <td>Input/Output</td>
+        <td>Same layer</td>
+        <td>Layer n → Layer n+1</td>
+      </tr>
+      <tr>
+        <td>Use Case</td>
+        <td>"What features are present?"</td>
+        <td>"How do features transform?"</td>
+      </tr>
+      <tr>
+        <td>Connects to</td>
+        <td>Probing, steering</td>
+        <td>Circuits, path patching</td>
+      </tr>
+    </table>
+
+    <h3>6. Feature Interpretation</h3>
+    <p>
+      Once SAEs find features, how do we interpret them?
+    </p>
+
+    <h4>Manual Interpretation</h4>
+    <p><strong>Max-activating examples:</strong> Find texts where feature activates most strongly</p>
+
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Feature 2.1M top activations:<br>
+      "...syntax error on line 47..."<br>
+      "...undefined variable foo..."<br>
+      "...debug trace shows..."<br>
+      → Interpretation: "Code errors and debugging"
+    </code>
+
+    <p>
+      <strong>Limitations:</strong> Slow, subjective, doesn't scale to millions of features
+    </p>
+
+    <h4>Automated Interpretation</h4>
+    <p>
+      Use an LLM to label features:
+    </p>
+
+    <ol>
+      <li>Extract max-activating examples for feature</li>
+      <li>Prompt LLM: "What concept do these examples have in common?"</li>
+      <li>LLM generates description: "This feature detects code errors"</li>
+      <li>Validate description on held-out examples</li>
+    </ol>
+
+    <h4>Validation Methods</h4>
+    <p><strong>1. Quantitative agreement:</strong></p>
+    <ul>
+      <li>Generate more examples matching description</li>
+      <li>Check if feature activates on them</li>
+      <li>Compute precision/recall</li>
+    </ul>
+
+    <p><strong>2. Simulation scoring:</strong></p>
+    <ul>
+      <li>Ask LLM to predict feature activation from text</li>
+      <li>Compare with actual activations</li>
+      <li>High correlation = good explanation</li>
+    </ul>
+
+    <p><strong>3. Human evaluation:</strong></p>
+    <ul>
+      <li>Show humans feature activations + descriptions</li>
+      <li>Rate quality of explanation</li>
+    </ul>
+
+    <h3>7. Feature Quality and Validation</h3>
+    <p>
+      Not all SAE features are equally meaningful. How do we validate quality?
+    </p>
+
+    <h4>Criterion 1: Monosemanticity</h4>
+    <p>
+      <strong>Question:</strong> Does the feature respond to one coherent concept?
+    </p>
+
+    <p><strong>Tests:</strong></p>
+    <ul>
+      <li>Examine diverse activating examples—are they related?</li>
+      <li>Check for spurious correlations</li>
+      <li>Compare early vs late activating examples—same concept?</li>
+    </ul>
+
+    <p><strong>Red flags:</strong></p>
+    <ul>
+      <li>Feature activates on seemingly unrelated concepts</li>
+      <li>Can't write coherent description</li>
+      <li>High activations are confusing/random</li>
+    </ul>
+
+    <h4>Criterion 2: Consistency</h4>
+    <p>
+      <strong>Question:</strong> Does the feature activate consistently across contexts?
+    </p>
+
+    <p><strong>Tests:</strong></p>
+    <ul>
+      <li>Paraphrase test: different phrasings of same concept → similar activation?</li>
+      <li>Context variation: concept in different contexts → consistent?</li>
+      <li>Negation test: negated concept → low activation?</li>
+    </ul>
+
+    <h4>Criterion 3: Causality</h4>
+    <p>
+      <strong>Question:</strong> Is the feature actually used by the model?
+    </p>
+
+    <div class="research-box">
+      <strong>Critical:</strong> SAE feature presence doesn't prove causal use (same issue as probes in Week 6)
+    </div>
+
+    <p><strong>Validation approaches:</strong></p>
+    <ul>
+      <li><strong>Clamping:</strong> Set feature to zero, does output change?</li>
+      <li><strong>Steering:</strong> Amplify feature, does behavior change predictably?</li>
+      <li><strong>Compare with circuits:</strong> Do features correspond to causally important components?</li>
+    </ul>
+
+    <h4>Feature Quality Metrics</h4>
+    <table>
+      <tr>
+        <th>Metric</th>
+        <th>What It Measures</th>
+        <th>How to Compute</th>
+      </tr>
+      <tr>
+        <td>L0 Sparsity</td>
+        <td>How many features active</td>
+        <td>Average number of non-zero features</td>
+      </tr>
+      <tr>
+        <td>Reconstruction Loss</td>
+        <td>Information preservation</td>
+        <td>||h - ĥ||²</td>
+      </tr>
+      <tr>
+        <td>Explained Variance</td>
+        <td>How much SAE captures</td>
+        <td>1 - (reconstruction_loss / variance)</td>
+      </tr>
+      <tr>
+        <td>Interpretation Score</td>
+        <td>Feature coherence</td>
+        <td>LLM agreement on activations</td>
+      </tr>
+    </table>
+
+    <h3>8. Comparing with Other Methods</h3>
+    <p>
+      How do SAE features relate to steering vectors and probe directions?
+    </p>
+
+    <h4>SAE Features vs Steering Vectors (Week 2)</h4>
+    <ul>
+      <li><strong>Steering vectors:</strong> Contrastive (positive - negative examples)</li>
+      <li><strong>SAE features:</strong> Unsupervised discovery</li>
+      <li><strong>Relationship:</strong> Steering vectors often align with SAE features</li>
+      <li><strong>Advantage of SAEs:</strong> Find features you didn't think to contrast</li>
+    </ul>
+
+    <h4>SAE Features vs Probe Directions (Week 6)</h4>
+    <ul>
+      <li><strong>Probes:</strong> Supervised, find directions for labeled concepts</li>
+      <li><strong>SAE features:</strong> Unsupervised, find natural feature basis</li>
+      <li><strong>Relationship:</strong> Probe directions may be combinations of SAE features</li>
+      <li><strong>Advantage of SAEs:</strong> Discover novel concepts without labels</li>
+    </ul>
+
+    <h4>Empirical Findings</h4>
+    <p>
+      Studies show:
+    </p>
+    <ul>
+      <li>70-80% of steering vectors align well with single SAE features</li>
+      <li>Remaining 20-30% are combinations of multiple features</li>
+      <li>SAEs discover features not found by probes or steering</li>
+      <li>Best results: use SAE features for steering (Week 2 methods with Week 7 features)</li>
+    </ul>
+
+    <h3>9. Open Research Questions</h3>
+    <p>
+      SAEs are powerful but leave major questions unanswered:
+    </p>
+
+    <h4>Question 1: Feature Completeness</h4>
+    <p>
+      <strong>Problem:</strong> Do SAEs find <em>all</em> features, or just easy-to-decompose ones?
+    </p>
+
+    <p><strong>Evidence for incompleteness:</strong></p>
+    <ul>
+      <li>Reconstruction loss never reaches zero</li>
+      <li>Some model behaviors can't be explained by SAE features</li>
+      <li>Features may exist in higher-order interactions</li>
+    </ul>
+
+    <p><strong>Open directions:</strong></p>
+    <ul>
+      <li>How to detect missing features?</li>
+      <li>Are some features fundamentally non-separable?</li>
+      <li>Can we quantify feature coverage?</li>
+    </ul>
+
+    <h4>Question 2: Feature Universality</h4>
+    <p>
+      <strong>Problem:</strong> Do different models learn the same features?
+    </p>
+
+    <p><strong>Initial findings:</strong></p>
+    <ul>
+      <li>Some features appear universal (e.g., "base64 encoding")</li>
+      <li>Others are model-specific</li>
+      <li>Feature similarity decreases as models differ more</li>
+    </ul>
+
+    <p><strong>Research implications:</strong></p>
+    <ul>
+      <li>Universal features → general properties of language/concepts</li>
+      <li>Model-specific features → training or architecture artifacts</li>
+      <li>Important for transfer and safety (are dangerous features universal?)</li>
+    </ul>
+
+    <h4>Question 3: Feature Causality</h4>
+    <p>
+      <strong>Problem:</strong> Are SAE features causally used or just present?
+    </p>
+
+    <div class="research-box">
+      <strong>Critical gap:</strong> Most SAE research focuses on discovery and interpretation, not validation of
+      causal role.
+    </div>
+
+    <p><strong>Why this matters:</strong></p>
+    <ul>
+      <li>For safety: need to know which features actually affect behavior</li>
+      <li>For understanding: presence ≠ use (same issue as probes)</li>
+      <li>For steering: need causally effective features</li>
+    </ul>
+
+    <p><strong>Validation needed:</strong></p>
+    <ul>
+      <li>Intervention experiments (clamping, steering)</li>
+      <li>Comparison with circuit analysis</li>
+      <li>Out-of-distribution testing</li>
+    </ul>
+
+    <h4>Question 4: Feature Splitting</h4>
+    <p>
+      <strong>Problem:</strong> As SAE capacity increases, features split into subfeatres. When does this help vs hurt?
+    </p>
+
+    <p><strong>Example:</strong></p>
+    <div class="diagram">
+      16k features: "Programming" (broad)<br>
+      ↓<br>
+      65k features: "Python syntax", "JavaScript syntax", "Debugging"<br>
+      ↓<br>
+      256k features: "Python list comprehensions", "Python error handling", etc.
+    </div>
+
+    <p><strong>Trade-offs:</strong></p>
+    <ul>
+      <li><strong>More splitting:</strong> Finer-grained understanding, but interpretability burden</li>
+      <li><strong>Less splitting:</strong> Simpler, but may miss important distinctions</li>
+      <li><strong>Question:</strong> What's the "right" granularity for features?</li>
+    </ul>
+
+    <h4>Question 5: Feature Geometry</h4>
+    <p>
+      <strong>Problem:</strong> How are features organized relative to each other?
+    </p>
+
+    <p><strong>Findings:</strong></p>
+    <ul>
+      <li>Related features are nearby in feature space</li>
+      <li>Hierarchical structure (broad → specific)</li>
+      <li>Some features form "concepts clusters"</li>
+    </ul>
+
+    <p><strong>Open questions:</strong></p>
+    <ul>
+      <li>Is there a universal feature geometry?</li>
+      <li>How does geometry relate to semantic structure?</li>
+      <li>Can we use geometry for better interpretation?</li>
+    </ul>
+
+    <h3>10. Research Workflow with SAEs</h3>
+
+    <ol>
+      <li><strong>Discovery:</strong>
+        <ul>
+          <li>Train SAE on target layer(s)</li>
+          <li>Extract features and their activations</li>
+          <li>Automated interpretation for all features</li>
+        </ul>
+      </li>
+
+      <li><strong>Filtering:</strong>
+        <ul>
+          <li>Identify features relevant to your concept</li>
+          <li>Check monosemanticity and consistency</li>
+          <li>Compare with steering/probe findings</li>
+        </ul>
+      </li>
+
+      <li><strong>Validation:</strong>
+        <ul>
+          <li>Test causal effects (steering, clamping)</li>
+          <li>Check if features participate in circuits</li>
+          <li>Out-of-distribution testing</li>
+        </ul>
+      </li>
+
+      <li><strong>Analysis:</strong>
+        <ul>
+          <li>How do features combine for your concept?</li>
+          <li>Are there unexpected related features?</li>
+          <li>How does feature activity change across contexts?</li>
+        </ul>
+      </li>
+
+      <li><strong>Integration:</strong>
+        <ul>
+          <li>Use SAE features for steering (Week 2)</li>
+          <li>Compare with probe findings (Week 6)</li>
+          <li>Trace feature circuits (Week 5)</li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="research-box">
+      <strong>Key principle:</strong> SAEs are a discovery tool, not a complete explanation. Always validate with
+      causal methods.
+    </div>
+  </section>
+
+
+  <section id="interpretability-illusions">
+    <h2>Part 2: Interpretability Illusions (50% of content)</h2>
+
+    <div class="warning-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+      <h3>Reality Check for Feature Discovery</h3>
+      <p>
+        Sparse autoencoders produce clean, interpretable features. Individual neurons appear to encode specific concepts.
+        But what if these seemingly monosemantic representations are actually <strong>fragile illusions</strong>? This
+        section examines evidence that discovered features may not be as robust or meaningful as they first appear.
+      </p>
+    </div>
+
+    <h2>1. The BERT Interpretability Illusion (Bolukbasi et al., 2021)</h2>
+
+    <h3>The Intuition Behind Neuron Analysis</h3>
+    <p>
+      A common approach in interpretability: examine individual neurons or directions, find inputs that activate them
+      strongly, and conclude the neuron represents some concept. This has produced many published interpretations.
+    </p>
+
+    <p>
+      But <strong>Bolukbasi et al. (2021)</strong> systematically tested: do these seemingly clean interpretations actually
+      hold up?
+    </p>
+
+    <h3>The Experiment</h3>
+    <p>
+      Test neurons in BERT that appear to encode specific semantic categories:
+    </p>
+
+    <ol>
+      <li>Identify neurons that activate on specific concepts (e.g., "sports," "locations," "dates")</li>
+      <li>Test on <strong>counterfactual examples:</strong> minimally modified sentences that change the concept while
+        preserving structure</li>
+      <li>Test on <strong>multiple datasets</strong> beyond the training distribution</li>
+    </ol>
+
+    <h3>The Illusion Revealed</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p><strong>Key findings:</strong></p>
+      <ul>
+        <li>Neurons that appear to encode simple concepts on standard datasets <strong>fail to generalize</strong> to
+          counterfactuals</li>
+        <li>The same neuron appears to encode <em>different concepts</em> depending on which dataset you probe it with</li>
+        <li>What looks like a "sports neuron" is actually encoding something far more complex—perhaps a mixture of syntactic
+          patterns, word frequency, and correlations that <em>happen to align with sports</em> in typical text</li>
+      </ul>
+    </div>
+
+    <h3>Why This Happens</h3>
+    <p><strong>Two main causes:</strong></p>
+
+    <ol>
+      <li><strong>Geometric properties of embedding spaces:</strong> BERT's representation space has specific structure
+        where certain directions spuriously appear to correspond to simple concepts</li>
+
+      <li><strong>Dataset bias:</strong> Training corpora don't uniformly sample possible sentences. Correlations in the
+        data (e.g., "sports" co-occurring with certain syntactic structures) create apparent monosemantic neurons that are
+        actually polysemantic</li>
+    </ol>
+
+    <h3>Taxonomy of Concept Directions</h3>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 8px;">Type</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Scope</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Example</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Local concepts</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Only meaningful in small region</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Works on news articles, breaks on social media</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Dataset-level</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Only within training distribution</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Appears semantic but is actually frequency pattern</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;"><strong>Global concepts</strong></td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Meaningful across entire space</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">True semantic concepts (rare!)</td>
+      </tr>
+    </table>
+
+    <p>
+      <strong>Key insight:</strong> Most neurons that appear monosemantic are actually <strong>dataset-level or
+        local</strong>, not global. They work on typical examples but fail on edge cases, counterfactuals, or
+      out-of-distribution inputs.
+    </p>
+
+    <h3>Methodological Recommendations</h3>
+    <ul>
+      <li><strong>Test on multiple datasets:</strong> A concept interpretation that only holds on one dataset is suspect
+      </li>
+      <li><strong>Use counterfactual examples:</strong> Minimally edit inputs to isolate the concept</li>
+      <li><strong>Check for confounds:</strong> Could the neuron be responding to correlated properties (word frequency,
+        syntax, position)?</li>
+      <li><strong>Be skeptical of monosemanticity claims:</strong> Just because you can label a neuron doesn't mean it
+        actually encodes that label as a pure concept</li>
+    </ul>
+
+    <h2>2. Interpretability Illusions with Sparse Autoencoders (2025)</h2>
+
+    <h3>The SAE Promise (Recap from Part 1)</h3>
+    <p>
+      Sparse autoencoders decompose neural network activations into interpretable, monosemantic features. This seems like a
+      breakthrough: we can finally label what individual directions represent!
+    </p>
+
+    <p>
+      <strong>But a 2025 paper</strong> tested the <em>robustness</em> of SAE-based concept representations.
+    </p>
+
+    <h3>The Robustness Test</h3>
+    <p><strong>Question:</strong> Can adversarial perturbations manipulate which SAE features activate without changing
+      model behavior?</p>
+
+    <p><strong>Method:</strong></p>
+    <ol>
+      <li>Train SAE on LLM activations</li>
+      <li>Identify interpretable features (e.g., "Golden Gate Bridge" feature)</li>
+      <li>Construct adversarial perturbations to inputs</li>
+      <li>Measure: Do perturbations change SAE activations while keeping model outputs unchanged?</li>
+    </ol>
+
+    <h3>The Illusion: Adversarial Fragility</h3>
+    <div class="warning-box" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+      <p><strong>Key findings:</strong></p>
+      <ul>
+        <li><strong>Tiny adversarial perturbations</strong> can drastically change which SAE features activate</li>
+        <li>These perturbations often have <strong>negligible effect on model outputs</strong></li>
+        <li>You can "fool" the interpretation without changing what the model does</li>
+        <li>Concept labels assigned to SAE features may be more fragile than they appear</li>
+      </ul>
+    </div>
+
+    <h3>Critical Question</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p>
+        If an SAE feature for "Golden Gate Bridge" can be activated by inputs that have nothing to do with the Golden Gate
+        Bridge (via adversarial perturbation), <strong>what does that feature really represent?</strong>
+      </p>
+
+      <p>
+        Options:
+      </p>
+      <ol>
+        <li>The feature is less monosemantic than it appears</li>
+        <li>The feature is real but adversarially fragile (like image classifiers)</li>
+        <li>Our method for labeling features is unreliable</li>
+        <li>All of the above</li>
+      </ol>
+    </div>
+
+    <h3>Implications for SAE Research</h3>
+    <p>
+      This doesn't mean SAEs are useless—but it means we need additional validation:
+    </p>
+
+    <ul>
+      <li><strong>Robustness testing:</strong> Are features stable under small input perturbations?</li>
+      <li><strong>Causal validation:</strong> Does intervening on a feature change behavior as predicted? (Week 4 methods)
+      </li>
+      <li><strong>Multi-dataset testing:</strong> Do features generalize beyond training distribution? (Bolukbasi lesson)
+      </li>
+      <li><strong>Adversarial testing:</strong> Can features be manipulated without changing outputs?</li>
+    </ul>
+
+    <h2>3. Connecting Illusions to SAE Validation</h2>
+
+    <h3>Validation Framework for Discovered Features</h3>
+    <p>
+      Given the evidence of illusions, how do we validate SAE features rigorously?
+    </p>
+
+    <div class="info-box" style="background-color: #e8f4f8; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0;">
+      <h4>Comprehensive SAE Feature Validation</h4>
+
+      <p><strong>1. Monosemanticity Tests</strong></p>
+      <ul>
+        <li>Top activating examples: Do they all exhibit the labeled concept?</li>
+        <li>Counterfactual test: Does minimally changing concept change activation?</li>
+        <li>Multi-dataset test: Does feature activate consistently across datasets? (Bolukbasi)</li>
+      </ul>
+
+      <p><strong>2. Robustness Tests</strong></p>
+      <ul>
+        <li>Perturbation stability: Small input changes shouldn't drastically change feature activation</li>
+        <li>Adversarial test: Can feature be fooled without changing output? (SAE illusions paper)</li>
+        <li>Compare trained model SAE vs random model SAE (Week 4 sanity check)</li>
+      </ul>
+
+      <p><strong>3. Causal Tests</strong></p>
+      <ul>
+        <li>Ablation: Does zeroing feature break related behavior?</li>
+        <li>Steering: Does amplifying feature enhance related behavior?</li>
+        <li>Patching: Does feature mediate the causal path? (Week 4)</li>
+      </ul>
+
+      <p><strong>4. Reconstruction Quality</strong></p>
+      <ul>
+        <li>Does SAE faithfully reconstruct activations?</li>
+        <li>Does reconstruction preserve model behavior?</li>
+        <li>Trade-off: sparsity vs reconstruction fidelity</li>
+      </ul>
+
+      <p><strong>5. Human Validation</strong></p>
+      <ul>
+        <li>Can humans understand feature labels?</li>
+        <li>Do domain experts agree with interpretations?</li>
+        <li>Blind testing: can humans predict which inputs activate features?</li>
+      </ul>
+    </div>
+
+    <h3>When to Trust vs Distrust SAE Features</h3>
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr>
+        <th style="border: 1px solid #ccc; padding: 8px;">Signal</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Trust Level</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Action</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature passes all 5 validation tests</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓✓✓ High</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Safe to use in research</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature is monosemantic and causal but fragile</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓✓ Moderate</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Use with caveats, report fragility</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature works on one dataset only</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✓ Low</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Likely dataset-level artifact (Bolukbasi)</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature is adversarially manipulable</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">⚠ Very Low</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Interpretation is unstable</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ccc; padding: 8px;">Feature fails causal tests</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">✗ None</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Correlated but not causal</td>
+      </tr>
+    </table>
+
+    <h2>4. Lessons for Your Project</h2>
+
+    <h3>If Using SAEs for Your Concept</h3>
+    <div class="example-box" style="background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 20px 0;">
+      <p><strong>Required validation steps:</strong></p>
+
+      <ol>
+        <li><strong>Find the feature:</strong> Use Part 1 methods to discover features related to your concept</li>
+
+        <li><strong>Test monosemanticity:</strong>
+          <ul>
+            <li>Show top activating examples</li>
+            <li>Create counterfactual examples (change concept, activation should change)</li>
+            <li>Test on multiple text sources (news, social media, academic, etc.)</li>
+          </ul>
+        </li>
+
+        <li><strong>Test robustness:</strong>
+          <ul>
+            <li>Paraphrase inputs: does feature still activate?</li>
+            <li>Add noise: is activation stable?</li>
+            <li>Test on random model SAE: does feature exist there? (shouldn't!)</li>
+          </ul>
+        </li>
+
+        <li><strong>Test causality:</strong>
+          <ul>
+            <li>Ablate feature: does concept-related behavior break?</li>
+            <li>Amplify feature: does behavior strengthen?</li>
+            <li>Use Week 4 patching to verify causal role</li>
+          </ul>
+        </li>
+
+        <li><strong>Document failures:</strong>
+          <ul>
+            <li>When does the feature not activate (false negatives)?</li>
+            <li>When does it activate incorrectly (false positives)?</li>
+            <li>Are there confounds (length, frequency, position)?</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <h3>Red Flags to Watch For</h3>
+    <ul>
+      <li><strong>🚩 Too perfect:</strong> Feature activates on all and only concept examples → likely overfitting to your
+        test set</li>
+      <li><strong>🚩 Dataset-dependent:</strong> Feature works on Wikipedia, fails on Twitter → not truly monosemantic
+        (Bolukbasi)</li>
+      <li><strong>🚩 Confounds:</strong> Feature correlates with word length/frequency/position, not actual concept</li>
+      <li><strong>🚩 No causal role:</strong> Ablating feature doesn't change behavior → just correlated, not used</li>
+      <li><strong>🚩 Cherry-picked examples:</strong> Only showing examples that work → confirmation bias</li>
+    </ul>
+
+    <h2>5. Summary: SAEs + Illusions</h2>
+
+    <h3>Part 1 Takeaways (SAE Methods)</h3>
+    <ul>
+      <li>SAEs decompose activations into sparse, interpretable features</li>
+      <li>Features appear more monosemantic than individual neurons</li>
+      <li>Training requires balancing sparsity and reconstruction</li>
+      <li>Multiple methods exist: TopK, learned thresholds, gated SAEs</li>
+    </ul>
+
+    <h3>Part 2 Takeaways (Illusions)</h3>
+    <ul>
+      <li>Seemingly monosemantic neurons may be dataset-level artifacts (Bolukbasi)</li>
+      <li>SAE features can be adversarially fragile (2025 paper)</li>
+      <li>Visual plausibility ≠ robustness ≠ causality</li>
+      <li>Comprehensive validation is essential</li>
+      <li>Report failures, not just successes</li>
+    </ul>
+
+    <h3>Integration with Course</h3>
+    <ul>
+      <li><strong>Week 4 (Causal Validation):</strong> Use patching to verify SAE features are causal</li>
+      <li><strong>Week 5 (Probes):</strong> Compare SAE features with probe results</li>
+      <li><strong>Week 6 (Attribution):</strong> Do SAE features align with high-attribution inputs?</li>
+      <li><strong>Week 8 (Circuits):</strong> How do features compose into circuits?</li>
+      <li><strong>Week 10 (Full Skepticism):</strong> Comprehensive study of all interpretability illusions</li>
+    </ul>
+
+    <h3>For Your Research</h3>
+    <p>
+      Use SAEs to discover features, but validate rigorously:
+    </p>
+    <ol>
+      <li>Run full validation protocol (monosemanticity, robustness, causality, reconstruction, human eval)</li>
+      <li>Test on multiple datasets and text types</li>
+      <li>Check for adversarial fragility</li>
+      <li>Integrate with other methods (probes, patching, attribution)</li>
+      <li>Report honestly: show failures, acknowledge limitations</li>
+    </ol>
+
+    <h2>References for Part 2 (Illusions)</h2>
+
+    <h3>Core Papers</h3>
+    <ul>
+      <li><strong>Bolukbasi et al. (2021):</strong> "An Interpretability Illusion for BERT." arXiv. <a
+          href="https://arxiv.org/abs/2104.07143" target="_blank">arXiv:2104.07143</a></li>
+      <li><strong>Interpretability Illusions with SAEs (2025):</strong> "Evaluating Robustness of Concept Representations."
+        <a href="https://arxiv.org/abs/2505.16004" target="_blank">arXiv:2505.16004</a>
+      </li>
+    </ul>
+
+    <h3>Related Work</h3>
+    <ul>
+      <li>Anthropic's Golden Gate Claude (2024): Example of SAE features that appear highly monosemantic</li>
+      <li>Templeton et al. (2024): Scaling monosemanticity with sparse autoencoders</li>
+      <li>Makelov et al. (2024): On the adversarial robustness of concept representations</li>
+    </ul>
+  </section>
+  <section id="code-exercise">
+    <h2>Code Exercise</h2>
+    <p>
+      This week's exercise provides hands-on experience with superposition and SAEs:
+    </p>
+    <ul>
+      <li>Build and analyze toy models of superposition</li>
+      <li>Train sparse autoencoders on transformer activations</li>
+      <li>Interpret discovered features with automated methods</li>
+      <li>Validate feature quality (monosemanticity, causality)</li>
+      <li>Compare SAE features with steering vectors and probes</li>
+      <li>Train transcoders to decompose computation</li>
+      <li>Explore feature splitting across SAE capacities</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
+      Open Exercise in Google Colab
+    </a>
+
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be created and linked here.</em>
+    </p>
+  </section>
+
+  <section id="milestone">
+    <h2>Project Milestone</h2>
+
+    <div class="assignment-box">
+      <p><strong>Due: Thursday of Week 7</strong></p>
+      <p>
+        Use sparse autoencoders (SAEs) to automatically discover features related to your concept.
+        Identify 5-10 relevant features, validate their quality, and analyze how they compose.
+      </p>
+
+      <h4>SAE Feature Discovery</h4>
+      <ul>
+        <li><strong>Obtain SAE features:</strong>
+          <ul>
+            <li>Use pre-trained SAEs from Neuronpedia (recommended for speed)</li>
+            <li>Or train your own SAEs on critical layers identified in Weeks 3-4</li>
+            <li>Focus on layers where your concept showed strong signal</li>
+          </ul>
+        </li>
+        <li><strong>Find concept-relevant features:</strong>
+          <ul>
+            <li>Run your benchmark dataset through the SAE</li>
+            <li>Identify features that activate differentially on concept vs non-concept examples</li>
+            <li>Aim to find 5-10 features most strongly associated with your concept</li>
+          </ul>
+        </li>
+        <li><strong>Interpret features:</strong>
+          <ul>
+            <li>Examine top activating examples for each feature</li>
+            <li>Use automated interpretation tools if available</li>
+            <li>Are features monosemantic (one clear meaning) or polysemantic?</li>
+            <li>Do they correspond to meaningful sub-aspects of your concept?</li>
+          </ul>
+        </li>
+        <li><strong>Analyze feature composition:</strong>
+          <ul>
+            <li>Do multiple features activate together for your concept?</li>
+            <li>Can you identify sub-types of your concept based on feature combinations?</li>
+            <li>Are there "core" features vs "peripheral" features?</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>Deliverables:</h4>
+      <ul>
+        <li><strong>Feature inventory:</strong>
+          <ul>
+            <li>List of 5-10 concept-relevant SAE features</li>
+            <li>Interpretation of what each feature represents</li>
+            <li>Top activating examples for each feature</li>
+            <li>Activation statistics (how often each fires on your dataset)</li>
+          </ul>
+        </li>
+        <li><strong>Feature composition analysis:</strong>
+          <ul>
+            <li>Co-activation matrix showing which features fire together</li>
+            <li>Identification of feature combinations that define sub-types</li>
+            <li>Comparison: are these features similar to or different from steering/probe directions?</li>
+          </ul>
+        </li>
+        <li><strong>Quality assessment:</strong>
+          <ul>
+            <li>Are features monosemantic or polysemantic?</li>
+            <li>Do they capture meaningful distinctions about your concept?</li>
+            <li>Are there aspects of your concept NOT captured by any features?</li>
+          </ul>
+        </li>
+        <li><strong>Code:</strong> Notebook with SAE analysis and feature discovery</li>
+      </ul>
+
+      <p><em>
+        SAEs can reveal compositional structure—your concept might be built from multiple interpretable sub-features
+        that combine in systematic ways.
+      </em></p>
+    </div>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">← Back to Course Home</a></p>
+  </footer>
+
+</body>
+
+</html>
