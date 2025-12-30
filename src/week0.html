@@ -128,8 +128,9 @@
   <h1>Week 0: Introduction & Course Overview</h1>
 
   <div class="info-box">
-    <p><strong>Start here:</strong> <a href="week0_welcome.html">Chapter 1: At the Edge of Understanding</a></p>
+    <p><strong>Start here:</strong> <a href="week0_welcome.html">Prologue: At the Edge of Understanding</a></p>
     <p>An essay on why understanding AI matters and what neural mechanics can teach us about the future of human knowledge.</p>
+    <p><strong>Also see:</strong> <a href="week0_notes.html">Lecture Notes</a> | <a href="week0_research.html">Finding a Good Research Question</a></p>
   </div>
 
   <div class="objectives">
@@ -200,66 +201,51 @@
         careful validation are publishable!</em></p>
   </div>
 
-  <h2>2. Neural Networks 101: A Gentle Introduction</h2>
+  <h2>2. The Central Mystery: Are Concepts Different from Words?</h2>
 
   <p>
-    For students without ML backgrounds, here's what you need to know about neural networks.
+    Large language models process text, but do they think in words? This course begins with a provocation: the internal representations that drive model behavior may be fundamentally different from the tokens that flow in and out.
   </p>
 
-  <h3>What is a Neural Network?</h3>
   <p>
-    A neural network is a <strong>function approximator</strong> composed of simple mathematical operations stacked in
-    layers. Think of it as a very flexible curve-fitting machine.
+    Words are surface phenomena. They vary across languages, shift meaning with context, and often fail to capture the abstractions that underlie coherent reasoning. <strong>Concepts</strong>, by contrast, are the invariants&mdash;the stable structures that persist across linguistic transformations. This course asks: can we find these invariants inside neural networks?
   </p>
 
-  <p><strong>Basic building blocks:</strong></p>
+  <h3>The Gap Between Knowledge and Expression</h3>
+  <p>
+    What an AI knows is not always what it says. This gap between internal representation and external behavior has become starkly visible in recent work.
+  </p>
+
+  <p>
+    <strong>Rager et al. (2025)</strong> study DeepSeek models, revealing a striking case of censorship mechanics. The models demonstrably possess knowledge about sensitive topics&mdash;their internal representations encode the relevant concepts&mdash;yet they refuse to express this knowledge in their outputs. The information exists inside the model; the suppression is a separate mechanism layered on top.
+  </p>
+
+  <p>
+    This dissociation between knowing and saying points to a general phenomenon: models may have internal states that diverge systematically from their outputs. If we want to understand what models actually believe, know, or intend, we cannot rely solely on their words. <strong>We must look inside.</strong>
+  </p>
+
+  <h3>Concepts as Invariants</h3>
+  <p>
+    The emerging picture suggests that concepts are invariants of the system&mdash;internal structures whose functional roles remain unchanged under many transformations. Just as a physical law remains valid regardless of the coordinate system used to express it, a neural concept may persist across languages, phrasings, and contexts.
+  </p>
+
+  <p>Examples of concepts that appear to have this invariant character:</p>
   <ul>
-    <li><strong>Neurons:</strong> Simple units that compute weighted sums: \( y = \text{activation}(w_1 x_1 + w_2 x_2 +
-      \ldots + b) \)</li>
-    <li><strong>Layers:</strong> Collections of neurons processing information in parallel</li>
-    <li><strong>Weights:</strong> Learnable parameters (typically millions to billions) adjusted during training</li>
-    <li><strong>Activations:</strong> Intermediate values as information flows through the network</li>
-  </ul>
-
-  <h3>How Do They Learn?</h3>
-  <p>
-    Training involves:
-  </p>
-  <ol>
-    <li><strong>Forward pass:</strong> Input → compute predictions</li>
-    <li><strong>Loss calculation:</strong> How wrong is the prediction?</li>
-    <li><strong>Backward pass (backpropagation):</strong> Compute gradients showing how to adjust weights</li>
-    <li><strong>Update:</strong> Nudge weights to reduce loss</li>
-    <li><strong>Repeat:</strong> Millions of times on billions of examples</li>
-  </ol>
-
-  <h3>What are Transformers?</h3>
-  <p>
-    The architecture behind modern LLMs (GPT, Claude, etc.). Key innovation: <strong>attention mechanism</strong>
-    allows any word to look at any other word in context.
-  </p>
-
-  <div class="example-box">
-    <p><strong>Example:</strong> In "The cat sat on the mat because <em>it</em> was soft", attention helps the model
-      connect "it" → "mat" (not "cat").</p>
-  </div>
-
-  <p><strong>Key components:</strong></p>
-  <ul>
-    <li><strong>Attention heads:</strong> ~144 per layer in GPT-2, each focusing on different patterns</li>
-    <li><strong>MLP layers:</strong> Process information at each position</li>
-    <li><strong>Residual stream:</strong> Information highway carrying representations through the network</li>
+    <li><strong>Truthfulness concepts:</strong> Directions in activation space corresponding to whether a statement is true or false, independent of topic or phrasing</li>
+    <li><strong>Task concepts:</strong> The abstract notion of "translate" or "summarize" as distinct from any particular instance</li>
+    <li><strong>User concepts:</strong> Representations of who the model is talking to, tracking properties across a conversation</li>
+    <li><strong>Domain concepts:</strong> Abstract structures from law, medicine, physics, music&mdash;the focus of this course</li>
   </ul>
 
   <p>
-    <em>Don't worry if this feels abstract—we'll build intuition through concrete examples!</em>
+    These are not isolated neurons but distributed patterns of activation. They are not explicitly labeled in the training data but emerge from the structure of the task. And they are not words&mdash;they are what the words point to.
   </p>
 
-  <h2>3. The Historical Surprise: In-Context Learning</h2>
+  <h2>3. The Emergence of Metareasoning</h2>
 
-  <h3>What is In-Context Learning (ICL)?</h3>
+  <h3>In-Context Learning: A Form of Reasoning About Reasoning</h3>
   <p>
-    In 2020, GPT-3 shocked the AI community by demonstrating <strong>in-context learning</strong>: the ability to learn
+    In 2020, GPT-3 demonstrated <strong>in-context learning</strong> (ICL): the ability to learn
     new tasks from a few examples in the prompt, <em>without any gradient updates</em>.
   </p>
 
@@ -267,263 +253,193 @@
     <p><strong>Example: Translation without training</strong></p>
     <p>
       <strong>Prompt:</strong><br>
-      English: Hello → French: Bonjour<br>
-      English: Goodbye → French: Au revoir<br>
-      English: Thank you → French: <em>[model generates: Merci]</em>
+      English: Hello &rarr; French: Bonjour<br>
+      English: Goodbye &rarr; French: Au revoir<br>
+      English: Thank you &rarr; French: <em>[model generates: Merci]</em>
     </p>
   </div>
 
-  <h3>Why This Was Shocking</h3>
   <p>
-    Traditional ML: Train a model specifically for each task (translation, Q&A, summarization, etc.).
+    This is a form of <strong>metareasoning</strong>&mdash;the model is not just processing text but reasoning about how to reason. Where does this capability come from? It is not explicitly programmed. It emerges from training on next-token prediction, yet manifests as something that looks remarkably like flexible cognition.
   </p>
+
+  <h3>Induction Heads: A Circuit That Implements ICL</h3>
   <p>
-    ICL: <strong>Same model, zero training, learns from prompt alone.</strong>
+    Among the most thoroughly analyzed circuits in transformers are <strong>induction heads</strong>: attention patterns that implement a simple but powerful operation of matching previous tokens and copying what came next. When you see "Harry Potter" in context and later encounter "Harry," an induction head helps the model predict "Potter."
+  </p>
+
+  <p>
+    This mechanism underlies much of in-context learning. Research has characterized induction heads in detail, revealing that they operate across multiple pathways and&mdash;crucially&mdash;that the relevant internal representations are often <strong>language-independent</strong>.
   </p>
 
   <div class="info-box">
-    <p><strong>Key Questions (still being researched!):</strong></p>
-    <ul>
-      <li>What algorithm do transformers implement during ICL? (Gradient descent? Bayesian inference?)</li>
-      <li>Where in the network does task recognition happen?</li>
-      <li>Which attention heads and layers are crucial?</li>
-      <li>How does ICL relate to pre-training?</li>
-    </ul>
+    <p><strong>A Key Finding:</strong> A concept that emerges in English contexts may be the <em>same internal structure</em> that handles the analogous German or Chinese context. The representations remain stable under transformations that change everything about the tokens while preserving the underlying meaning.</p>
   </div>
 
-  <h3>Why This Matters for Interpretability</h3>
   <p>
-    If we don't understand <em>how</em> models perform basic tasks like ICL, how can we trust them for critical
-    applications? Interpretability helps us:
-  </p>
-  <ul>
-    <li>Understand failure modes</li>
-    <li>Detect deception or unintended behavior</li>
-    <li>Build safer, more reliable AI systems</li>
-    <li>Bridge the gap between AI capabilities and human understanding</li>
-  </ul>
-
-  <h2>4. Early Interpretability Success Stories</h2>
-
-  <p>
-    Before LLMs, interpretability researchers discovered fascinating internal structure in other neural networks.
+    This reinforces the central thesis: concepts inside LLMs are not words. They are abstract structures&mdash;stable under linguistic transformations&mdash;that we can study, characterize, and manipulate.
   </p>
 
-  <h3>Case Study: The "Lamp-Controlling Neuron" in GANs</h3>
-
+  <h3>Why This Matters</h3>
   <p>
-    <strong>Background:</strong> GANs (Generative Adversarial Networks) can generate realistic images of bedrooms,
-    faces, etc. But what are the neurons doing?
+    Understanding how emergent capabilities like ICL are implemented&mdash;not just that they exist, but how they work mechanistically&mdash;is one of the core challenges that motivates interpretability research. If we can identify the internal representations that causally mediate specific behaviors, we gain both scientific understanding and practical control.
   </p>
 
+  <h2>4. Causal Mediation: Finding the Neurons That Matter</h2>
+
   <p>
-    <strong>Discovery (Bau et al., 2019):</strong> Researchers found individual neurons in a scene-generation GAN that
-    controlled specific objects:
+    How do we identify which internal components are responsible for specific behaviors? The methodology is called <strong>causal mediation analysis</strong>: intervening on internal components to establish their causal role in the model's outputs.
   </p>
 
-  <ul>
-    <li><strong>Neuron 281:</strong> When activated, adds lamps to generated bedroom images</li>
-    <li><strong>Neuron 398:</strong> Controls presence of doors</li>
-    <li><strong>Neuron 750:</strong> Adds trees to outdoor scenes</li>
-  </ul>
+  <h3>Early Success: The Lamp-Controlling Neuron</h3>
+  <p>
+    Early work on GANs (Generative Adversarial Networks) provides an instructive template. Researchers found individual neurons that controlled specific scene properties: a single neuron might control whether lights are on or off.
+  </p>
 
   <div class="example-box">
-    <p><strong>Experiment:</strong></p>
+    <p><strong>Experiment (Bau et al., 2019):</strong></p>
     <ol>
       <li>Generate a bedroom image (no lamps)</li>
       <li>Manually increase activation of "lamp neuron"</li>
       <li>Result: Lamps appear in the image!</li>
       <li>Decrease activation: Lamps disappear</li>
     </ol>
-    <p><em>This demonstrated neurons can encode human-interpretable concepts.</em></p>
+    <p><em>This is causal mediation: intervening on internal components establishes their causal role in the outputs.</em></p>
   </div>
 
-  <h3>Other Early Discoveries</h3>
-  <ul>
-    <li><strong>Vision networks:</strong> Early layers detect edges, middle layers detect textures, late layers detect
-      objects (Zeiler & Fergus, 2014)</li>
-    <li><strong>Word embeddings:</strong> Vector arithmetic captures semantic relationships (king - man + woman = queen)
-    </li>
-    <li><strong>Adversarial examples:</strong> Tiny input perturbations cause catastrophic failures, revealing models
-      don't "see" like humans</li>
-  </ul>
-
-  <h3>The Challenge with LLMs</h3>
+  <h3>Key Research Threads in LLMs</h3>
   <p>
-    LLMs are <strong>far more complex</strong>:
-  </p>
-  <ul>
-    <li>175 billion parameters (GPT-3) vs ~100 million (early vision models)</li>
-    <li>Trained on diverse text data, not single domains</li>
-    <li>Perform thousands of tasks implicitly</li>
-    <li>Concepts are often distributed across many components</li>
-  </ul>
-
-  <p>
-    <strong>This course teaches methods to tackle this complexity.</strong>
-  </p>
-
-  <h2>5. Function Vectors: A Motivating Case Study</h2>
-
-  <p>
-    To show what's possible with modern interpretability, let's look at <strong>function vectors</strong>—a recent
-    breakthrough you'll study in detail in Week 4.
-  </p>
-
-  <h3>The Core Idea</h3>
-  <p>
-    <strong>Hypothesis:</strong> Abstract concepts might be represented as <em>directions in activation space</em>.
+    The methodology generalizes from GANs to language models. Three lines of work illustrate the progress that has been made in localizing and characterizing neural concepts:
   </p>
 
   <p>
-    <strong>Method (simplified):</strong>
+    <strong>Locating Factual Knowledge (Meng et al., 2022):</strong> The ROME paper demonstrated that factual associations in GPT-style models are localized in specific MLP layers. By applying <em>causal tracing</em>&mdash;corrupting inputs and restoring activations at targeted locations&mdash;researchers identified where facts like "The Eiffel Tower is in Paris" are stored. This established that factual knowledge has a discernible address inside the network.
   </p>
-  <ol>
-    <li>Find prompts where concept is present vs absent</li>
-    <li>Compute difference in model activations</li>
-    <li>This difference vector represents the concept</li>
-    <li>Add it to new inputs → inject the concept</li>
-  </ol>
 
-  <h3>Example: Country Capitals</h3>
+  <p>
+    <strong>Locating Functions (Todd et al., 2024):</strong> This work extended localization from facts to functions. When a model performs in-context learning of an abstract task&mdash;translating to French, answering with antonyms, continuing a pattern&mdash;where is that function encoded? <em>Function vectors</em> show that task-level abstractions are localizable and, remarkably, transferable: a vector extracted from one context can induce the same function in another.
+  </p>
 
-  <div class="example-box">
-    <p><strong>Setup (Hernandez et al., 2023):</strong></p>
-    <p>Prompt pairs:</p>
-    <ul>
-      <li>"The capital of France is" → "Paris" (capital context)</li>
-      <li>"France is known for" → "wine" (non-capital context)</li>
-    </ul>
-    <p>Compute: <strong>Function Vector</strong> = Activations(capital) - Activations(non-capital)</p>
-    <p><strong>Result:</strong> Adding this vector to "The capital of Italy is" improves the model's ability to answer
-      correctly!</p>
+  <p>
+    <strong>Locating Mental State Representations (Prakash et al., 2025):</strong> This work examined how models represent and track the mental states of agents described in text&mdash;theory of mind. It shows that interpretability methods can reach beyond simple factual recall into the representation of genuinely abstract, cognitively rich concepts.
+  </p>
+
+  <div class="info-box">
+    <p><strong>The Pattern:</strong> From facts to functions to mental states&mdash;each study finds that abstract concepts have neural correlates that can be identified, validated, and manipulated. The methods you will learn in this course are the tools for this kind of discovery.</p>
   </div>
 
-  <h3>More Surprising Examples</h3>
-
-  <ul>
-    <li><strong>Sentiment:</strong> Extract "positive sentiment" vector, add to neutral text → model generates
-      happier completions</li>
-    <li><strong>Truthfulness:</strong> Steering models to be more/less truthful (Tigges et al., 2023)</li>
-    <li><strong>Linguistic properties:</strong> Tense, number agreement, formality</li>
-    <li><strong>Abstract concepts:</strong> Even concepts like "weddings" or "urban environments"</li>
-  </ul>
-
-  <h3>Why This Matters for Your Project</h3>
+  <h2>5. Toward an Atlas of Neural Concepts</h2>
 
   <p>
-    Function vectors show that <strong>abstract concepts have neural correlates</strong>. Your project will:
+    If concepts inside LLMs are real, discoverable, and causally important, then we should map them systematically. The vision motivating this course is the creation of an <strong>atlas of neural concepts</strong>: a comprehensive characterization of the internal structures that drive model behavior across domains.
+  </p>
+
+  <h3>Why Build an Atlas?</h3>
+  <p>
+    Such an atlas would serve multiple purposes:
   </p>
   <ul>
-    <li>Identify where YOUR concept (from your domain) is represented</li>
-    <li>Validate that it's truly causal, not just correlational</li>
-    <li>Characterize how it's computed across the network</li>
+    <li><strong>Scientific understanding:</strong> What are the basic building blocks of machine cognition?</li>
+    <li><strong>Safety and alignment:</strong> Which concepts relate to honesty, deception, harm, and helpfulness?</li>
+    <li><strong>Knowledge extraction:</strong> What has the model learned that humans do not yet know?</li>
+    <li><strong>Control and steering:</strong> How can we intervene on concepts to shape behavior?</li>
   </ul>
 
   <p>
-    <em>Methods come in Weeks 2-8. For now, appreciate what's possible!</em>
+    Building this atlas requires methods. The works surveyed above&mdash;and the techniques you will learn throughout this course&mdash;constitute the toolkit for this cartographic project.
   </p>
 
-  <h2>6. What Makes a Good Interpretability Project?</h2>
+  <h3>What Should the Atlas Contain?</h3>
+  <p>
+    This is an open question. Possibilities include:
+  </p>
+  <ul>
+    <li><strong>Individual neurons:</strong> The simplest units, but concepts are rarely confined to single neurons</li>
+    <li><strong>Directions in activation space:</strong> Linear combinations of neurons that represent concepts</li>
+    <li><strong>Circuits:</strong> Collections of components that work together to implement functions</li>
+    <li><strong>Functional roles:</strong> Abstract descriptions of what computations are performed where</li>
+  </ul>
+
+  <p>
+    The right level of description likely depends on the question being asked. Your projects will contribute to answering this.
+  </p>
 
   <div class="discussion-box">
-    <h3>Interactive Discussion</h3>
-    <p><strong>Class Activity:</strong> We'll discuss these questions as a group. Think about your domain expertise!
-    </p>
+    <h3>Discussion Questions</h3>
+    <ol>
+      <li><strong>What do interpretability methods have in common?</strong> Causal tracing, function vectors, circuit analysis&mdash;each uses different techniques. What makes something a "mechanistic interpretability" approach?</li>
+      <li><strong>How do we know when we have found a concept?</strong> What criteria distinguish a genuine neural concept from a spurious correlation or an artifact of our analysis methods?</li>
+      <li><strong>What concepts matter most?</strong> Given limited research resources, which concepts should we prioritize? What makes a concept important from a scientific perspective? From a safety perspective?</li>
+      <li><strong>Can models describe their own concepts?</strong> If concepts are not words, can language models ever articulate what they internally represent? Or is there a fundamental gap between neural representation and linguistic expression?</li>
+    </ol>
   </div>
 
-  <h3>Characteristics of Strong Projects</h3>
+  <h2>6. What Makes a Good Research Question?</h2>
+
+  <p>
+    Before you invest months of effort into a research project, you should ask: is this the right question? The FINER framework&mdash;adapted from clinical research methodology&mdash;offers useful criteria: a good research question should be <strong>Feasible, Interesting, Novel, Ethical, and Relevant</strong>.
+  </p>
+
+  <p>For a detailed discussion, see <a href="week0_research.html">Finding a Good Research Question</a>.</p>
+
+  <h3>The FINER Framework for Interpretability</h3>
 
   <table>
     <tr>
-      <th>Good ✓</th>
-      <th>Challenging ✗</th>
+      <th>Criterion</th>
+      <th>Key Questions</th>
     </tr>
     <tr>
-      <td><strong>Specific concept</strong><br>"How do models represent musical keys?"</td>
-      <td><strong>Too broad</strong><br>"How do models understand music?"</td>
+      <td><strong>Feasible</strong></td>
+      <td>Can you find a model where the phenomenon appears and where you can see inside? Are there signs of life in the internal representations?</td>
     </tr>
     <tr>
-      <td><strong>Testable predictions</strong><br>"Intervening on pitch neurons should change key classification"</td>
-      <td><strong>Vague goals</strong><br>"Find music-related neurons"</td>
+      <td><strong>Interesting</strong></td>
+      <td>Does this question excite you? Would your colleagues (in ML and in your domain) consider it important?</td>
     </tr>
     <tr>
-      <td><strong>Domain expertise advantage</strong><br>Biologist studying protein folding concepts</td>
-      <td><strong>Generic CS concepts</strong><br>Another project on sentiment analysis</td>
+      <td><strong>Novel</strong></td>
+      <td>Has this been done before? Domain-specific concepts are vastly understudied&mdash;this is your opportunity.</td>
     </tr>
     <tr>
-      <td><strong>Measurable</strong><br>"Subject-verb agreement accuracy"</td>
-      <td><strong>Subjective</strong><br>"Model creativity"</td>
+      <td><strong>Ethical</strong></td>
+      <td>Would this work primarily enable harm? Interpretability tools can be misused.</td>
     </tr>
     <tr>
-      <td><strong>Tractable scope</strong><br>One concept, multiple validation methods</td>
-      <td><strong>Too ambitious</strong><br>"Complete model of reasoning"</td>
+      <td><strong>Relevant</strong></td>
+      <td>If you answer this question, what changes for the field? For the domains where models are deployed?</td>
     </tr>
   </table>
 
   <h3>The Interdisciplinary Advantage</h3>
 
   <p>
-    <strong>Why this course emphasizes non-CS concepts:</strong>
+    LLMs are being deployed in medicine, law, education, scientific research, policy analysis. The highest-stakes applications are almost entirely outside computer science. Yet interpretability research remains focused on questions that matter primarily to ML researchers.
   </p>
-  <ul>
-    <li>LLMs are trained on text from ALL domains (law, medicine, physics, music...)</li>
-    <li>Most interpretability research focuses on CS/NLP tasks (sentiment, syntax, factual knowledge)</li>
-    <li><strong>Gap:</strong> Domain-specific concepts are understudied but potentially revealing</li>
-    <li><strong>Your expertise:</strong> You know what concepts are fundamental in your field</li>
-    <li><strong>Our expertise:</strong> We know how to localize and validate them in LLMs</li>
-  </ul>
 
-  <h3>Example Project Ideas (From Various Domains)</h3>
+  <p>
+    This is the gap. This course is forming interdisciplinary teams precisely to address it. The interpretability community has strong intuitions about which questions matter for AI safety and for understanding deep learning. But we have weak intuitions about which questions matter for medicine, for law, for scientific discovery. <strong>Your non-CS collaborators have those intuitions.</strong>
+  </p>
 
-  <div class="example-box">
-    <p><strong>Biology:</strong></p>
-    <ul>
-      <li>Do models represent evolutionary relationships (phylogenetic trees)?</li>
-      <li>How are protein structures encoded?</li>
-      <li>Can we locate neurons tracking ecological relationships (predator/prey)?</li>
-    </ul>
-
-    <p><strong>Linguistics:</strong></p>
-    <ul>
-      <li>Politeness strategies across languages</li>
-      <li>Evidentiality (information source marking)</li>
-      <li>Topic vs focus in discourse</li>
-    </ul>
-
-    <p><strong>Psychology:</strong></p>
-    <ul>
-      <li>Theory of mind representations (beliefs, intentions)</li>
-      <li>Temporal reasoning and event structure</li>
-      <li>Causal attribution</li>
-    </ul>
-
-    <p><strong>Physics/Chemistry:</strong></p>
-    <ul>
-      <li>Conservation laws (energy, momentum)</li>
-      <li>Reaction mechanisms and transition states</li>
-      <li>Spatial reasoning in 3D molecular structures</li>
-    </ul>
-
-    <p><strong>Law:</strong></p>
-    <ul>
-      <li>Legal precedent and case similarity</li>
-      <li>Burden of proof concepts</li>
-      <li>Jurisdiction and legal standing</li>
-    </ul>
-
-    <p><strong>Music:</strong></p>
-    <ul>
-      <li>Harmonic relationships (tonic, dominant)</li>
-      <li>Rhythmic patterns and meter</li>
-      <li>Musical form (verse, chorus, bridge)</li>
-    </ul>
+  <div class="info-box">
+    <p>When the legal scholar on your team gets excited about a research direction, that signal contains information you could not generate yourself. When the biologist identifies a concept that would matter for scientific discovery, that is the kind of question no one else is asking.</p>
   </div>
 
-  <h3>Discussion Questions</h3>
+  <h3>Example Project Ideas</h3>
+
+  <div class="example-box">
+    <p><strong>Biology:</strong> Evolutionary relationships, protein structure encoding, ecological relationships</p>
+    <p><strong>Linguistics:</strong> Politeness strategies, evidentiality, discourse structure</p>
+    <p><strong>Psychology:</strong> Theory of mind, temporal reasoning, causal attribution</p>
+    <p><strong>Physics/Chemistry:</strong> Conservation laws, reaction mechanisms, spatial reasoning</p>
+    <p><strong>Law:</strong> Legal precedent, burden of proof, jurisdiction</p>
+    <p><strong>Music:</strong> Harmonic relationships, rhythmic patterns, musical form</p>
+  </div>
+
+  <h3>Group Discussion</h3>
 
   <div class="discussion-box">
-    <p><strong>In groups, discuss:</strong></p>
+    <p><strong>In your teams, discuss:</strong></p>
     <ol>
       <li>What is a fundamental concept in your domain that non-experts often misunderstand?</li>
       <li>How would you test if an LLM understands this concept?</li>
@@ -625,32 +541,44 @@
 
   <h3>Core Papers Mentioned</h3>
   <ul>
-    <li><strong>In-Context Learning:</strong>
+    <li><strong>Locating and Editing Knowledge:</strong>
       <ul>
-        <li>Brown et al. (2020). "Language Models are Few-Shot Learners" (GPT-3 paper). <a
-            href="https://arxiv.org/abs/2005.14165" target="_blank">arXiv:2005.14165</a></li>
-        <li>Garg et al. (2022). "What Can Transformers Learn In-Context? A Case Study of Simple Function Classes." <a href="https://arxiv.org/abs/2208.01066"
-            target="_blank">arXiv:2208.01066</a></li>
+        <li>Meng et al. (2022). "Locating and Editing Factual Associations in GPT" (ROME). <a
+            href="papers/meng-2022-rome-2202.05262.pdf">PDF</a> | <a href="https://arxiv.org/abs/2202.05262" target="_blank">arXiv</a></li>
       </ul>
     </li>
 
-    <li><strong>GAN Interpretability:</strong>
+    <li><strong>Function Vectors and Steering:</strong>
+      <ul>
+        <li>Todd et al. (2024). "Function Vectors in Large Language Models". <a
+            href="papers/todd-2023-function-vectors-2310.15213.pdf">PDF</a> | <a href="https://arxiv.org/abs/2310.15213" target="_blank">arXiv</a></li>
+        <li>Hernandez et al. (2023). "Linearity of Relation Decoding in Transformer LMs". <a
+            href="papers/hernandez-2023-linear-relations-2308.09124.pdf">PDF</a> | <a href="https://arxiv.org/abs/2308.09124" target="_blank">arXiv</a></li>
+      </ul>
+    </li>
+
+    <li><strong>Entity Tracking and Theory of Mind:</strong>
+      <ul>
+        <li>Prakash et al. (2025). "Fine-tuning Enhances Existing Mechanisms: A Case Study on Entity Tracking". <a
+            href="papers/prakash-2024-entity-tracking-2402.14811.pdf">PDF</a> | <a href="https://arxiv.org/abs/2402.14811" target="_blank">arXiv</a></li>
+      </ul>
+    </li>
+
+    <li><strong>In-Context Learning and Induction Heads:</strong>
+      <ul>
+        <li>Olsson et al. (2022). "In-context Learning and Induction Heads". <a
+            href="papers/olsson-2022-induction-heads-2209.11895.pdf">PDF</a> | <a href="https://arxiv.org/abs/2209.11895" target="_blank">arXiv</a></li>
+        <li>Brown et al. (2020). "Language Models are Few-Shot Learners" (GPT-3). <a
+            href="papers/brown-2020-gpt3-2005.14165.pdf">PDF</a> | <a href="https://arxiv.org/abs/2005.14165" target="_blank">arXiv</a></li>
+      </ul>
+    </li>
+
+    <li><strong>Early Interpretability:</strong>
       <ul>
         <li>Bau et al. (2019). "GAN Dissection: Visualizing and Understanding Generative Adversarial Networks". <a
-            href="https://arxiv.org/abs/1811.10597" target="_blank">arXiv:1811.10597</a></li>
+            href="papers/bau-2018-gan-dissection-1811.10597.pdf">PDF</a> | <a href="https://arxiv.org/abs/1811.10597" target="_blank">arXiv</a></li>
         <li>Interactive demo: <a href="https://gandissect.csail.mit.edu/"
             target="_blank">gandissect.csail.mit.edu</a></li>
-      </ul>
-    </li>
-
-    <li><strong>Function Vectors:</strong>
-      <ul>
-        <li>Hernandez et al. (2023). "Linearity of Relation Decoding in Transformer LMs". <a
-            href="https://arxiv.org/abs/2308.09124" target="_blank">arXiv:2308.09124</a></li>
-        <li>Todd et al. (2023). "Function Vectors in Large Language Models". <a
-            href="https://arxiv.org/abs/2310.15213" target="_blank">arXiv:2310.15213</a></li>
-        <li>Tigges et al. (2023). "Linear Representations of Sentiment in LLMs". <a
-            href="https://arxiv.org/abs/2310.15154" target="_blank">arXiv:2310.15154</a></li>
       </ul>
     </li>
   </ul>
