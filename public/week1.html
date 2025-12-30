@@ -282,31 +282,27 @@
       <strong>Possible implications:</strong>
     </p>
     <ul>
-      <li>Interpretability tools developed on English may apply to other languages</li>
-      <li>Models may not process all languages equally</li>
-      <li>Internal representations are not simple copies of input/output</li>
+      <li>Perhaps the model has an internal "concept language" that decodes as English regardless of input and output languages</li>
+      <li>This suggests models might have a <em>language-independent</em> way of representing and processing concepts</li>
+      <li>It strongly suggests that concepts are not just words&mdash;the internal representations are something different from the surface tokens</li>
     </ul>
 
     <p>
-      <strong>But what does this actually show?</strong> The observation that intermediate layers decode to English is striking, but its interpretation is far from settled. Consider: the unembedding matrix was trained predominantly on English data&mdash;perhaps it simply projects <em>any</em> high-dimensional vector more readily onto English tokens. Or perhaps the pattern reflects tokenization artifacts rather than genuine linguistic processing. And even if the model does "pivot through English," we have no causal evidence that these intermediate English representations are actually <em>used</em> in the computation, rather than being epiphenomenal byproducts. What experiments would you design to distinguish these possibilities?
+      <strong>But what does this actually show?</strong> The observation that intermediate layers decode to English is striking, but its interpretation is far from settled. Consider: the unembedding matrix was trained predominantly on English data&mdash;perhaps it simply projects <em>any</em> high-dimensional vector more readily onto English tokens. Or perhaps the pattern reflects tokenization artifacts rather than genuine linguistic processing. And even if the model does "pivot through English," we have no causal evidence that these intermediate English representations are actually <em>used</em> in the computation, rather than being epiphenomenal byproducts. We'll return to further experiments along these lines later in the course, but it's a reasonable debate: what does this really prove?
     </p>
 
-    <h3>5. Tuned Lens: Beyond Raw Projection</h3>
+    <h3>5. Variations on Logit Lens</h3>
     <p>
-      The basic logit lens assumes we can directly project intermediate activations with the unembedding matrix.
-      But representations at early layers may not be in the same "format" as final-layer representations.
+      The basic logit lens assumes we can directly project intermediate activations through the unembedding matrix.
+      But representations at early layers may not be in the same "format" as final-layer representations, and researchers have developed many variations:
     </p>
-
+    <ul>
+      <li><strong>Tuned Lens</strong> (Belrose et al., 2023): Learns a small affine transformation at each layer to account for layer-specific representation formats</li>
+      <li><strong>Future Lens</strong> (Pal et al., 2023): Predicts not just the next token but future tokens from intermediate states</li>
+      <li><strong>Concept Lens</strong> (Feucht et al., 2024): Projects onto concept-specific directions rather than vocabulary tokens</li>
+    </ul>
     <p>
-      The <strong>tuned lens</strong> learns a small affine transformation at each layer:
-    </p>
-
-    <div class="diagram">
-      tuned_logits = W<sub>U</sub> &middot; (A<sub>L</sub> x<sub>L</sub> + b<sub>L</sub>)
-    </div>
-
-    <p>
-      This accounts for layer-specific representation formats, often yielding more interpretable intermediate predictions.
+      Each variation asks a slightly different question about what information is present in intermediate representations. The proliferation of "lenses" reflects both the fertility of the basic idea and the difficulty of interpreting what these projections really mean.
     </p>
 
     <h3>6. From Observation to Understanding: What Experiments Are Needed?</h3>
@@ -402,11 +398,47 @@
       <li>Compare with a non-pun sentence using the same words&mdash;does the pattern differ?</li>
     </ol>
 
+    <h4>In-Context Learning of Puns</h4>
+    <p>
+      Here's a more sophisticated experiment: can we use <em>in-context learning</em> to teach the model the "pun pattern"?
+    </p>
+    <p>
+      Try comparing the prediction for an incomplete pun <strong>alone</strong> versus <strong>prefixed with other puns</strong>:
+    </p>
+    <div class="diagram" style="text-align: left;">
+      <strong>Without context:</strong><br>
+      "I used to be a banker, but I lost ___"<br>
+      <em>(Model might predict: "my job", "everything", "money")</em><br><br>
+      <strong>With pun context:</strong><br>
+      "I used to be a tailor, but I wasn't suited for it.<br>
+      I used to be a train conductor, but I switched tracks.<br>
+      I used to be a banker, but I lost ___"<br>
+      <em>(Model might now predict: "interest")</em>
+    </div>
+    <p>
+      Use logit lens to examine: at which layers does "interest" emerge? Does the pun context change what appears in intermediate layers, or only at the final layers? This connects back to the function vectors idea from Week 0&mdash;is there a "pun function" that gets activated by the context?
+    </p>
+
+    <h4>Comparing Model Sizes</h4>
+    <p>
+      Try the same pun experiments on models of different sizes. At what scale does pun understanding emerge? A small model might never predict "interest" even with pun context, while a larger model might get it immediately. Use this to explore: <em>how large does a model need to be to "get" puns?</em> Does the pattern in intermediate layers look different in models that succeed versus those that fail?
+    </p>
+
+    <h4>Using SOTA Models as a Reference</h4>
+    <p>
+      State-of-the-art models like ChatGPT or Claude can help in two ways:
+    </p>
+    <ul>
+      <li><strong>Generate test cases:</strong> Ask for puns with a specific structure, e.g., "Generate 10 puns that follow the pattern 'I used to be a [profession], but [punchline using profession-related word with double meaning].'" This gives you a systematic dataset to explore.</li>
+      <li><strong>Check pun understanding:</strong> Give a SOTA model an incomplete pun and see if it can complete it correctly. This establishes a baseline&mdash;if even the best models struggle with certain puns, that's informative. If they succeed easily, you can then ask: what's different about the internal representations in models that "get it" versus those that don't?</li>
+    </ul>
+
     <h4>Research Questions to Consider:</h4>
     <ul>
       <li>Can you find evidence that the model represents both meanings of the pun word?</li>
       <li>Does the "wrong" meaning appear at early layers before being suppressed?</li>
-      <li>How does the model's behavior differ between good puns and bad puns?</li>
+      <li>How does in-context pun examples change the intermediate representations?</li>
+      <li>At what model size does pun understanding emerge?</li>
       <li>What would it mean to "localize" pun understanding in the model?</li>
     </ul>
 
