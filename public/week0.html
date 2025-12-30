@@ -241,54 +241,10 @@
     These are not isolated neurons but distributed patterns of activation. They are not explicitly labeled in the training data but emerge from the structure of the task. And they are not words&mdash;they are what the words point to.
   </p>
 
-  <h2>3. The Emergence of Metareasoning</h2>
-
-  <h3>In-Context Learning: A Form of Reasoning About Reasoning</h3>
-  <p>
-    In 2020, GPT-3 demonstrated <strong>in-context learning</strong> (ICL): the ability to learn
-    new tasks from a few examples in the prompt, <em>without any gradient updates</em>.
-  </p>
-
-  <div class="example-box">
-    <p><strong>Example: Translation without training</strong></p>
-    <p>
-      <strong>Prompt:</strong><br>
-      English: Hello &rarr; French: Bonjour<br>
-      English: Goodbye &rarr; French: Au revoir<br>
-      English: Thank you &rarr; French: <em>[model generates: Merci]</em>
-    </p>
-  </div>
+  <h2>3. Causal Mediation: Finding the Neurons That Matter</h2>
 
   <p>
-    This is a form of <strong>metareasoning</strong>&mdash;the model is not just processing text but reasoning about how to reason. Where does this capability come from? It is not explicitly programmed. It emerges from training on next-token prediction, yet manifests as something that looks remarkably like flexible cognition.
-  </p>
-
-  <h3>Induction Heads: A Circuit That Implements ICL</h3>
-  <p>
-    Among the most thoroughly analyzed circuits in transformers are <strong>induction heads</strong>: attention patterns that implement a simple but powerful operation of matching previous tokens and copying what came next. When you see "Harry Potter" in context and later encounter "Harry," an induction head helps the model predict "Potter."
-  </p>
-
-  <p>
-    This mechanism underlies much of in-context learning. Research has characterized induction heads in detail, revealing that they operate across multiple pathways and&mdash;crucially&mdash;that the relevant internal representations are often <strong>language-independent</strong>.
-  </p>
-
-  <div class="info-box">
-    <p><strong>A Key Finding:</strong> A concept that emerges in English contexts may be the <em>same internal structure</em> that handles the analogous German or Chinese context. The representations remain stable under transformations that change everything about the tokens while preserving the underlying meaning.</p>
-  </div>
-
-  <p>
-    This reinforces the central thesis: concepts inside LLMs are not words. They are abstract structures&mdash;stable under linguistic transformations&mdash;that we can study, characterize, and manipulate.
-  </p>
-
-  <h3>Why This Matters</h3>
-  <p>
-    Understanding how emergent capabilities like ICL are implemented&mdash;not just that they exist, but how they work mechanistically&mdash;is one of the core challenges that motivates interpretability research. If we can identify the internal representations that causally mediate specific behaviors, we gain both scientific understanding and practical control.
-  </p>
-
-  <h2>4. Causal Mediation: Finding the Neurons That Matter</h2>
-
-  <p>
-    How do we identify which internal components are responsible for specific behaviors? The methodology is called <strong>causal mediation analysis</strong>: intervening on internal components to establish their causal role in the model's outputs.
+    How do we identify which internal components are responsible for specific behaviors? One methodology is <strong>causal mediation analysis</strong>: intervening on internal components to establish their causal role in the model's outputs.
   </p>
 
   <h3>Early Success: The Lamp-Controlling Neuron</h3>
@@ -314,9 +270,58 @@
     <strong>This leads to the central question of this course:</strong> When we train on much more complex data&mdash;text spanning all of human knowledge&mdash;what concepts do neural networks learn?
   </p>
 
+  <h2>4. In-Context Learning and Function Vectors</h2>
+
+  <h3>In-Context Learning: A Form of Metareasoning</h3>
+  <p>
+    In 2020, GPT-3 demonstrated <strong>in-context learning</strong> (ICL): the ability to learn
+    new tasks from a few examples in the prompt, <em>without any gradient updates</em>.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Example: Translation without training</strong></p>
+    <p>
+      <strong>Prompt:</strong><br>
+      English: Hello &rarr; French: Bonjour<br>
+      English: Goodbye &rarr; French: Au revoir<br>
+      English: Thank you &rarr; French: <em>[model generates: Merci]</em>
+    </p>
+  </div>
+
+  <p>
+    This is a form of <strong>metareasoning</strong>&mdash;the model is not just processing text but reasoning about how to reason. Where does this capability come from? It is not explicitly programmed. It emerges from training on next-token prediction, yet manifests as something that looks remarkably like flexible cognition.
+  </p>
+
+  <h3>Function Vectors: Portable Neural Representations of Tasks</h3>
+  <p>
+    Where is in-context learning encoded inside the model? Research by <strong>Todd et al. (2024)</strong> reveals a striking answer: when a model performs ICL, it develops compact vector representations of the task itself&mdash;<em>function vectors</em>&mdash;that can be extracted and transplanted to new contexts.
+  </p>
+
+  <div class="example-box">
+    <p><strong>Experiment (Todd et al., 2024):</strong></p>
+    <ol>
+      <li>Give the model in-context examples demonstrating a function (e.g., antonyms: "arrive:depart, small:big, hot:cold")</li>
+      <li>Extract the activation pattern from attention head outputs&mdash;this is the "function vector" for antonyms</li>
+      <li>Insert this vector into a completely different context: "The word 'fast' means"</li>
+    </ol>
+    <p><strong>Result:</strong> The model outputs "slow"&mdash;the antonym&mdash;even though no antonym examples appeared in this new prompt.</p>
+  </div>
+
+  <p>
+    This is directly analogous to the lamp-controlling neuron, but for abstract functions rather than visual features. Just as the lamp neuron's causal effect transfers across different bedroom images, function vectors transfer across completely different textual contexts. The neural representation learned in one setting causes the same function to execute in another.
+  </p>
+
+  <div class="info-box">
+    <p><strong>A Key Finding:</strong> Function vectors work across languages. An antonym function vector extracted from English examples can induce antonym behavior on French or German inputs. The internal representation of "find the opposite" is not tied to any particular language&mdash;it is an abstract structure that transcends the tokens.</p>
+  </div>
+
+  <p>
+    This reinforces the central thesis: concepts inside LLMs are not words. They are abstract structures&mdash;stable under linguistic transformations&mdash;that we can study, characterize, and manipulate.
+  </p>
+
   <h3>Key Research Threads in LLMs</h3>
   <p>
-    The methodology generalizes from GANs to language models. Three lines of work illustrate the progress that has been made in localizing and characterizing neural concepts:
+    The methodology of causal mediation generalizes from GANs to language models. Three lines of work illustrate the progress that has been made in localizing and characterizing neural concepts:
   </p>
 
   <p>
@@ -518,20 +523,20 @@
     </ol>
 
     <p><strong>Submission:</strong> Upload to Canvas by [DATE]. We'll provide feedback within one week.</p>
-
-    <p><strong>Template:</strong> Download the <a href="project_proposal_template.pdf">project proposal template</a> to
-      help structure your submission.</p>
   </div>
 
   <h2>8. Looking Ahead</h2>
 
-  <p><strong>Week 1:</strong> Benchmarking—how to create evaluation datasets for your concept</p>
-  <p><strong>Week 2:</strong> Steering—manipulating model behavior by adding activation vectors</p>
-  <p><strong>Week 3:</strong> Representation visualization—seeing what models encode</p>
-  <p><strong>Weeks 4-8:</strong> Advanced methods (circuits, probes, SAEs, validation)</p>
+  <p><strong>Week 1:</strong> Foundations—logit lens, intermediate representations, and the vocabulary of mechanistic interpretability</p>
+  <p><strong>Week 2:</strong> Steering—controlling model behavior through activation addition and representation engineering</p>
+  <p><strong>Week 3:</strong> Evaluation Methodology—measuring and evaluating LLM behavior</p>
+  <p><strong>Week 4:</strong> Representation Geometry—PCA visualization, linear directions, and geometric structure</p>
+  <p><strong>Weeks 5-8:</strong> Advanced methods (causal localization, probes, attribution, circuits)</p>
+  <p><strong>Weeks 9-10:</strong> Training dynamics, model editing, and self-description</p>
+  <p><strong>Weeks 11-13:</strong> Paper writing workshops and final presentations</p>
 
   <p>
-    <strong>By the end:</strong> You'll have a complete research pipeline for characterizing YOUR concept in LLMs.
+    <strong>By the end:</strong> You'll have a complete research pipeline for characterizing YOUR concept in LLMs, culminating in a paper suitable for submission to a top venue.
   </p>
 
   <div class="info-box">
