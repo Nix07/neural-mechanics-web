@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Model-Written Evaluations - Neural Mechanics</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: #0055a4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    pre {
+      background-color: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    .note-box {
+      background-color: #e8f4f8;
+      border-left: 4px solid #0055a4;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    .warning-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Model-Written Evaluations for Interpretability Research</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="week3.html">&larr; Back to Week 3</a>
+  </nav>
+
+  <p><em>A tutorial based on Perez et al. (2022), "Discovering Language Model Behaviors with Model-Written Evaluations"</em></p>
+
+  <section id="overview">
+    <h2>Overview</h2>
+    <p>
+      Before we can study how a concept is represented inside a neural network, we need examples that reliably elicit that concept. Creating evaluation datasets by hand is slow. Perez et al. demonstrate that language models can generate evaluation data at scale, and that this approach can uncover behaviors humans might not anticipate.
+    </p>
+    <p>
+      This tutorial explains the core methodology and adapts it for interpretability research, using <strong>pun understanding</strong> as a running example.
+    </p>
+  </section>
+
+  <section id="core-method">
+    <h2>The Core Method</h2>
+    <p>The paper's approach has four stages:</p>
+    <ol>
+      <li><strong>Specify the behavior</strong> you want to evaluate in a clear prompt</li>
+      <li><strong>Generate examples</strong> by prompting a capable LLM with instructions and a few seed examples</li>
+      <li><strong>Filter for quality</strong> using automated checks and human review</li>
+      <li><strong>Run evaluations</strong> on target models and analyze results</li>
+    </ol>
+    <p>
+      The key insight: LLMs can generate diverse, creative test cases faster than humans, while humans remain in the loop for quality control and analysis.
+    </p>
+  </section>
+
+  <section id="evaluation-formats">
+    <h2>Evaluation Formats</h2>
+
+    <h3>Why Token Localization Matters for Interpretability</h3>
+    <p>
+      Many interpretability methods become dramatically easier when the model's critical decision is concentrated at a single, predictable token position. Consider what you can do when you know exactly where the decision happens:
+    </p>
+    <ul>
+      <li><strong>Logit lens:</strong> Decode intermediate layers at the decision token to watch the prediction evolve</li>
+      <li><strong>Activation patching:</strong> Intervene at a known position rather than searching across the sequence</li>
+      <li><strong>Probing:</strong> Extract activations at exactly the decision point, avoiding noise from irrelevant positions</li>
+      <li><strong>Attention analysis:</strong> See what the model attends to when generating the critical token</li>
+      <li><strong>Probability comparison:</strong> Compare logits for candidate completions directly</li>
+    </ul>
+    <p>
+      Two formats naturally provide this localization: <strong>cloze-style prompts</strong> (fill-in-the-blank) and <strong>MCQ</strong> (where the model produces a single letter). Free-form generation is harder to analyze because the "decision" is distributed across multiple tokens.
+    </p>
+
+    <h3>Cloze-Style Evaluation</h3>
+    <p>The model completes a sentence with a single word or short phrase. The blank is the decision point.</p>
+    <p><strong>Strengths:</strong> Decision localized to one token. Enables direct probability comparison over candidate completions. Natural fit for logit lens and activation extraction.</p>
+    <p><strong>Weaknesses:</strong> Requires careful prompt design so the blank is unambiguous. Some concepts do not reduce naturally to single-token decisions.</p>
+    <p><strong>Design principle:</strong> The cloze prompt should be constructed so that (1) the correct answer is a single token or very short phrase, and (2) incorrect answers are also plausible completions. This lets you compare P(correct) vs. P(incorrect) at the decision position.</p>
+
+    <h3>Multiple Choice Questions (MCQ)</h3>
+    <p>The model chooses among labeled options (A, B, C, D). This enables precise measurement and easy automation.</p>
+    <p><strong>Strengths:</strong> Decision localized to a single token (the letter). Unambiguous evaluation. Enables comparison of answer probabilities across options. Easy to automate.</p>
+    <p><strong>Weaknesses:</strong> May not reflect real-world usage. The correct answer might be guessable from surface features. Format itself may activate "test-taking" behaviors distinct from natural understanding.</p>
+    <p><strong>For interpretability:</strong> MCQ is excellent because you can extract activations at the final position and examine the logit distribution over {A, B, C, D}. You can also study what information flows to that position from earlier in the prompt.</p>
+
+    <h3>Zero-Shot vs. In-Context Learning</h3>
+    <p><strong>Zero-shot:</strong> The model receives only a question or prompt, with no examples. Tests baseline capabilities and default behaviors.</p>
+    <p><strong>In-context learning (ICL):</strong> Provide examples in the prompt to demonstrate the task. This activates task-relevant circuits and can elicit capabilities the model has but does not spontaneously display.</p>
+    <p><strong>For interpretability:</strong> ICL is valuable precisely because it changes internal representations. You can compare activations with and without in-context examples to see how demonstrations reshape the model's processing. Use cloze or MCQ format for the test case to maintain token localization.</p>
+  </section>
+
+  <section id="pun-case-study">
+    <h2>Case Study: Evaluating Pun Understanding</h2>
+    <p>
+      Suppose we want to study how language models represent <strong>puns</strong>: wordplay that exploits multiple meanings or similar sounds. Before we can localize "pun circuits" or probe for pun-related features, we need evaluation data that reliably triggers pun processing.
+    </p>
+
+    <h3>Step 1: Specify the Behavior</h3>
+    <p>We want to evaluate whether a model:</p>
+    <ul>
+      <li>Recognizes that a statement is a pun</li>
+      <li>Understands <em>why</em> it is a pun (which words have double meanings)</li>
+      <li>Can distinguish good puns from bad ones</li>
+      <li>Can generate puns (though this is harder to evaluate)</li>
+    </ul>
+
+    <h3>Step 2: Generate Examples</h3>
+    <p>We prompt a capable model to generate evaluation data. Here are templates for each format:</p>
+
+    <h4>Cloze-Style Generation Prompt</h4>
+    <pre>Generate cloze-style questions that test pun understanding. Each question
+should have a blank that can be filled with a single word or short phrase.
+Provide the correct answer and one plausible incorrect answer.
+
+Format:
+Prompt: [sentence with ___ blank]
+Correct: [answer]
+Incorrect: [plausible wrong answer]
+
+Examples:
+
+Prompt: The joke "I used to be a banker but I lost interest" is a pun
+because the word "interest" refers to both financial returns and ___.
+Correct: curiosity
+Incorrect: money
+
+Prompt: "Time flies like an arrow; fruit flies like a banana" is a pun
+because "flies" shifts from being a ___ to being a noun.
+Correct: verb
+Incorrect: metaphor
+
+Generate 20 more cloze-style pun evaluation items with varied formats.</pre>
+
+    <h4>Zero-Shot Cloze Generation Prompt</h4>
+    <pre>Generate pun recognition tasks in cloze format. The model must complete
+the sentence with "Yes" or "No".
+
+Format:
+Prompt: [statement]. This is a pun. Yes or No? Answer:
+Label: [Yes/No]
+
+Examples:
+
+Prompt: "I used to be a banker, but I lost interest." This is a pun.
+Yes or No? Answer:
+Label: Yes
+
+Prompt: "I used to be a banker, but I changed careers." This is a pun.
+Yes or No? Answer:
+Label: No
+
+Generate 30 examples, balanced between puns and non-puns.</pre>
+
+    <h4>MCQ Generation Prompt</h4>
+    <pre>Generate multiple choice questions that test understanding of puns.
+Each question should have one correct answer and three plausible distractors.
+
+Format:
+Question: [question text]
+A) [option]
+B) [option]
+C) [option]
+D) [option]
+Correct: [letter]
+
+Example:
+
+Question: In the pun "I used to be a banker, but I lost interest,"
+which word carries the double meaning?
+A) banker
+B) lost
+C) interest
+D) used
+Correct: C
+
+Generate 15 more MCQ items testing pun recognition and explanation.</pre>
+
+    <h3>Step 3: Filter for Quality</h3>
+    <p>The paper emphasizes that raw LLM output requires filtering. Apply these checks:</p>
+
+    <p><strong>Automated filters:</strong></p>
+    <ul>
+      <li>Remove duplicates and near-duplicates</li>
+      <li>Check that MCQ options are distinct</li>
+      <li>Verify format compliance (correct labels, expected structure)</li>
+      <li>For puns: check that the "pun" examples actually contain wordplay</li>
+    </ul>
+
+    <p><strong>Human review:</strong></p>
+    <ul>
+      <li>Sample 50-100 examples for manual inspection</li>
+      <li>Check that puns are actually funny or at least recognizable as wordplay</li>
+      <li>Verify that explanations correctly identify the double meaning</li>
+      <li>Ensure distractors in MCQs are plausible but clearly wrong</li>
+    </ul>
+
+    <p><strong>Diversity checks:</strong></p>
+    <ul>
+      <li>Are puns drawn from varied domains (professions, animals, food, etc.)?</li>
+      <li>Do they use different mechanisms (homophones, polysemy, syntactic ambiguity)?</li>
+      <li>Is difficulty varied?</li>
+    </ul>
+
+    <h3>Step 4: Run Evaluations</h3>
+    <p>With filtered data, evaluate your target models. For interpretability work, you likely want more than accuracy:</p>
+    <ul>
+      <li><strong>Activation extraction:</strong> Save hidden states when the model processes puns vs. non-puns</li>
+      <li><strong>Attention patterns:</strong> Where does the model attend when processing the ambiguous word?</li>
+      <li><strong>Layer-by-layer analysis:</strong> At which layer does the model "get" the joke?</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls">
+    <h2>Pitfalls and How to Avoid Them</h2>
+
+    <div class="warning-box">
+      <h4 style="margin-top: 0;">1. Generated Examples May Be Low Quality</h4>
+      <p><strong>Problem:</strong> LLMs sometimes generate examples that are ambiguous, incorrect, or too easy.</p>
+      <p><strong>Solution:</strong> Always manually review a sample. For puns, check that the wordplay actually works; LLMs sometimes generate "puns" where the double meaning does not quite land.</p>
+    </div>
+
+    <div class="warning-box">
+      <h4 style="margin-top: 0;">2. Lack of Diversity</h4>
+      <p><strong>Problem:</strong> LLMs tend to repeat patterns. You might get 50 puns about "bank" and "interest."</p>
+      <p><strong>Solution:</strong> Explicitly prompt for diversity: "Generate puns about different topics: food, animals, professions, science, sports..." Use multiple generation runs with different temperatures.</p>
+    </div>
+
+    <div class="warning-box">
+      <h4 style="margin-top: 0;">3. Memorization and Data Contamination</h4>
+      <p><strong>Problem:</strong> The model being evaluated may have seen these exact puns during training.</p>
+      <p><strong>Solution:</strong> Generate novel puns rather than using famous ones. Include a novelty check: can the model explain puns it has likely never seen?</p>
+    </div>
+
+    <div class="warning-box">
+      <h4 style="margin-top: 0;">4. Surface Feature Shortcuts</h4>
+      <p><strong>Problem:</strong> Models might detect puns from surface features (sentence length, punctuation) rather than understanding wordplay.</p>
+      <p><strong>Solution:</strong> Ensure non-pun examples have similar surface features. Include "almost-puns" that have the structure but lack the double meaning.</p>
+    </div>
+  </section>
+
+  <section id="interpretability-advice">
+    <h2>Advice for Interpretability Applications</h2>
+
+    <h3>Prioritize Token-Localized Formats</h3>
+    <p>For most interpretability methods, cloze and MCQ formats are strictly superior to free-form generation:</p>
+    <table>
+      <tr>
+        <th>Method</th>
+        <th>Cloze/MCQ</th>
+        <th>Free-form</th>
+      </tr>
+      <tr>
+        <td>Logit lens</td>
+        <td>Extract at decision token</td>
+        <td>Unclear where to extract</td>
+      </tr>
+      <tr>
+        <td>Activation patching</td>
+        <td>Patch at known position</td>
+        <td>Must search across positions</td>
+      </tr>
+      <tr>
+        <td>Probing</td>
+        <td>Clean single-position signal</td>
+        <td>Aggregation required</td>
+      </tr>
+      <tr>
+        <td>Attention analysis</td>
+        <td>Clear "what influences this token"</td>
+        <td>Diffuse across sequence</td>
+      </tr>
+      <tr>
+        <td>Causal tracing</td>
+        <td>Intervene at decision point</td>
+        <td>Multiple intervention points</td>
+      </tr>
+    </table>
+
+    <h3>Construct Minimal Pairs</h3>
+    <p>A minimal pair differs in exactly one aspect. For cloze-style interpretability work, this is especially powerful:</p>
+    <pre>Pun condition:
+"I used to be a banker but I lost interest."
+This is a pun. Yes or No? Answer: [Yes]
+
+Non-pun condition (minimal change):
+"I used to be a banker but I lost patience."
+This is a pun. Yes or No? Answer: [No]</pre>
+    <p>
+      Both prompts are nearly identical up to the decision token. Differences in activations at the final position can be attributed to the pun/non-pun distinction rather than confounding surface features.
+    </p>
+
+    <h3>Generate Enough Examples for Statistical Power</h3>
+    <p>Interpretability experiments often require hundreds or thousands of examples:</p>
+    <ul>
+      <li>Probing classifiers need training data</li>
+      <li>Activation patching needs many trials to estimate causal effects</li>
+      <li>PCA and other dimensionality reduction need sufficient samples</li>
+    </ul>
+    <p>Model-written evaluation scales well here. Generate 500+ examples, filter to 200+ high-quality ones.</p>
+
+    <h3>Create Difficulty Gradations</h3>
+    <p>Some puns are obvious; others are subtle. For interpretability, it helps to have:</p>
+    <ul>
+      <li><strong>Easy examples:</strong> Clear signal, useful for initial exploration</li>
+      <li><strong>Hard examples:</strong> Tests whether your methods capture genuine understanding</li>
+      <li><strong>Edge cases:</strong> Ambiguous cases that reveal the boundaries of model representations</li>
+    </ul>
+  </section>
+
+  <section id="pipeline">
+    <h2>Example: A Complete Pun Evaluation Pipeline</h2>
+    <p>Here is a concrete workflow for creating a pun evaluation dataset optimized for interpretability:</p>
+    <pre>1. GENERATION PHASE
+   - Generate 100 cloze-style pun recognition items (Yes/No format)
+   - Generate 100 cloze-style explanation items (fill in the double meaning)
+   - Generate 100 minimal pairs (pun + matched non-pun)
+   - Generate 50 MCQ items testing mechanism understanding
+   - Generate 50 MCQ items testing wordplay identification
+
+2. FILTERING PHASE
+   - Remove duplicates (expect ~10-15% reduction)
+   - Verify cloze answers are single tokens where possible
+   - Check minimal pairs are actually minimal (edit distance)
+   - Human review of 100 random samples
+   - Diversity analysis (topic distribution, mechanism types)
+
+3. VALIDATION PHASE
+   - Test on held-out human annotators
+   - Pilot evaluation on 2-3 models of different sizes
+   - Verify token localization
+   - Iterate on generation prompts if needed
+
+4. DEPLOYMENT PHASE
+   - Split into train/validation/test (for probing)
+   - For each example, record:
+     - Full prompt text
+     - Decision token position
+     - Correct answer token(s)
+     - Incorrect answer token(s) for comparison
+     - Minimal pair ID (if applicable)
+   - Extract activations at decision positions during evaluation
+   - Run interpretability analyses (probing, patching, logit lens)</pre>
+  </section>
+
+  <section id="takeaways">
+    <h2>Key Takeaways</h2>
+    <ol>
+      <li><strong>LLMs can generate evaluation data at scale</strong>, dramatically reducing the bottleneck of dataset creation.</li>
+      <li><strong>Token localization is critical for interpretability:</strong> design cloze and MCQ formats so the model's decision concentrates at a single, predictable position.</li>
+      <li><strong>Human oversight remains essential:</strong> filter for quality, check for diversity, and validate that examples actually test what you intend.</li>
+      <li><strong>Construct minimal pairs:</strong> examples that differ only in the presence or absence of the target concept provide the cleanest signal for comparing activations.</li>
+      <li><strong>Multiple evaluation formats</strong> (zero-shot, ICL, MCQ) provide complementary signals and help identify format-specific artifacts.</li>
+      <li><strong>Watch for pitfalls:</strong> memorization, surface shortcuts, and lack of diversity can all undermine your evaluation.</li>
+    </ol>
+    <p>
+      The Perez et al. methodology is a meta-technique: using AI capabilities to accelerate AI research. For interpretability researchers, it offers a path from "I want to study concept X" to "I have 500 high-quality examples of concept X" in hours rather than weeks.
+    </p>
+  </section>
+
+  <section id="references">
+    <h2>References</h2>
+    <p>
+      Perez, E., et al. (2022). Discovering Language Model Behaviors with Model-Written Evaluations. <em>arXiv preprint arXiv:2212.09251</em>.
+    </p>
+  </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="week3.html">&larr; Back to Week 3</a></p>
+  </footer>
+
+</body>
+
+</html>

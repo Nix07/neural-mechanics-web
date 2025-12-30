@@ -159,9 +159,9 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/1909.01066" target="_blank">Language Models as Knowledge Bases?</a>
+          <a href="https://arxiv.org/abs/2212.09251" target="_blank">Discovering Language Model Behaviors with Model-Written Evaluations</a>
         </div>
-        <div class="reading-description">Petroni et al. (2019). The LAMA benchmark&mdash;template for probing factual knowledge via cloze-style tasks.</div>
+        <div class="reading-description">Perez et al. (2022). Using LLMs to generate evaluation datasets at scale.</div>
       </div>
 
       <div class="reading-item">
@@ -173,14 +173,21 @@
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2212.09251" target="_blank">Discovering Language Model Behaviors with Model-Written Evaluations</a>
+          <a href="https://arxiv.org/abs/1909.01066" target="_blank">Language Models as Knowledge Bases?</a>
         </div>
-        <div class="reading-description">Perez et al. (2022). Using LLMs to generate evaluation datasets at scale.</div>
+        <div class="reading-description">Petroni et al. (2019). The LAMA benchmark: probing factual knowledge via cloze-style tasks.</div>
       </div>
     </div>
 
-    <h3>Supplementary Readings</h3>
+    <h3>Supplementary Materials</h3>
     <div class="reading-list">
+      <div class="reading-item">
+        <div class="reading-title">
+          <a href="model-written-evals.html">Model-Written Evaluations for Interpretability Research</a>
+        </div>
+        <div class="reading-description">Tutorial essay on using LLMs to generate evaluation datasets, with pun understanding as a running example.</div>
+      </div>
+
       <div class="reading-item">
         <div class="reading-title">
           <a href="https://arxiv.org/abs/2005.14165" target="_blank">Language Models are Few-Shot Learners (GPT-3)</a>
@@ -191,54 +198,70 @@
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: Understanding and Measuring LLM Behavior</h2>
+    <h2>Tutorial: Why Single-Token Predictions Matter for Interpretability</h2>
 
     <h3>1. The Autoregressive Language Model</h3>
     <p>
       At its core, a large language model is a function that takes a sequence of tokens as input and produces a
-      probability distribution over the next token. Given a sequence of tokens <code>x₁, x₂, ..., xₙ</code>, the model
+      probability distribution over <strong>a single next token</strong>. Given a sequence of tokens <code>x₁, x₂, ..., xₙ</code>, the model
       computes:
     </p>
     <p style="text-align: center; font-style: italic;">
       P(xₙ₊₁ | x₁, x₂, ..., xₙ)
     </p>
     <p>
-      This is a distribution over the entire vocabulary—typically 50,000 to 100,000+ tokens. The model doesn't directly
-      generate text; it generates probabilities. Understanding this distinction is crucial: every behavior we observe
-      emerges from these probability distributions.
+      This is a distribution over the entire vocabulary, typically 50,000 to 100,000+ tokens. The model doesn't directly
+      generate paragraphs or essays; it generates probabilities for <em>one token at a time</em>. Understanding this distinction is crucial for interpretability research.
     </p>
 
-    <h3>2. Autoregressive Sampling</h3>
+    <h3>2. Why Single-Token Predictions Are Easy to Study</h3>
     <p>
-      To generate longer sequences, we sample from the model autoregressively:
+      The one-token-at-a-time nature of autoregressive models is a gift for interpretability. When a model makes a single prediction, we know exactly where and when the decision happens:
+    </p>
+    <ul>
+      <li><strong>Logit lens:</strong> Decode intermediate layers at the final token position to watch the prediction evolve layer by layer</li>
+      <li><strong>Activation patching:</strong> Intervene at a known position rather than searching across the sequence</li>
+      <li><strong>Probing:</strong> Extract activations at exactly the decision point, avoiding noise from irrelevant positions</li>
+      <li><strong>Probability comparison:</strong> Compare logits for candidate completions directly (e.g., P("Yes") vs P("No"))</li>
+    </ul>
+    <p>
+      This is why <strong>cloze-style evaluation</strong> ("The capital of France is ___") is so powerful for mechanistic interpretability: the model's entire reasoning must culminate in a single token prediction at a known position.
+    </p>
+
+    <h3>3. The Challenge of Evaluating Longer Outputs</h3>
+    <p>
+      But not everything reduces to single-token predictions. Sometimes we need to evaluate:
+    </p>
+    <ul>
+      <li>Extended reasoning chains</li>
+      <li>Creative writing quality</li>
+      <li>Dialogue coherence</li>
+      <li>Following complex multi-step instructions</li>
+    </ul>
+    <p>
+      When the model generates 100 tokens, the "decision" is distributed across all of them. There's no single position where we can say "this is where the model decided to be helpful/harmful/creative." This makes interpretability much harder.
+    </p>
+
+    <h3>4. Autoregressive Sampling (How Long Outputs Happen)</h3>
+    <p>
+      To generate longer sequences, we sample from the model autoregressively, one token at a time:
     </p>
     <ul>
       <li><strong>Greedy decoding:</strong> Always pick the highest probability token</li>
-      <li><strong>Temperature sampling:</strong> Sample from the distribution, with temperature controlling randomness
-      </li>
+      <li><strong>Temperature sampling:</strong> Sample from the distribution, with temperature controlling randomness</li>
       <li><strong>Top-k sampling:</strong> Sample only from the k most likely tokens</li>
-      <li><strong>Nucleus (top-p) sampling:</strong> Sample from the smallest set of tokens whose cumulative
-        probability exceeds p</li>
+      <li><strong>Nucleus (top-p) sampling:</strong> Sample from the smallest set of tokens whose cumulative probability exceeds p</li>
     </ul>
     <p>
-      Each strategy affects the diversity, coherence, and randomness of generated text. For benchmarking purposes,
-      greedy decoding or low-temperature sampling provides deterministic, reproducible results.
+      Each strategy affects the diversity, coherence, and randomness of generated text. For benchmarking, greedy decoding or low-temperature sampling provides deterministic, reproducible results.
     </p>
 
-    <h3>3. Prompting Strategies for Evaluation</h3>
+    <h3>5. Prompting Strategies for Single-Token Evaluation</h3>
     <p>
-      How we prompt the model determines what capabilities we measure. Three fundamental strategies:
+      To make interpretability tractable, we want to reduce complex tasks to single-token predictions. Three strategies:
     </p>
 
-    <h4>Instruction-Following</h4>
-    <p>
-      Modern models trained with instruction-tuning respond to direct commands:
-    </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "Translate the following sentence to French: Hello, how are you?"
-    </code>
-
-    <h4>Cloze Prompts</h4>
+    <h4>Cloze Prompts (Best for Interpretability)</h4>
     <p>
       Format the task as text completion, measuring the probability of specific completions:
     </p>
@@ -246,13 +269,25 @@
       "The capital of France is ___"
     </code>
     <p>
-      We can evaluate whether "Paris" has higher probability than alternatives. This works even with base models that
-      haven't seen instruction-tuning.
+      We can evaluate whether "Paris" has higher probability than alternatives. The decision happens at a known position.
+    </p>
+
+    <h4>Multiple Choice Questions</h4>
+    <p>
+      Force selection from predefined options by comparing token probabilities for "A", "B", "C", "D":
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Which is the capital of France?<br>
+      A) London  B) Paris  C) Berlin  D) Madrid<br>
+      Answer:
+    </code>
+    <p>
+      The model's prediction at the final position tells us everything. We can extract activations here and compare logits across options.
     </p>
 
     <h4>In-Context Learning (ICL)</h4>
     <p>
-      Provide examples in the prompt to demonstrate the task:
+      Provide examples in the prompt to demonstrate the task, then use cloze format for the test case:
     </p>
     <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
       Input: The movie was terrible.<br>
@@ -263,28 +298,12 @@
       Sentiment:
     </code>
     <p>
-      ICL allows us to test capabilities without fine-tuning and is particularly powerful for evaluating novel concepts.
+      ICL is valuable for interpretability because you can compare activations with and without the in-context examples to see how they reshape processing.
     </p>
 
-    <h3>4. Constraining Outputs for Evaluation</h3>
+    <h3>6. LLM-as-Judge: When Single Tokens Are Not Enough</h3>
     <p>
-      Reliable benchmarking requires outputs in predictable formats. Several approaches:
-    </p>
-    <ul>
-      <li><strong>Multiple choice questions:</strong> Force selection from predefined options by comparing token
-        probabilities for "A", "B", "C", "D"</li>
-      <li><strong>Custom decoding:</strong> Constrain the output vocabulary or use grammar-based sampling to ensure
-        valid formats (e.g., only allowing "Yes"/"No")</li>
-      <li><strong>Few-shot ICL:</strong> Demonstrate the desired format in examples, teaching the model to respond
-        consistently</li>
-      <li><strong>Probability-based evaluation:</strong> Instead of generating text, directly measure P(correct_answer)
-        vs P(incorrect_answer)</li>
-    </ul>
-
-    <h3>5. LLM-as-Judge for Long-Form Outputs</h3>
-    <p>
-      Some capabilities—like writing quality, reasoning coherence, or helpfulness—can't be reduced to multiple choice.
-      LLM-as-judge uses a strong model (often GPT-4) to evaluate outputs:
+      Some capabilities genuinely require evaluating longer outputs: writing quality, reasoning coherence, helpfulness. When you must evaluate runs of text rather than single tokens, <strong>LLM-as-judge</strong> provides an automated approach:
     </p>
     <ul>
       <li>Provide the judge with evaluation criteria and rubrics</li>
@@ -296,46 +315,55 @@
       MT-Bench demonstrated that LLM judges correlate well with human judgments for many tasks, but always validate on
       a subset with human evaluation.
     </p>
+    <div style="background-color: #e8f4f8; border-left: 4px solid #0055a4; padding: 15px; margin: 15px 0;">
+      <strong>For interpretability research:</strong> Try to convert free-form tasks to single-token formats when possible. Instead of "Explain why this is a pun" (hard to interpret), use "This is a pun because the word ___ has two meanings" (cloze format, tractable).
+    </div>
 
-    <h3>6. Evaluation Metrics Beyond Accuracy</h3>
+    <h3>7. Creating Evaluation Datasets at Scale</h3>
+    <p>
+      The bottleneck in interpretability research is often data: you need hundreds or thousands of examples that cleanly test your concept. <a href="model-written-evals.html">Model-written evaluations</a> (Perez et al. 2022) offer a solution: use LLMs to generate evaluation datasets.
+    </p>
+    <p>The core workflow:</p>
+    <ol>
+      <li><strong>Specify the behavior</strong> you want to evaluate in a clear prompt</li>
+      <li><strong>Generate examples</strong> by prompting a capable LLM with instructions and seed examples</li>
+      <li><strong>Filter for quality</strong> using automated checks and human review</li>
+      <li><strong>Run evaluations</strong> on target models</li>
+    </ol>
+    <p>
+      For interpretability, design your generation prompts to produce <strong>cloze-format</strong> or <strong>MCQ</strong> examples. This ensures the resulting dataset has the token-localization properties you need.
+    </p>
+    <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+      <strong>Example:</strong> To study pun understanding, prompt Claude to generate "This is a pun: Yes or No? Answer:" format examples. Generate 500+ raw examples, filter to 200+ high-quality ones, and you have a dataset suitable for probing, patching, and logit lens analysis.
+    </div>
+    <p>
+      See the <a href="model-written-evals.html">supplementary essay</a> for detailed prompts and a complete pipeline example using puns.
+    </p>
+
+    <h3>8. Evaluation Metrics</h3>
     <p>
       Different tasks require different metrics:
     </p>
-
-    <h4>Classification Metrics</h4>
     <ul>
       <li><strong>Accuracy:</strong> Proportion of correct predictions (good for balanced classes)</li>
-      <li><strong>Precision:</strong> Of predicted positives, what fraction are actually positive? (TP / (TP + FP))
-      </li>
-      <li><strong>Recall:</strong> Of actual positives, what fraction did we find? (TP / (TP + FN))</li>
-      <li><strong>F1 Score:</strong> Harmonic mean of precision and recall: 2 × (precision × recall) / (precision +
-        recall)</li>
+      <li><strong>Precision/Recall/F1:</strong> When classes are imbalanced or false positives/negatives have different costs</li>
+      <li><strong>Perplexity:</strong> How "surprised" the model is by a sequence (lower = better)</li>
     </ul>
 
-    <h4>Generation Metrics</h4>
-    <ul>
-      <li><strong>Perplexity:</strong> Measures how "surprised" the model is by a sequence. Lower is better. Defined as
-        exp(average negative log probability of tokens)</li>
-      <li><strong>BLEU, ROUGE:</strong> Compare generated text to reference texts (useful for translation, summarization)
-      </li>
-    </ul>
-
-    <h3>7. Statistical Significance and Error Bars</h3>
+    <h3>9. Statistical Significance</h3>
     <p>
-      A model scoring 85% vs 83% on a benchmark might not be meaningfully different. We must quantify uncertainty:
+      A model scoring 85% vs 83% might not be meaningfully different. Quantify uncertainty:
     </p>
     <ul>
       <li><strong>Standard error:</strong> For accuracy on n samples, SE = √(p(1-p)/n)</li>
       <li><strong>Confidence intervals:</strong> 95% CI is approximately ± 2 × SE for large n</li>
-      <li><strong>Bootstrap resampling:</strong> Repeatedly sample (with replacement) from your test set to estimate
-        the distribution of scores</li>
-      <li><strong>Statistical tests:</strong> Use McNemar's test for comparing two models on the same examples</li>
+      <li><strong>Bootstrap resampling:</strong> Repeatedly sample from your test set to estimate score distribution</li>
     </ul>
     <p>
       Rule of thumb: differences smaller than 2-3% on typical benchmark sizes often aren't statistically significant.
     </p>
 
-    <h3>8. Memorization vs. Generalization</h3>
+    <h3>10. Memorization vs. Generalization</h3>
     <p>
       A fundamental question: Did the model learn the concept, or did it memorize training examples?
     </p>
@@ -370,7 +398,7 @@
       <li>Transfer to related but different tasks</li>
     </ul>
 
-    <h3>9. HELM: Holistic Evaluation</h3>
+    <h3>11. HELM: Holistic Evaluation</h3>
     <p>
       The Holistic Evaluation of Language Models (HELM) benchmark exemplifies comprehensive evaluation:
     </p>
@@ -625,18 +653,119 @@
     </ul>
   </section>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Pun Evaluation Dataset</h2>
+
+    <p>
+      Building on the pun theme from Week 1, we'll create a complete evaluation pipeline: generate data, test multiple evaluation methods, and apply logit lens to see where pun understanding emerges.
+    </p>
+
+    <h3>Part 1: Prompt Engineering for Dataset Generation (15 min)</h3>
+    <p>
+      Work in groups to craft a prompt for Claude that generates high-quality pun evaluation examples. Your prompt should produce examples in cloze format for interpretability tractability.
+    </p>
+
+    <div style="background-color: #f4f4f4; padding: 15px; margin: 15px 0; border-radius: 5px;">
+      <strong>Starter prompt to iterate on:</strong>
+      <pre style="margin: 10px 0; white-space: pre-wrap;">Generate pun recognition examples in cloze format. For each example:
+1. Provide a sentence that may or may not be a pun
+2. Format: "[sentence]" This is a pun. Yes or No? Answer:
+3. Provide the correct label (Yes/No)
+4. For puns, briefly note the wordplay mechanism
+
+Generate 20 examples:
+- 10 puns (varied mechanisms: homophones, polysemy, syntactic)
+- 10 non-puns (similar structure but no wordplay)
+- Vary topics: professions, food, animals, science, everyday life</pre>
+    </div>
+
+    <p><strong>Discussion questions:</strong></p>
+    <ul>
+      <li>How do we ensure the non-puns aren't obviously different from puns?</li>
+      <li>Should we include "almost-puns" that fail to land?</li>
+      <li>How do we avoid Claude generating the same classic puns everyone knows?</li>
+    </ul>
+
+    <h3>Part 2: Testing Evaluation Methods (20 min)</h3>
+    <p>
+      Using the <a href="https://nnsight.net/" target="_blank">NDIF workbench</a>, we'll compare different evaluation approaches on the same pun examples:
+    </p>
+
+    <h4>Method A: Probability Comparison</h4>
+    <p>Compare P("Yes") vs P("No") at the answer position:</p>
+    <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">prompt = '"I used to be a banker but I lost interest." This is a pun. Yes or No? Answer:'
+# Extract logits at final position
+# Compare logit["Yes"] vs logit["No"]
+# Classify based on which is higher</pre>
+
+    <h4>Method B: In-Context Learning</h4>
+    <p>Provide 3-4 examples before the test case:</p>
+    <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">"The bicycle was two-tired." Pun? Yes
+"The bicycle was broken." Pun? No
+"I lost interest in banking." Pun? Yes
+"I lost patience with banking." Pun? No
+
+"Time flies like an arrow." Pun?</pre>
+
+    <h4>Method C: MCQ Format</h4>
+    <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">Why is "I lost interest" a pun when said by a former banker?
+A) It references losing money
+B) "Interest" means both curiosity and financial returns
+C) Banking is boring
+D) It's not actually a pun
+Answer:</pre>
+
+    <p><strong>Compare:</strong> Which method gives the clearest signal? Which is easiest to interpret mechanistically?</p>
+
+    <h3>Part 3: Logit Lens on Puns (25 min)</h3>
+    <p>
+      The key question: <strong>At which layer does the model "get" the pun?</strong>
+    </p>
+
+    <p>For a set of pun/non-pun minimal pairs, we'll:</p>
+    <ol>
+      <li>Run logit lens at each layer on the final token position</li>
+      <li>Track when "Yes" probability emerges for puns vs "No" for non-puns</li>
+      <li>Compare across model sizes (if time permits)</li>
+    </ol>
+
+    <div style="background-color: #e8f4f8; border-left: 4px solid #0055a4; padding: 15px; margin: 15px 0;">
+      <strong>Hypothesis to test:</strong> Pun understanding requires integrating information about word meanings (likely mid-to-late layers). Early layers should show similar predictions for puns and non-puns; divergence indicates where the model processes the wordplay.
+    </div>
+
+    <h4>Analysis Template</h4>
+    <pre style="background-color: #f4f4f4; padding: 10px; border-radius: 5px; font-size: 0.9em;">from nnsight import LanguageModel
+
+model = LanguageModel("meta-llama/Llama-3.2-1B", device_map="auto")
+
+pun_prompt = '"I used to be a banker but I lost interest." This is a pun. Yes or No? Answer:'
+non_pun_prompt = '"I used to be a banker but I lost patience." This is a pun. Yes or No? Answer:'
+
+# For each layer, decode the residual stream at the final position
+# Track: P("Yes") - P("No") across layers
+# Plot: layer vs. pun_score for puns and non-puns
+# Look for: divergence point where model distinguishes pun from non-pun</pre>
+
+    <h3>Discussion</h3>
+    <ul>
+      <li>Do smaller models (1B) show pun understanding? At what scale does it emerge?</li>
+      <li>Is pun understanding "all or nothing" or does it develop gradually across layers?</li>
+      <li>Do different pun types (homophones vs. polysemy) show different patterns?</li>
+      <li>How does ICL context change the layer-by-layer pattern?</li>
+    </ul>
+  </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>
       This week's exercise will give you hands-on experience with the core concepts:
     </p>
     <ul>
-      <li>Load a small language model (GPT-2 or similar)</li>
-      <li>Examine token probability distributions</li>
-      <li>Implement different sampling strategies</li>
-      <li>Test cloze, ICL, and instruction prompts</li>
-      <li>Calculate precision, recall, F1, and perplexity</li>
-      <li>Perform statistical significance testing</li>
+      <li>Load a small language model and examine token probability distributions</li>
+      <li>Implement the pun evaluation methods from the in-class exercise</li>
+      <li>Run logit lens analysis on a pun dataset</li>
+      <li>Compare model sizes: at what scale does pun understanding emerge?</li>
+      <li>Calculate accuracy with confidence intervals</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
