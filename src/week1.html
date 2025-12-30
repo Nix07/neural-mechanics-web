@@ -288,7 +288,7 @@
     </ul>
 
     <p>
-      <strong>Caveats:</strong> These observations are intriguing but require careful interpretation. The logit lens decoding shows English words, but this does not prove that the model "thinks in English" or that English serves as an internal lingua franca. Alternative explanations include: the unembedding matrix may be biased toward English tokens (since English dominates training data); the pattern may not generalize across all word types or model sizes; and crucially, we have no causal evidence that these English representations are <em>used</em> by the model rather than being epiphenomenal. The Wendler results are best viewed as a surprising observation that motivates further investigation, not a settled conclusion about how multilingual models work.
+      <strong>But what does this actually show?</strong> The observation that intermediate layers decode to English is striking, but its interpretation is far from settled. Consider: the unembedding matrix was trained predominantly on English data&mdash;perhaps it simply projects <em>any</em> high-dimensional vector more readily onto English tokens. Or perhaps the pattern reflects tokenization artifacts rather than genuine linguistic processing. And even if the model does "pivot through English," we have no causal evidence that these intermediate English representations are actually <em>used</em> in the computation, rather than being epiphenomenal byproducts. What experiments would you design to distinguish these possibilities?
     </p>
 
     <h3>5. Tuned Lens: Beyond Raw Projection</h3>
@@ -309,23 +309,33 @@
       This accounts for layer-specific representation formats, often yielding more interpretable intermediate predictions.
     </p>
 
-    <h3>6. What Logit Lens Does NOT Tell You</h3>
+    <h3>6. Skeptical Questions About Logit Lens</h3>
     <p>
-      Logit lens is a powerful exploratory tool, but it has important limitations. Understanding what it <em>cannot</em> tell you is essential for interpreting results correctly.
+      Before drawing conclusions from logit lens observations, consider what the method actually shows&mdash;and what it doesn't.
     </p>
 
-    <ul>
-      <li><strong>No causal power:</strong> Logit lens is purely observational. Seeing a word decoded at layer 15 does not mean that layer 15 "caused" or "computed" that prediction. The model might have computed the answer earlier, or the decoded word might be a side effect of unrelated processing. To establish causation, you need intervention experiments (coming in Week 5).</li>
-
-      <li><strong>No generalization claims:</strong> Observing a pattern on one prompt tells you nothing about whether the pattern holds in general. The model might decode "flower" in intermediate layers for this particular French word, but behave completely differently for other words, phrasings, or contexts.</li>
-
-      <li><strong>No explanation of "why":</strong> Even when logit lens shows an interesting pattern&mdash;like English appearing in intermediate layers during translation&mdash;it doesn't explain <em>why</em> this happens. Is English a computational lingua franca? An artifact of training data? A consequence of tokenization? Logit lens alone cannot answer these questions.</li>
-
-      <li><strong>No guarantee of capability:</strong> Seeing the "right" answer appear at some layer doesn't mean the model actually has the capability you're testing. The decoded token might be a lucky correlation, or the model might fail on slight variations of the same task. Behavioral evaluation (coming in Week 3) is needed to establish what a model can actually do.</li>
-    </ul>
+    <p>
+      <strong>What does "decoding" even mean?</strong> When we project an intermediate activation through the unembedding matrix and get "trumpet," we're applying a linear transformation designed for the <em>final</em> layer to an <em>intermediate</em> representation. Why should this tell us anything meaningful? The intermediate layers weren't trained to produce outputs that make sense when decoded this way. We might be looking at computational byproducts rather than genuine intermediate predictions.
+    </p>
 
     <p>
-      <strong>Bottom line:</strong> Logit lens is best understood as a <em>hypothesis generator</em>, not a hypothesis tester. It can reveal surprising patterns that suggest where to look deeper, but confirming those patterns requires additional methods&mdash;causal interventions, systematic evaluation, and careful controls.
+      <strong>Correlation vs. causation:</strong> Suppose you see "horn" decoded at layer 20 and "trumpet" at layer 25. Does this mean layer 20-25 "refined" the prediction from horn to trumpet? Not necessarily. The layers might have computed something else entirely, and the decoded words might be epiphenomenal&mdash;correlated with what the model is doing, but not causally involved. How would you distinguish these possibilities?
+    </p>
+
+    <p>
+      <strong>Sample size of one:</strong> Logit lens naturally invites analysis of individual prompts. But a single example tells you almost nothing about generalization. If you see English in intermediate layers during French&rarr;Chinese translation, is this a general phenomenon or an artifact of this particular word, this tokenization, this model? What controls would you need?
+    </p>
+
+    <p>
+      <strong>The decoder bias problem:</strong> The unembedding matrix was trained on data that is predominantly English. When intermediate representations project to English tokens, is the model "thinking in English," or is the decoder simply more sensitive to English-like patterns? How could you test this?
+    </p>
+
+    <p>
+      <strong>What are we actually learning?</strong> Even when logit lens reveals a striking pattern, ask: what scientific claim does this support? "The model sometimes decodes to English in middle layers" is an observation. "The model uses English as an internal lingua franca" is a much stronger claim that requires much more evidence.
+    </p>
+
+    <p>
+      These aren't reasons to dismiss logit lens&mdash;it remains a valuable tool for exploration and hypothesis generation. But the distance between "I observed X" and "I understand Y" is often larger than it first appears.
     </p>
   </section>
 
