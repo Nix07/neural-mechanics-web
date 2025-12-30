@@ -78,6 +78,16 @@ Open items to revisit as the course materials are developed.
   - Synthesis template (gather findings from weeks 2-7)
 - [ ] Test: run EAP-IG on pun recognition task
 
+### Week 9: Pun Emergence Over Training (NDIF/OLMo)
+- [x] **Exercise added to week9.html**
+- [ ] Create Colab notebook with:
+  - NDIF connection and OLMo checkpoint access
+  - Pun completion accuracy measurement across checkpoints
+  - Probe accuracy tracking over training
+  - Logit lens comparison at different training stages
+- [ ] Test: verify NDIF access works and checkpoints are available
+- [ ] Prepare: list of recommended OLMo checkpoint steps
+
 ### Week 10: Patchscopes for Puns
 - [x] **Exercise added to week10.html**
 - [ ] Create Colab notebook with:
@@ -90,14 +100,15 @@ Open items to revisit as the course materials are developed.
 
 ## Exercises to Write
 
-- [ ] **Week 1 Exercise: Logit lens and the Wendler result**
+- [x] **Week 1 Exercise: Logit lens, Wendler result, and puns** (already in week1.html)
   - Reproduce the finding that multilingual models pivot through English
-  - Use logit lens to decode intermediate layers
-  - Observe three-phase pattern: ambiguous → English-dominant → target language
+  - Pun analysis with logit lens (intro to pun thread)
+  - Uses NDIF Logit Lens Workbench
 
 - [x] **Week 2 Exercise: Neuronpedia concept steering** (structure added, notebook pending)
 
 - [x] **Running In-Class Exercise: Puns/humor thread** (all weeks structured)
+  - Week 1: Logit lens on puns — intro to the research question
   - Week 2: Find pun/humor features on Neuronpedia, try steering
   - Week 3: Create a pun evaluation dataset; score models on pun understanding/completion
   - Week 4: Visualize pun vs non-pun representations; find a "pun direction" via difference-in-means
@@ -105,6 +116,7 @@ Open items to revisit as the course materials are developed.
   - Week 6: Train a probe for "is this a pun?"
   - Week 7: Attribution — which input words matter for pun recognition?
   - Week 8: Attempt automated circuit discovery for puns using EAP-IG
+  - Week 9: Track pun emergence over OLMo training checkpoints (NDIF)
   - Week 10: Use Patchscopes to decode pun representations
   - By end of course: students have applied every major method to one concept
   - Format: ~60 min in-class activity each week (3 parts of ~15-25 min), results carry forward
@@ -128,7 +140,8 @@ Priority order for notebook development:
 5. Week 6 (builds on Weeks 4-5)
 6. Week 7 (builds on Week 6)
 7. Week 8 (synthesis of all previous)
-8. Week 10 (capstone pun exercise)
+8. Week 9 (training dynamics with NDIF/OLMo)
+9. Week 10 (capstone pun exercise)
 
 ---
 

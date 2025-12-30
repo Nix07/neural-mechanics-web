@@ -3,42 +3,58 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Week 9: Training Dynamics & Model Editing - Neural Mechanics</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body);"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      line-height: 1.6;
-      max-width: 900px;
+      max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
-      color: #333;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    header img {
+      height: 60px;
+      margin-right: 20px;
     }
 
     h1 {
-      color: #2c3e50;
-      border-bottom: 3px solid #3498db;
-      padding-bottom: 10px;
+      margin: 0;
+      font-size: 1.8em;
+    }
+
+    section {
+      margin-bottom: 40px;
     }
 
     h2 {
-      color: #34495e;
-      margin-top: 30px;
-      border-bottom: 2px solid #bdc3c7;
-      padding-bottom: 5px;
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
     }
 
     h3 {
-      color: #555;
+      font-size: 1.2em;
       margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 1.05em;
+      margin-top: 15px;
+      margin-bottom: 8px;
     }
 
     a {
-      color: #3498db;
+      color: #0055a4;
       text-decoration: none;
     }
 
@@ -46,16 +62,89 @@
       text-decoration: underline;
     }
 
-    .info-box {
-      background-color: #e8f4f8;
-      border-left: 4px solid #3498db;
+    .reading-list {
+      margin-left: 20px;
+    }
+
+    .reading-item {
+      margin-bottom: 15px;
+    }
+
+    .reading-title {
+      font-weight: bold;
+    }
+
+    .reading-description {
+      color: #555;
+      font-style: italic;
+    }
+
+    ul {
+      margin-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .assignment-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
       padding: 15px;
       margin: 20px 0;
     }
 
-    .key-insight {
-      background-color: #fff3cd;
-      border-left: 4px solid #ffc107;
+    .colab-button {
+      display: inline-block;
+      background-color: #0055a4;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+
+    .colab-button:hover {
+      background-color: #003d7a;
+      text-decoration: none;
+    }
+
+    code {
+      background-color: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .diagram {
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+    }
+
+    .info-box {
+      background-color: #e8f4fc;
+      border-left: 4px solid #0055a4;
       padding: 15px;
       margin: 20px 0;
     }
@@ -68,17 +157,9 @@
       margin: 20px 0;
     }
 
-    .comparison-box {
-      background-color: #f0f7ff;
-      border: 1px solid #3498db;
-      border-radius: 5px;
-      padding: 15px;
-      margin: 20px 0;
-    }
-
     .paper-card {
       background-color: #fff;
-      border: 2px solid #3498db;
+      border: 2px solid #0055a4;
       border-radius: 8px;
       padding: 20px;
       margin: 20px 0;
@@ -86,64 +167,24 @@
 
     .paper-card h4 {
       margin-top: 0;
-      color: #2c3e50;
-    }
-
-    ul,
-    ol {
-      margin: 10px 0;
-    }
-
-    li {
-      margin: 8px 0;
-    }
-
-    code {
-      background-color: #f4f4f4;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: 'Courier New', monospace;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f2f2f2;
-      font-weight: bold;
-    }
-
-    .objectives {
-      background-color: #f0f7ff;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-
-    img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 20px auto;
     }
   </style>
 </head>
 
 <body>
-  <h1>Week 9: Training Dynamics & Model Editing</h1>
 
-  <div class="objectives">
-    <h3>Learning Objectives</h3>
+  <header>
+    <img src="imgs/ne.png" alt="Northeastern Logo">
+    <h1>Week 9: Training Dynamics & Model Editing</h1>
+  </header>
+
+  <nav style="margin-bottom: 20px;">
+    <a href="index.html">&larr; Back to Course Home</a>
+  </nav>
+
+  <section id="learning-objectives">
+    <h2>Learning Objectives</h2>
+    <p>By the end of this week, you should be able to:</p>
     <ul>
       <li>Understand how neural network mechanisms emerge during training</li>
       <li>Study phase transitions and grokking phenomena</li>
@@ -603,6 +644,97 @@
     <li><strong>Grokking reproduction code:</strong> Nanda's experiments <a href="https://github.com/neelnanda-io/Grokking" target="_blank">GitHub</a></li>
   </ul>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: When Do Puns Emerge?</h2>
+    <p>
+      Using NDIF (National Deep Inference Fabric) to access OLMo training checkpoints, we will track
+      when pun understanding emerges during pretraining. This connects our pun thread to training dynamics.
+    </p>
+
+    <h3>Part 1: Setup and Checkpoint Selection (15 min)</h3>
+    <p>
+      Access OLMo checkpoints through NDIF:
+    </p>
+    <ol>
+      <li><strong>Connect to NDIF:</strong> Use the provided notebook to access the OLMo checkpoint suite</li>
+      <li><strong>Select checkpoints:</strong> Choose 8-10 checkpoints spanning training:
+        <ul>
+          <li>Early: steps 1k, 5k, 10k (before most capabilities emerge)</li>
+          <li>Middle: steps 50k, 100k, 200k (capability formation)</li>
+          <li>Late: steps 500k, 1M, final (mature model)</li>
+        </ul>
+      </li>
+      <li><strong>Prepare pun test set:</strong> Load your puns from Week 3 (10-15 examples)</li>
+    </ol>
+
+    <h3>Part 2: Track Pun Capabilities Over Training (25 min)</h3>
+    <p>
+      Measure pun understanding at each checkpoint:
+    </p>
+    <ol>
+      <li><strong>Pun completion accuracy:</strong>
+        <ul>
+          <li>For each checkpoint, test: can it complete pun setups correctly?</li>
+          <li>"I used to be a banker, but I lost ___" → does it predict "interest"?</li>
+          <li>Record top-5 predictions and their probabilities</li>
+        </ul>
+      </li>
+      <li><strong>Probe accuracy over training:</strong>
+        <ul>
+          <li>Apply your Week 6 pun probe to each checkpoint</li>
+          <li>Does pun/non-pun separation improve over training?</li>
+          <li>At which checkpoint does probe accuracy exceed 70%? 90%?</li>
+        </ul>
+      </li>
+      <li><strong>Logit lens at each checkpoint:</strong>
+        <ul>
+          <li>For a fixed pun, run logit lens at early, middle, and late checkpoints</li>
+          <li>Does the "correct" punchline emerge at earlier layers as training progresses?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 3: Identify Phase Transitions (20 min)</h3>
+    <p>
+      Look for sudden changes in pun capability:
+    </p>
+    <ol>
+      <li><strong>Plot capability curves:</strong>
+        <ul>
+          <li>X-axis: training step (log scale)</li>
+          <li>Y-axis: pun completion accuracy, probe accuracy, or other metric</li>
+        </ul>
+      </li>
+      <li><strong>Identify transitions:</strong>
+        <ul>
+          <li>Is pun understanding gradual or sudden?</li>
+          <li>If sudden, at what training step does it emerge?</li>
+          <li>Does it correlate with other capability emergence (e.g., general language ability)?</li>
+        </ul>
+      </li>
+      <li><strong>Compare to in-context learning:</strong>
+        <ul>
+          <li>Test pun completion with and without pun examples in context</li>
+          <li>At early checkpoints, does in-context help more than at late checkpoints?</li>
+          <li>Does ICL for puns emerge at the same time as induction heads?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> Is pun understanding a distinct capability that emerges at a specific point,
+      or does it improve gradually with general language ability? What does this tell us about how models
+      learn to process humor?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK9_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here. Requires NDIF access.</em>
+    </p>
+  </section>
+
   <section id="milestone">
     <h2>Project Milestone</h2>
 
@@ -681,6 +813,10 @@
       </em></p>
     </div>
   </section>
+
+  <footer style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ccc; color: #666; font-size: 0.9em;">
+    <p><a href="index.html">&larr; Back to Course Home</a></p>
+  </footer>
 
 </body>
 
