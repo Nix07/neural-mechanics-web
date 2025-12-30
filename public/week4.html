@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 4: Causal Mediation Analysis + Validation Framework - Neural Mechanics</title>
+  <title>Week 4: Representation Geometry - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -130,23 +130,6 @@
       text-align: center;
       margin: 10px 0;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-    }
-
-    th,
-    td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f0f0f0;
-    }
   </style>
 </head>
 
@@ -154,7 +137,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 4: Causal Mediation Analysis + Validation Framework</h1>
+    <h1>Week 4: Representation Geometry</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -164,10 +147,10 @@
   <section id="overview">
     <h2>Overview</h2>
     <p>
-      Understanding what a model computes is one thing; understanding <em>how</em> it computes it is another. This week
-      introduces causal intervention techniques that let you test hypotheses about which components are responsible for
-      specific behaviors. Through activation patching, causal tracing, and attribution methods, you'll learn to
-      identify the mechanisms that matter, moving from correlation to causation in interpretability research.
+      This week focuses on techniques for making the invisible visible. You'll learn how to visualize high-dimensional
+      activation vectors, understand the geometric structure of representations, and use visualization to discover
+      interpretable patterns. From PCA projections to attention heatmaps, from the geometry of truth to the dual-route
+      model of induction, you'll develop the visual intuition essential for mechanistic interpretability research.
     </p>
   </section>
 
@@ -175,46 +158,46 @@
     <h2>Learning Objectives</h2>
     <p>By the end of this week, you should be able to:</p>
     <ul>
-      <li>Set up and execute activation patching experiments between two prompts</li>
-      <li>Explain the difference between noise patching and clean (counterfactual) patching</li>
-      <li>Define and compute average causal effect (ACE), total effect, and indirect effect</li>
-      <li>Explain how ROME uses causal tracing to localize factual knowledge in networks</li>
-      <li>Contrast ROME's findings with entity tracking and binding vector discoveries</li>
-      <li>Apply gradient-based attribution patching to identify important activations</li>
-      <li>Use Average Indirect Effect (AIE) to systematically identify causally important components</li>
-      <li>Design effective counterfactual datasets for patching experiments</li>
-      <li>Find and use function vectors and their associated attention heads</li>
+      <li>Apply fundamental linear algebra concepts: vectors, dot products, norms, matrix-vector products</li>
+      <li>Understand and apply Singular Value Decomposition (SVD) and Principal Component Analysis (PCA)</li>
+      <li>Use PCA to visualize high-dimensional activation vectors in 2D/3D</li>
+      <li>Explain the "geometry of truth" and how concepts form linear subspaces</li>
+      <li>Compute and interpret mass mean-difference vectors and Euclidean classifiers</li>
+      <li>Understand the geometry of token embeddings (encoder) and unembeddings (decoder)</li>
+      <li>Perform and interpret semantic-vector arithmetic (e.g., king - man + woman ≈ queen)</li>
+      <li>Use the logit lens to visualize what the model "thinks" at intermediate layers</li>
+      <li>Visualize and interpret attention patterns across heads and layers</li>
+      <li>Explain how induction heads work and visualize their characteristic attention patterns</li>
+      <li>Distinguish between token-level induction and concept-level induction</li>
+      <li>Understand the dual-route model of induction and how it relates to semantic processing</li>
+      <li>Explain how concept induction heads attend to the last token of multi-token words</li>
+      <li>Demonstrate that concept-level representations enable semantic-vector arithmetic</li>
     </ul>
   </section>
 
   <section id="readings">
-    <h2>Readings</h2>
+    <h2>Required Readings</h2>
 
-    <h3>Core Readings</h3>
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2202.05262" target="_blank">Locating and Editing Factual Associations in
-            GPT</a>
+          <a href="https://arxiv.org/abs/2310.06824" target="_blank">The Geometry of Truth: Emergent Linear Structure in LLM Representations of True/False Datasets</a>
         </div>
-        <div class="reading-description">Meng et al. (2022). The ROME paper - causal tracing to localize where factual knowledge is stored
-        </div>
+        <div class="reading-description">Marks &amp; Tegmark (2023). Truth and falsehood correspond to a linear direction in representation space.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2401.06102" target="_blank">Patchscopes: A Unifying Framework for Inspecting
-            Hidden Representations</a>
+          <a href="https://arxiv.org/abs/2310.15154" target="_blank">Linear Representations of Sentiment in Large Language Models</a>
         </div>
-        <div class="reading-description">Ghandeharioun et al. (2024). Framework for understanding different patching and intervention techniques
-        </div>
+        <div class="reading-description">Tigges et al. (2023). Clean case study showing sentiment is encoded linearly, with practical techniques for finding concept directions.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2310.15213" target="_blank">Function Vectors in Large Language Models</a>
+          <a href="https://arxiv.org/abs/2308.09124" target="_blank">Linearity of Relation Decoding in Transformer LMs</a>
         </div>
-        <div class="reading-description">Todd et al. (2023). Finding task-specific vectors through causal intervention</div>
+        <div class="reading-description">Hernandez et al. (2023). Even relational concepts like "the capital of X" are approximately linear.</div>
       </div>
     </div>
 
@@ -222,828 +205,475 @@
     <div class="reading-list">
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://arxiv.org/abs/2304.14997" target="_blank">Towards Automated Circuit Discovery for
-            Mechanistic Interpretability</a>
+          <a href="https://arxiv.org/abs/1301.3781" target="_blank">Efficient Estimation of Word Representations in Vector Space (Word2Vec)</a>
         </div>
-        <div class="reading-description">Conmy et al. (2023). ACDC - automated methods for circuit discovery using causal interventions</div>
+        <div class="reading-description">Mikolov et al. (2013). Historical origin of "linear directions encode concepts" with the famous king &minus; man + woman = queen example.</div>
       </div>
 
       <div class="reading-item">
         <div class="reading-title">
-          <a href="https://rome.baulab.info/" target="_blank">ROME Project Page</a>
+          <a href="https://arxiv.org/abs/1607.06520" target="_blank">Man is to Computer Programmer as Woman is to Homemaker?</a>
         </div>
-        <div class="reading-description">Interactive demos and additional resources (not arXiv)</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://finetuning.baulab.info/" target="_blank">Entity Tracking and Binding Vectors</a>
-        </div>
-        <div class="reading-description">Study of how models track entities through context (project page)</div>
-      </div>
-
-      <div class="reading-item">
-        <div class="reading-title">
-          <a href="https://www.neelnanda.io/mechanistic-interpretability/attribution-patching" target="_blank">Attribution Patching: Activation Patching At
-            Industrial Scale</a>
-        </div>
-        <div class="reading-description">Nanda (2023). Blog post on gradient-based method for efficient attribution</div>
+        <div class="reading-description">Bolukbasi et al. (2016). Early template for manipulating concept directions&mdash;debiasing word embeddings.</div>
       </div>
     </div>
   </section>
 
   <section id="tutorial">
-    <h2>Tutorial: From Observation to Causation</h2>
+    <h2>Tutorial: Visualizing the Geometry of Language Model Representations</h2>
 
-    <h3>1. The Challenge: Correlation vs. Causation</h3>
+    <h3>1. Linear Algebra Review</h3>
     <p>
-      Visualization shows us <em>what</em> is represented. Steering shows us we can <em>change</em> behavior. But
-      neither tells us which specific components are <strong>causally responsible</strong> for a behavior.
+      Before diving into visualization, let's review the mathematical tools we'll use.
     </p>
 
+    <h4>Vectors and Operations</h4>
     <p>
-      <strong>Example:</strong> If a model correctly answers "The capital of France is Paris," we might observe:
+      A <strong>vector</strong> is a list of numbers: <code>v = [v₁, v₂, ..., vₙ]</code>
     </p>
     <ul>
-      <li>Certain neurons activate strongly for "France"</li>
-      <li>Attention heads attend from "capital" to "France"</li>
-      <li>MLP layers at certain positions have high activation</li>
-    </ul>
-
-    <p>
-      But which of these are <strong>necessary</strong> for the correct answer? Which are merely correlated? Causal
-      intervention lets us test this.
-    </p>
-
-    <h3>2. Activation Patching: The Core Technique</h3>
-    <p>
-      <strong>Activation patching</strong> is the fundamental intervention method: replace activations from one forward
-      pass with activations from another, then measure the effect.
-    </p>
-
-    <h4>Basic Setup</h4>
-    <ol>
-      <li><strong>Clean run:</strong> Run the model on a prompt where it behaves correctly<br>
-        <code>"The capital of France is" → "Paris" ✓</code>
+      <li><strong>Dot product:</strong> <code>v · w = v₁w₁ + v₂w₂ + ... + vₙwₙ</code> (measures similarity/projection)
       </li>
-      <li><strong>Corrupted run:</strong> Run on a prompt where behavior differs<br>
-        <code>"The capital of Germany is" → "Berlin"</code>
-      </li>
-      <li><strong>Patch:</strong> In a new run on the corrupted prompt, replace specific activations with those from
-        the clean run</li>
-      <li><strong>Measure:</strong> Does the model now produce the clean run's output?</li>
-    </ol>
-
-    <div class="diagram">
-      Corrupted: "Germany" → activations → "Berlin"<br>
-      Clean: "France" → activations → "Paris"<br><br>
-      Patched: "Germany" + [patched activations from "France"] → ???<br><br>
-      If output → "Paris": patched component was causally important!
-    </div>
-
-    <h4>Interpretation</h4>
-    <ul>
-      <li><strong>If patching restores clean behavior:</strong> The patched component is causally sufficient (in this
-        context)</li>
-      <li><strong>If patching has no effect:</strong> The component is not necessary for the behavior</li>
-      <li><strong>Partial restoration:</strong> Component plays a role but is not solely responsible</li>
+      <li><strong>Norm (length):</strong> <code>||v|| = √(v · v)</code></li>
+      <li><strong>Cosine similarity:</strong> <code>cos(θ) = (v · w) / (||v|| ||w||)</code></li>
     </ul>
 
-    <h3>3. Noise Patching vs. Clean Patching</h3>
+    <h4>Matrix-Vector Products</h4>
     <p>
-      There are two main patching strategies, each answering different questions:
+      A matrix <code>M</code> transforms vectors: <code>y = Mx</code><br>
+      Each row of <code>M</code> computes one dot product with <code>x</code>
     </p>
 
-    <h4>Noise Patching (Ablation)</h4>
+    <h4>Singular Value Decomposition (SVD)</h4>
     <p>
-      Replace activations with random noise or zeros:
+      Any matrix <code>M</code> can be decomposed as: <code>M = UΣVᵀ</code>
     </p>
-    <div class="diagram">
-      Original: "The capital of France is" → "Paris"<br>
-      Noise patched: "The capital of France is" + [noise] → ???
-    </div>
-
-    <p>
-      <strong>Question answered:</strong> Is this component <em>necessary</em> for the behavior?<br>
-      <strong>Interpretation:</strong> If performance degrades, the component was contributing.
-    </p>
-
-    <h4>Clean (Counterfactual) Patching</h4>
-    <p>
-      Replace activations with those from a different, meaningful prompt:
-    </p>
-    <div class="diagram">
-      Corrupted: "The capital of Germany is" → "Berlin"<br>
-      Clean: "The capital of France is" → "Paris"<br>
-      Patched: "Germany" + [France activations] → "Paris"?
-    </div>
-
-    <p>
-      <strong>Question answered:</strong> Is this component <em>sufficient</em> to change behavior from corrupted to
-      clean?<br>
-      <strong>Interpretation:</strong> If behavior changes, this component causally mediates the difference.
-    </p>
-
-    <h4>Choosing Your Strategy</h4>
-    <table>
-      <tr>
-        <th>Use Case</th>
-        <th>Strategy</th>
-        <th>Why</th>
-      </tr>
-      <tr>
-        <td>Find necessary components</td>
-        <td>Noise patching</td>
-        <td>See what breaks when removed</td>
-      </tr>
-      <tr>
-        <td>Find sufficient components</td>
-        <td>Clean patching</td>
-        <td>See what can transfer behavior</td>
-      </tr>
-      <tr>
-        <td>Understand factual recall</td>
-        <td>Clean patching</td>
-        <td>Isolate subject-specific processing</td>
-      </tr>
-      <tr>
-        <td>Test robustness</td>
-        <td>Noise patching</td>
-        <td>Find critical dependencies</td>
-      </tr>
-    </table>
-
-    <h3>4. Causal Effects: Formal Definitions</h3>
-    <p>
-      To reason precisely about interventions, we need formal definitions from causal inference.
-    </p>
-
-    <h4>Average Causal Effect (ACE)</h4>
-    <p>
-      The effect of changing one variable while holding others constant:
-    </p>
-    <div class="math">
-      ACE = E[Y | do(X=x₁)] - E[Y | do(X=x₀)]
-    </div>
-
-    <p>
-      <strong>In neural networks:</strong> The difference in output when we intervene to set a component's activation to
-      x₁ vs x₀.
-    </p>
-
-    <h4>Total Effect</h4>
-    <p>
-      The overall impact of X on Y, including all paths (direct and indirect):
-    </p>
-    <div class="diagram">
-      X → Y (direct)<br>
-      X → Z → Y (indirect through Z)<br><br>
-      Total Effect = Direct Effect + Indirect Effects
-    </div>
-
-    <h4>Indirect Effect</h4>
-    <p>
-      The effect of X on Y that flows <em>through</em> intermediate variable Z:
-    </p>
-    <div class="math">
-      Indirect Effect = E[Y | do(Z = value_when_X=x₁), X=x₀] - E[Y | X=x₀]
-    </div>
-
-    <p>
-      <strong>Example:</strong> How much does changing "France" to "Germany" at position 5 affect the output through its
-      effect on layer 10's MLP?
-    </p>
-
-    <h3>5. ROME: Causal Tracing for Knowledge Localization</h3>
-    <p>
-      The ROME paper uses causal tracing to answer: <strong>Where is factual knowledge stored in GPT models?</strong>
-    </p>
-
-    <h4>The Experiment</h4>
-    <ol>
-      <li><strong>Clean prompt:</strong> "The Space Needle is located in the city of" → "Seattle"</li>
-      <li><strong>Corrupted prompt:</strong> Add noise to all token embeddings</li>
-      <li><strong>Systematic patching:</strong> Restore clean activations one component at a time</li>
-      <li><strong>Measure:</strong> Does the model recover the correct answer?</li>
-    </ol>
-
-    <h4>Key Findings</h4>
     <ul>
-      <li><strong>Critical window:</strong> Restoring the <em>last subject token</em> ("Needle") at <em>middle MLP
-          layers</em> (layers 5-10 in GPT-2 XL) is sufficient to recover factual recall</li>
-      <li><strong>Localized storage:</strong> Factual associations are stored in specific MLP weights, not distributed
-        across the network</li>
-      <li><strong>Layer specificity:</strong> Early layers encode syntax/position, middle layers store facts, late
-        layers decode to vocabulary</li>
+      <li><code>U</code>: Left singular vectors (output space basis)</li>
+      <li><code>Σ</code>: Singular values (scaling factors, diagonal matrix)</li>
+      <li><code>V</code>: Right singular vectors (input space basis)</li>
     </ul>
 
-    <div class="diagram">
-      Subject: "Space Needle"<br>
-      ↓<br>
-      Middle MLP layers (5-10) at last subject token<br>
-      ↓<br>
-      Retrieve: "located in Seattle"<br>
-      ↓<br>
-      Output: "Seattle"
-    </div>
-
-    <h4>Methodology: Average Indirect Effect (AIE)</h4>
+    <h4>Principal Component Analysis (PCA)</h4>
     <p>
-      ROME measures the <strong>indirect effect</strong> of the subject through each component:
+      PCA finds the directions of maximum variance in data:
     </p>
     <ol>
-      <li>Run corrupted prompt (all noise)</li>
-      <li>Patch clean activations at state S (e.g., layer 8, position "Needle")</li>
-      <li>Measure: how much does this restore correct output?</li>
-      <li>Repeat for all states S</li>
-      <li>States with high AIE are causally important</li>
+      <li>Center the data: subtract the mean</li>
+      <li>Compute SVD of the centered data matrix</li>
+      <li>The columns of <code>V</code> are the principal components</li>
+      <li>Project data onto top k components for dimensionality reduction</li>
     </ol>
 
-    <h3>6. Entity Tracking and Binding Vectors</h3>
     <p>
-      The entity tracking work (finetuning.baulab.info) studied a different question: <strong>How do models track which
-        attributes belong to which entities?</strong>
+      <strong>Why PCA matters:</strong> It lets us visualize 768-dimensional activation vectors in 2D or 3D while
+      preserving the most important structure.
     </p>
 
-    <h4>The Setup</h4>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      "The tall person and the short person walked into the room.<br>
-      The tall person sat down."
-    </code>
-
+    <h3>2. Visualizing Activation Vectors with PCA</h3>
     <p>
-      Question: How does the model remember "tall" is bound to the first person when processing "The tall person sat
-      down"?
+      Activation vectors live in high-dimensional space (typically 768-12,288 dimensions). PCA projects them into 2D or
+      3D while preserving as much variance as possible.
     </p>
 
-    <h4>Findings: Binding Vectors</h4>
+    <h4>Example: Visualizing Word Embeddings</h4>
+    <ol>
+      <li>Collect activation vectors for many words</li>
+      <li>Apply PCA to find the top 2 principal components</li>
+      <li>Plot each word at its projected coordinates</li>
+      <li>Observe clusters: animals together, countries together, etc.</li>
+    </ol>
+
+    <p>
+      <strong>What to look for:</strong>
+    </p>
     <ul>
-      <li><strong>Binding information</strong> is stored in attention head outputs, not MLPs</li>
-      <li>Specific attention heads maintain <strong>binding vectors</strong> that associate attributes with entities
-      </li>
-      <li>These binding vectors can be <strong>extracted and reused</strong> across contexts</li>
-      <li>Patching binding vectors transfers attribute associations</li>
+      <li>Semantic clusters (related concepts group together)</li>
+      <li>Linear structure (arithmetic relationships visible as parallel arrows)</li>
+      <li>Outliers (unusual or polysemantic words)</li>
     </ul>
 
-    <h4>Contrast with ROME</h4>
-    <table>
-      <tr>
-        <th>Aspect</th>
-        <th>ROME (Factual Knowledge)</th>
-        <th>Entity Tracking (Bindings)</th>
-      </tr>
-      <tr>
-        <td>Storage</td>
-        <td>MLP layers</td>
-        <td>Attention heads</td>
-      </tr>
-      <tr>
-        <td>Layer</td>
-        <td>Middle layers (5-10)</td>
-        <td>Various layers, task-dependent</td>
-      </tr>
-      <tr>
-        <td>What's stored</td>
-        <td>Long-term facts ("Seattle")</td>
-        <td>Context-specific bindings ("tall" ↔ person 1)</td>
-      </tr>
-      <tr>
-        <td>Localization</td>
-        <td>Highly localized (specific MLPs)</td>
-        <td>More distributed (multiple heads)</td>
-      </tr>
-    </table>
-
+    <h3>3. The Geometry of Truth</h3>
     <p>
-      <strong>Lesson:</strong> Different types of information are stored in different architectural components. Facts go
-      in MLPs, bindings in attention.
+      A remarkable finding: truth is represented as a <strong>linear direction</strong> in activation space, consistent
+      across diverse contexts.
     </p>
 
-    <h3>7. Gradient-Based Attribution Patching</h3>
-    <p>
-      Testing every possible component via patching is expensive. <strong>Gradient-based attribution</strong> estimates
-      causal importance efficiently using gradients.
-    </p>
+    <h4>Key Results</h4>
+    <ul>
+      <li>True vs. false statements produce systematically different activations</li>
+      <li>The difference vector (truth direction) generalizes across topics</li>
+      <li>Truth forms a linear subspace that can be found via PCA on contrastive examples</li>
+      <li>This structure emerges without explicit truth training</li>
+    </ul>
 
-    <h4>The Idea</h4>
+    <h4>Mass Mean-Difference Vectors</h4>
     <p>
-      Instead of actually patching every activation, approximate the effect using gradients:
+      A simple but powerful technique:
     </p>
+    <ol>
+      <li>Collect activations for many examples with property A</li>
+      <li>Collect activations for many examples without property A</li>
+      <li>Compute: <code>direction_A = mean(with_A) - mean(without_A)</code></li>
+      <li>This direction captures the essence of property A</li>
+    </ol>
 
-    <div class="math">
-      Attribution(activation) ≈ gradient(loss w.r.t. activation) × (clean_value - corrupted_value)
+    <p>
+      <strong>Applications:</strong>
+    </p>
+    <ul>
+      <li>Truth vs. false</li>
+      <li>Positive vs. negative sentiment</li>
+      <li>Formal vs. informal language</li>
+      <li>Your concept vs. not-your-concept</li>
+    </ul>
+
+    <h4>Euclidean Classifiers</h4>
+    <p>
+      Use the mass mean-difference vector as a classifier:
+    </p>
+    <div class="diagram">
+      score = activation · direction_vector<br>
+      if score > threshold: predict property A present<br>
+      else: predict property A absent
     </div>
 
     <p>
-      This gives a first-order approximation of how much patching that activation would change the output.
+      This simple linear classifier often works surprisingly well, supporting the linear representation hypothesis.
     </p>
 
-    <h4>Algorithm</h4>
-    <ol>
-      <li>Run clean and corrupted forward passes, save all activations</li>
-      <li>Run corrupted pass again, computing gradients w.r.t. output loss</li>
-      <li>For each activation: <code>attribution = gradient × Δactivation</code></li>
-      <li>Activations with high attribution are predicted to be important</li>
-    </ol>
+    <h3>4. The Geometry of Token Embeddings and Unembeddings</h3>
 
-    <h4>Advantages</h4>
+    <h4>Token Embedding Matrix (Encoder)</h4>
+    <p>
+      Converts token IDs to vectors: <code>E[token_id] → vector</code><br>
+      Each row of <code>E</code> is a token's initial representation.
+    </p>
+
+    <h4>Unembedding Matrix (Decoder)</h4>
+    <p>
+      Converts final activations to vocabulary logits: <code>logits = U × activation</code><br>
+      Each row of <code>U</code> is a direction in activation space that "votes" for that token.
+    </p>
+
+    <h4>Geometric Insight</h4>
+    <p>
+      Token embedding and unembedding matrices often share similar geometric structure:
+    </p>
     <ul>
-      <li><strong>Speed:</strong> One backward pass instead of thousands of forward passes</li>
-      <li><strong>Fine-grained:</strong> Can attribute to individual neurons, not just layers</li>
-      <li><strong>Actionable:</strong> Identifies specific interventions to test</li>
+      <li>Semantically similar tokens have similar embedding vectors</li>
+      <li>Similar tokens have similar unembedding directions</li>
+      <li>The dot product <code>E[i] · U[j]ᵀ</code> measures how much token i "predicts" token j</li>
+      <li>PCA on embedding/unembedding matrices reveals semantic clusters</li>
+    </ul>
+
+    <h3>5. Semantic-Vector Arithmetic</h3>
+    <p>
+      One of the most striking properties of neural language representations: you can do meaningful arithmetic with
+      concept vectors.
+    </p>
+
+    <h4>Classic Examples</h4>
+    <div class="diagram">
+      king - man + woman ≈ queen<br>
+      Paris - France + Germany ≈ Berlin<br>
+      walking - walk + swim ≈ swimming
+    </div>
+
+    <h4>Why It Works</h4>
+    <p>
+      If concepts are linear directions, then:
+    </p>
+    <ul>
+      <li>"Male" is a direction in embedding space</li>
+      <li>"Royalty" is another direction</li>
+      <li>"King" ≈ "royalty" + "male"</li>
+      <li>"Queen" ≈ "royalty" + "female"</li>
+      <li>Therefore: king - male + female ≈ queen</li>
     </ul>
 
     <h4>Limitations</h4>
     <ul>
-      <li>Linear approximation may miss nonlinear effects</li>
-      <li>Doesn't account for interactions between components</li>
-      <li>Should be validated with actual patching on top candidates</li>
+      <li>Works best for simple, compositional relationships</li>
+      <li>Quality depends on training data biases</li>
+      <li>Not all concepts compose linearly</li>
     </ul>
 
-    <h3>8. Average Indirect Effect (AIE) for Systematic Search</h3>
     <p>
-      AIE provides a systematic framework for finding all causally important components.
+      We'll see later how <strong>concept-level induction</strong> relies on this arithmetic property.
     </p>
 
-    <h4>The Method</h4>
+    <h3>6. The Logit Lens</h3>
     <p>
-      For each component (layer, head, neuron):
+      The <strong>logit lens</strong> is a technique for understanding what the model is "thinking" at intermediate
+      layers, before it reaches the final output.
     </p>
+
+    <h4>How It Works</h4>
     <ol>
-      <li>Start with corrupted run</li>
-      <li>Patch only that component with clean activations</li>
-      <li>Measure effect on output: <code>AIE = P(correct | patch) - P(correct | no patch)</code></li>
-      <li>Repeat across many examples</li>
-      <li>Components with high average AIE are important</li>
+      <li>Extract activation vector at layer L</li>
+      <li>Apply the unembedding matrix: <code>intermediate_logits = U × activation_L</code></li>
+      <li>Convert to probabilities: <code>probs = softmax(intermediate_logits)</code></li>
+      <li>Examine top predictions</li>
     </ol>
 
-    <h4>Hierarchical Search</h4>
+    <h4>What You Learn</h4>
     <p>
-      Use AIE hierarchically to narrow down:
-    </p>
-    <ol>
-      <li>Test each layer → find important layers</li>
-      <li>Test each component in important layers → find important heads/neurons</li>
-      <li>Test positions × components → find spatiotemporal importance</li>
-    </ol>
-
-    <h4>Interpretation</h4>
-    <ul>
-      <li><strong>High AIE:</strong> Component mediates the causal effect (is in the causal path)</li>
-      <li><strong>Zero AIE:</strong> Component is not in the causal path for this behavior</li>
-      <li><strong>Negative AIE:</strong> Component actually suppresses the behavior (inhibitory)</li>
-    </ul>
-
-    <h3>9. Function Vectors: Elegant Application of Patching</h3>
-    <p>
-      <strong>Function vectors</strong> encode specific computational functions (like "negate" or "compare") and can be
-      extracted through causal intervention.
-    </p>
-
-    <h4>Core Idea</h4>
-    <p>
-      If a function is represented as a vector, adding/subtracting it should enable/disable that function:
-    </p>
-
-    <div class="diagram">
-      Original: "The tower is tall" → "tall"<br>
-      + Negation vector: "The tower is tall" → "short"<br>
-      - Negation vector: (might enhance affirmation)
-    </div>
-
-    <h4>Finding Function Vectors</h4>
-    <ol>
-      <li><strong>Create pairs:</strong> Sentences that differ only in the target function
-        <ul>
-          <li>"The tower is tall" / "The tower is short" (negation)</li>
-          <li>"Paris is larger than Lyon" / "Lyon is smaller than Paris" (comparison reversal)</li>
-        </ul>
-      </li>
-      <li><strong>Extract activations:</strong> Get activation differences at various layers/heads</li>
-      <li><strong>Find direction:</strong> Compute mean difference across pairs</li>
-      <li><strong>Test causally:</strong> Add vector to new examples, verify it performs the function</li>
-    </ol>
-
-    <h4>Function Vector Attention Heads</h4>
-    <p>
-      Some attention heads specialize in computing specific functions. You can identify them by:
+      The logit lens reveals:
     </p>
     <ul>
-      <li>High AIE when patching for function-related tasks</li>
-      <li>Attention patterns consistent with the function (e.g., comparison heads attend between compared entities)</li>
-      <li>Output vectors aligned with the function vector</li>
+      <li>How predictions evolve across layers</li>
+      <li>When the model "decides" on its answer (which layer)</li>
+      <li>Whether early layers have different hypotheses than final output</li>
+      <li>How context modifies representations layer by layer</li>
     </ul>
 
-    <h4>Applications</h4>
-    <ul>
-      <li><strong>Negation:</strong> "NOT" function, flips sentiment/truth</li>
-      <li><strong>Comparison:</strong> "greater than", "less than"</li>
-      <li><strong>Temporal:</strong> "past", "future", "present"</li>
-      <li><strong>Modality:</strong> "possible", "necessary", "actual"</li>
-    </ul>
-
-    <h3>10. Designing Counterfactual Datasets</h3>
-    <p>
-      Effective causal experiments require carefully designed counterfactual pairs.
-    </p>
-
-    <h4>Principles</h4>
-
-    <p><strong>1. Minimal Pairs:</strong> Change only the target variable</p>
+    <h4>Example: Factual Recall</h4>
     <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Good: "France" / "Germany" (minimal change)<br>
-      Bad: "France" / "The United States of America" (length differs)
+      Prompt: "The capital of France is"<br><br>
+      Layer 0: (embedding) → "France", "Paris", "the"<br>
+      Layer 3: → "Paris", "a", "the"<br>
+      Layer 6: → "Paris", "Lyon", "Marseille"<br>
+      Layer 12: (final) → "Paris", "the", "France"<br>
     </code>
 
-    <p><strong>2. Matched Structure:</strong> Keep syntax and structure identical</p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Good: "The capital of France" / "The capital of Germany"<br>
-      Bad: "France's capital" / "The capital of Germany" (different structure)
-    </code>
+    <p>
+      This shows the model refining its prediction across layers, with middle layers strongest on the correct answer.
+    </p>
 
-    <p><strong>3. Clear Causation:</strong> The changed variable should clearly cause the output difference</p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      Good: "happy" / "sad" → sentiment changes<br>
-      Bad: "happy Tuesday" / "sad Wednesday" → multiple changes
-    </code>
+    <h3>7. Visualizing Attention Patterns</h3>
+    <p>
+      Attention weights tell us which tokens each position is "looking at." Visualizing these patterns reveals
+      interpretable structure.
+    </p>
 
-    <p><strong>4. Sufficient Diversity:</strong> Test across varied contexts</p>
-    <ul>
-      <li>Different sentence structures</li>
-      <li>Different positions of target variable</li>
-      <li>Different surrounding context</li>
-    </ul>
+    <h4>Attention Heatmap</h4>
+    <p>
+      For each head, create a matrix where <code>A[i,j]</code> = attention from position i to position j<br>
+      Plot as a heatmap with tokens on both axes.
+    </p>
 
     <h4>Common Patterns</h4>
-
-    <p><strong>Subject Substitution:</strong></p>
-    <code>The [subject] is located in [object]</code>
-
-    <p><strong>Attribute Swapping:</strong></p>
-    <code>The [adjective] person walked / The [different adjective] person walked</code>
-
-    <p><strong>Negation Toggle:</strong></p>
-    <code>The tower is tall / The tower is not tall</code>
-
-    <p><strong>Relation Reversal:</strong></p>
-    <code>A is greater than B / A is less than B</code>
-
-    <h4>Validation</h4>
-    <p>
-      Test your dataset:
-    </p>
     <ul>
-      <li>Does the model produce different outputs for each pair?</li>
-      <li>Are the outputs consistent with your hypothesis?</li>
-      <li>Do results generalize across multiple examples?</li>
-      <li>Are there confounds (other variables that changed)?</li>
+      <li><strong>Diagonal:</strong> Attending to same position (self-attention)</li>
+      <li><strong>Previous token:</strong> Strong band just below diagonal</li>
+      <li><strong>Beginning of sequence:</strong> Vertical stripe at position 0</li>
+      <li><strong>Punctuation:</strong> Attending to periods, commas</li>
+      <li><strong>Syntactic dependencies:</strong> Verbs attending to subjects</li>
     </ul>
 
-    <h3>Putting It All Together: A Research Workflow</h3>
-    <ol>
-      <li><strong>Hypothesis:</strong> Formulate what you think the model is doing</li>
-      <li><strong>Dataset:</strong> Design counterfactual pairs testing your hypothesis</li>
-      <li><strong>Baseline:</strong> Verify the model shows the target behavior</li>
-      <li><strong>Coarse search:</strong> Use AIE to find important layers/components</li>
-      <li><strong>Gradient attribution:</strong> Narrow down to specific activations</li>
-      <li><strong>Causal validation:</strong> Patch top candidates, measure effects</li>
-      <li><strong>Interpretation:</strong> Build mechanistic story from findings</li>
-      <li><strong>Generalization:</strong> Test on new examples/tasks</li>
-    </ol>
-  </section>
-
-  <section id="validation-framework">
-    <h2>Part 2: Validation Framework for Interpretability</h2>
-
-    <h3>The Need for Rigorous Validation</h3>
+    <h3>8. Induction Heads: Visualizing Pattern-Copying</h3>
     <p>
-      Causal intervention gives us powerful tools to test mechanistic hypotheses. But how do we know our interpretations
-      are actually correct? This section establishes a comprehensive validation framework that will be critical throughout
-      the course—especially as we encounter potential illusions and failure modes in Weeks 6, 7, and 10.
+      Now we dive deep into <strong>induction heads</strong>, one of the first interpretable circuits discovered in
+      transformers.
     </p>
 
-    <h3>1. Levels of Validation (Doshi-Velez & Kim, 2017)</h3>
+    <h4>What Induction Heads Do</h4>
     <p>
-      <strong>Doshi-Velez and Kim (2017)</strong> propose three levels of evaluation for interpretability methods:
+      Pattern copying: if the model has seen <code>[A][B]</code> earlier, then upon seeing <code>[A]</code> again, it
+      predicts <code>[B]</code>.
     </p>
 
-    <h4>Application-Grounded Evaluation</h4>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      Input: "foo bar baz foo bar baz foo"<br>
+      At final "foo", model predicts: "bar" (copying the pattern)
+    </code>
+
+    <h4>How They Work: Two-Head Cooperation</h4>
     <p>
-      Test interpretations with real users performing real tasks in the actual application domain.
+      Induction requires <strong>two attention heads working together</strong> across layers:
     </p>
+
+    <p><strong>Step 1: Previous-Token Head (earlier layer)</strong></p>
     <ul>
-      <li><strong>Example:</strong> Have doctors use model explanations to make diagnoses, measure accuracy improvement</li>
-      <li><strong>Pros:</strong> Highest ecological validity, tests real-world utility</li>
-      <li><strong>Cons:</strong> Expensive, requires domain experts, slow iteration</li>
-      <li><strong>When to use:</strong> Final validation before deployment, high-stakes applications</li>
+      <li>Attends to position i-1 from position i</li>
+      <li>Copies information about what came before</li>
+      <li>Writes this to the residual stream</li>
     </ul>
-
-    <h4>Human-Grounded Evaluation</h4>
-    <p>
-      Test with lay users on simplified tasks that capture the essence of the real application.
-    </p>
-    <ul>
-      <li><strong>Example:</strong> Show users attention visualizations, ask if they make sense</li>
-      <li><strong>Pros:</strong> Faster than application-grounded, can use larger samples</li>
-      <li><strong>Cons:</strong> May not generalize to real application, subjective judgments</li>
-      <li><strong>When to use:</strong> Iterative development, when domain experts are unavailable</li>
-    </ul>
-
-    <h4>Functionally-Grounded Evaluation</h4>
-    <p>
-      Test interpretations using quantitative metrics without human subjects.
-    </p>
-    <ul>
-      <li><strong>Example:</strong> Measure if high-importance features (by attribution) actually change outputs when intervened on</li>
-      <li><strong>Pros:</strong> Fast, reproducible, scalable, no human subjects needed</li>
-      <li><strong>Cons:</strong> May miss aspects that matter to humans</li>
-      <li><strong>When to use:</strong> Initial validation, debugging, comparing methods</li>
-    </ul>
-
-    <h3>2. Faithfulness: The Core Requirement (Jacovi & Goldberg, 2020)</h3>
-    <p>
-      <strong>Jacovi and Goldberg (2020)</strong> argue that faithfulness is the fundamental property interpretations must satisfy:
-    </p>
 
     <div class="diagram">
-      <strong>Faithfulness:</strong> An explanation is faithful if it accurately represents the model's true decision-making process.
+      At "bar": attend to previous token → residual stream now encodes "previous token was foo"
     </div>
 
-    <h4>Why Faithfulness Matters</h4>
+    <p><strong>Step 2: Induction Head (later layer)</strong></p>
+    <ul>
+      <li>Looks for positions where the previous token matches current context</li>
+      <li>When it finds a match, it attends to what came after in the past</li>
+      <li>Promotes that token in its output</li>
+    </ul>
+
+    <div class="diagram">
+      Current: "foo"<br>
+      Induction head: "Find where previous token was 'foo'"<br>
+      → Finds earlier "foo bar"<br>
+      → Attends to "bar" (what came after "foo")<br>
+      → Predicts "bar" for current position
+    </div>
+
+    <h4>Characteristic Attention Pattern</h4>
     <p>
-      An explanation can be:
+      Induction heads have a distinctive "stripe" pattern in attention visualization:
     </p>
     <ul>
-      <li><strong>Plausible but unfaithful:</strong> Makes intuitive sense but doesn't reflect what the model actually does</li>
-      <li><strong>Faithful but implausible:</strong> Accurately describes the model but is hard to understand</li>
+      <li>Strong attention to positions where pattern previously occurred</li>
+      <li>Offset by +1 (attending to what came after the match)</li>
+      <li>Creates a characteristic diagonal stripe pattern offset from the main diagonal</li>
     </ul>
+
+    <h3>9. Token Induction vs. Concept Induction</h3>
     <p>
-      <strong>Goal:</strong> Faithful AND plausible explanations. But when forced to choose, <em>faithfulness must come first</em>.
+      Not all induction is created equal. Recent work has revealed two fundamentally different types.
     </p>
 
-    <h4>Testing Faithfulness</h4>
-    <p>The causal intervention methods from Part 1 are key faithfulness tests:</p>
-    <ol>
-      <li><strong>Forward simulation:</strong> If explanation says X causes Y, intervening on X should change Y</li>
-      <li><strong>Backward verification:</strong> If explanation highlights component C, ablating C should break the behavior</li>
-      <li><strong>Sufficiency test:</strong> Patching only the explained components should recover the behavior</li>
-    </ol>
-
-    <h3>3. Multi-Method Validation</h3>
+    <h4>Token-Level Induction</h4>
     <p>
-      No single interpretability method is perfect. Robust findings require convergent evidence from multiple independent methods.
+      Copies <strong>literal tokens</strong>:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "Alice went to the store. Bob went to the park. Alice went to the ___"<br>
+      → Predicts "store" (exact token that followed "Alice went to the" before)
+    </code>
+
+    <p>
+      <strong>Limitation:</strong> Fails when surface form changes but meaning is the same.
     </p>
 
-    <h4>Method Triangulation</h4>
-    <table>
-      <tr>
-        <th>Method Category</th>
-        <th>Example Methods</th>
-        <th>What It Tests</th>
+    <h4>Concept-Level Induction</h4>
+    <p>
+      Copies <strong>semantic patterns</strong>:
+    </p>
+    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
+      "The capital of France is Paris. The capital of Germany is Berlin. The capital of Italy is ___"<br>
+      → Predicts "Rome" (concept pattern: [country] → [capital])<br>
+    </code>
+
+    <p>
+      Even though "France", "Germany", and "Italy" are different tokens, the model recognizes the semantic pattern and
+      applies it.
+    </p>
+
+    <h4>Key Differences</h4>
+    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+      <tr style="background-color: #f0f0f0;">
+        <th style="border: 1px solid #ccc; padding: 8px;">Property</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Token Induction</th>
+        <th style="border: 1px solid #ccc; padding: 8px;">Concept Induction</th>
       </tr>
       <tr>
-        <td><strong>Causal Intervention</strong></td>
-        <td>Patching, ablation, steering</td>
-        <td>Which components are necessary/sufficient</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Matching</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Exact token match</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Semantic similarity</td>
       </tr>
       <tr>
-        <td><strong>Attribution</strong></td>
-        <td>Gradients, IG, SHAP, attention (Week 6)</td>
-        <td>Which inputs are important</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Copying</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Literal token</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Semantic role</td>
       </tr>
       <tr>
-        <td><strong>Probing</strong></td>
-        <td>Linear probes, logistic regression (Week 5)</td>
-        <td>What information is encoded</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Generalization</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Limited</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Strong</td>
       </tr>
       <tr>
-        <td><strong>Feature Discovery</strong></td>
-        <td>SAEs, dictionary learning (Week 7)</td>
-        <td>What features are represented</td>
-      </tr>
-      <tr>
-        <td><strong>Behavioral Testing</strong></td>
-        <td>Adversarial examples, edge cases</td>
-        <td>When does the interpretation fail</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Vector Arithmetic</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Not required</td>
+        <td style="border: 1px solid #ccc; padding: 8px;">Essential</td>
       </tr>
     </table>
 
-    <p><strong>Validation strategy:</strong> Use at least 3 independent methods. If they agree, confidence increases. If they disagree, investigate why.</p>
-
-    <h3>4. Sanity Checks: Catching Illusions Early</h3>
+    <h3>10. The Dual-Route Model of Induction</h3>
     <p>
-      Before trusting any interpretation, run basic sanity checks. These will be critical in Week 10 (Skepticism) when we study interpretability failures.
+      Research has shown that transformers implement <strong>both routes</strong> simultaneously, with different
+      attention heads specializing in each type.
     </p>
 
-    <h4>Model Randomization Test</h4>
-    <p>
-      <strong>Test:</strong> Does your interpretation change when applied to a randomly initialized model?
-    </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      interpretation_trained = analyze(trained_model)<br>
-      interpretation_random = analyze(random_model)<br>
-      <br>
-      assert interpretation_trained != interpretation_random
-    </code>
-    <p>
-      <strong>Why it matters:</strong> If interpretations look the same for trained and random models, your method might just be detecting network architecture, not learned behavior.
-    </p>
-
-    <h4>Data Randomization Test</h4>
-    <p>
-      <strong>Test:</strong> Train a model on data with random labels. Does your interpretation change?
-    </p>
+    <h4>Dual-Route Architecture</h4>
     <ul>
-      <li>A model trained on random labels should have different (probably nonsensical) internal mechanisms</li>
-      <li>If interpretation looks the same, it's not capturing what the model learned</li>
+      <li><strong>Route 1 (Token):</strong> Fast, exact-match based copying</li>
+      <li><strong>Route 2 (Concept):</strong> Slower, semantic-similarity based copying</li>
+      <li>Both routes contribute to final predictions</li>
+      <li>Model can use whichever is more appropriate for context</li>
     </ul>
 
-    <h4>Ablation Completeness Test</h4>
+    <h4>Multi-Token Words: A Key Insight</h4>
     <p>
-      <strong>Test:</strong> If you ablate all "important" components identified by your method, does the behavior break?
+      One striking finding: <strong>concept induction heads attend to the last token of multi-token words</strong>.
     </p>
-    <code style="display: block; margin: 10px 0; padding: 10px; background-color: #f4f4f4;">
-      important_components = find_important_components(model)<br>
-      ablated_performance = test(model, ablate=important_components)<br>
-      <br>
-      assert ablated_performance << baseline_performance
-    </code>
 
-    <h4>Sign Test (for attribution methods)</h4>
     <p>
-      <strong>Test:</strong> Do positive attributions actually help the predicted class?
+      Example: "San Francisco" is tokenized as ["San", "Francisco"]
     </p>
     <ul>
-      <li>Remove features with high positive attribution → performance should drop</li>
-      <li>Remove features with high negative attribution → performance might improve</li>
-      <li>If removing "important" features doesn't change output, attribution is unfaithful</li>
+      <li><strong>Token induction:</strong> Might attend to "San" (first token)</li>
+      <li><strong>Concept induction:</strong> Attends to "Francisco" (last token)</li>
     </ul>
 
-    <h3>5. Baseline Comparisons</h3>
     <p>
-      Always compare your interpretability findings against appropriate baselines:
+      <strong>Why?</strong> The last token's representation has accumulated information from previous tokens through
+      attention, creating a more complete semantic representation of "San Francisco" as a city.
     </p>
 
-    <h4>Random Baseline</h4>
+    <h4>Semantic-Vector Arithmetic in Concept Induction</h4>
     <p>
-      Is your method better than random selection?
+      Concept induction heads rely on semantic similarity in activation space:
     </p>
-    <ul>
-      <li>For component importance: Compare AIE of identified components vs. random components</li>
-      <li>For attribution: Compare removal of high-attribution features vs. random features</li>
-      <li><strong>Minimum bar:</strong> Your method must beat random</li>
-    </ul>
-
-    <h4>Frequency Baseline</h4>
-    <p>
-      Is your method just detecting frequent patterns?
-    </p>
-    <ul>
-      <li>For text: High-attribution words might just be common words</li>
-      <li>Test: Does attribution correlate with word frequency? If yes, consider TF-IDF weighting</li>
-    </ul>
-
-    <h4>Input × Gradient Baseline</h4>
-    <p>
-      For complex attribution methods, compare against simple Input × Gradient:
-    </p>
-    <ul>
-      <li>Does your expensive method (IG, SHAP) actually perform better?</li>
-      <li>By how much? Is the computational cost worth it?</li>
-    </ul>
-
-    <h3>6. Counterfactual Testing</h3>
-    <p>
-      The strongest validation: <strong>predict what will happen, then intervene and verify</strong>.
-    </p>
-
-    <h4>The Counterfactual Validation Loop</h4>
     <ol>
-      <li><strong>Interpret:</strong> "Component C computes function F for concept X"</li>
-      <li><strong>Predict:</strong> "If I intervene on C, behavior related to X should change in way Y"</li>
-      <li><strong>Intervene:</strong> Actually modify C (patch, ablate, steer)</li>
-      <li><strong>Measure:</strong> Did Y happen?</li>
-      <li><strong>Iterate:</strong> If not, revise interpretation</li>
+      <li>Represent "France", "Germany", "Italy" as activation vectors</li>
+      <li>These vectors are similar (all countries)</li>
+      <li>Find where vector similar to "France" appeared before</li>
+      <li>Copy what came after (in semantic role space: the capital)</li>
     </ol>
 
-    <h4>Example: Validating a Factual Association</h4>
+    <p>
+      This enables generalization through vector arithmetic:
+    </p>
     <div class="diagram">
-      <strong>Interpretation:</strong> "Layer 8 MLP at position 'Needle' stores the fact that Space Needle is in Seattle"<br><br>
-
-      <strong>Prediction 1:</strong> Ablating this component should make model fail to recall "Seattle"<br>
-      → Test: Ablate → measure accuracy drop ✓<br><br>
-
-      <strong>Prediction 2:</strong> Patching from "Eiffel Tower → Paris" should make model say "Paris"<br>
-      → Test: Patch → check output ✓<br><br>
-
-      <strong>Prediction 3:</strong> This component should activate for other factual recall tasks<br>
-      → Test: Check AIE on "The Colosseum is in...", "The Parthenon is in..." ✓
+      "Italy" ≈ "France" in semantic space<br>
+      → Find context where "France" occurred → [capital]<br>
+      → Apply same semantic relationship to "Italy" → [its capital]
     </div>
 
-    <h3>7. Validation Checklist for Your Research</h3>
     <p>
-      Before claiming you've discovered something about how a model works, verify:
+      <strong>Evidence:</strong> Concept induction heads' representations show better semantic-vector arithmetic
+      properties than token induction heads. You can perform operations like "Paris - France + Italy" in their
+      activation space and get "Rome".
     </p>
 
-    <div class="assignment-box">
-      <h4>Validation Checklist</h4>
-      <ol>
-        <li><strong>✓ Sanity checks passed:</strong>
-          <ul>
-            <li>Random model gives different interpretation</li>
-            <li>Random labels give different interpretation</li>
-            <li>Ablating "important" components breaks behavior</li>
-          </ul>
-        </li>
-
-        <li><strong>✓ Causal validation:</strong>
-          <ul>
-            <li>Intervention on identified components changes behavior as predicted</li>
-            <li>Effect size is substantial (not just statistically significant)</li>
-            <li>Results replicate across multiple examples</li>
-          </ul>
-        </li>
-
-        <li><strong>✓ Multi-method agreement:</strong>
-          <ul>
-            <li>At least 3 independent methods point to same components/features</li>
-            <li>If methods disagree, you understand why</li>
-          </ul>
-        </li>
-
-        <li><strong>✓ Baseline comparisons:</strong>
-          <ul>
-            <li>Performance beats random baseline</li>
-            <li>Results aren't explained by simple heuristics (frequency, position)</li>
-          </ul>
-        </li>
-
-        <li><strong>✓ Generalization:</strong>
-          <ul>
-            <li>Findings hold on held-out test set</li>
-            <li>Findings transfer to related tasks/prompts</li>
-            <li>You've characterized when the interpretation fails</li>
-          </ul>
-        </li>
-
-        <li><strong>✓ Negative results reported:</strong>
-          <ul>
-            <li>You've documented what doesn't work</li>
-            <li>You've shown edge cases where interpretation breaks</li>
-          </ul>
-        </li>
-      </ol>
-
-      <p><strong>Remember:</strong> This validation framework will be crucial as we study attribution methods (Week 6), SAEs (Week 7),
-      and especially when we examine interpretability illusions (Week 10). The methods that seem most convincing are often the ones
-      that need the most rigorous validation.</p>
-    </div>
-
-    <h3>8. Validation in the Wild: What Can Go Wrong</h3>
+    <h3>Putting It All Together: A Visualization Toolkit</h3>
     <p>
-      Preview of Week 10 issues to watch for:
+      You now have multiple tools for understanding representations:
     </p>
-
-    <ul>
-      <li><strong>Confirmation bias:</strong> Finding what you expect to find, ignoring contradictory evidence</li>
-      <li><strong>Cherry-picking:</strong> Showing only examples that support your interpretation</li>
-      <li><strong>P-hacking:</strong> Testing many hypotheses, reporting only significant ones without correction</li>
-      <li><strong>Overfitting:</strong> Interpretation works on training data but not test data</li>
-      <li><strong>Confounds:</strong> Attributed importance is actually due to correlated features</li>
-      <li><strong>Visualization artifacts:</strong> Patterns in visualization don't reflect model computation</li>
-    </ul>
+    <ol>
+      <li><strong>PCA:</strong> Reduce dimensionality, visualize clusters and structure</li>
+      <li><strong>Mass mean-difference:</strong> Find concept directions</li>
+      <li><strong>Geometric analysis:</strong> Understand truth, token encodings/decodings</li>
+      <li><strong>Vector arithmetic:</strong> Test compositional structure</li>
+      <li><strong>Logit lens:</strong> See intermediate predictions</li>
+      <li><strong>Attention visualization:</strong> Understand information flow</li>
+      <li><strong>Induction analysis:</strong> Distinguish token vs. concept copying</li>
+    </ol>
 
     <p>
-      <strong>The solution:</strong> Rigorous application of this validation framework. We'll return to these issues in depth in Week 10.
+      These techniques combine to give you a comprehensive view of how language models represent and process
+      information.
     </p>
-
-    <h3>Looking Ahead</h3>
-    <p>
-      This validation framework will be your foundation for the rest of the course:
-    </p>
-    <ul>
-      <li><strong>Week 5 (Probes):</strong> How do we validate that probes are faithful?</li>
-      <li><strong>Week 6 (Attribution):</strong> Which attribution methods pass sanity checks?</li>
-      <li><strong>Week 7 (SAEs):</strong> Are discovered features robust and meaningful?</li>
-      <li><strong>Week 8 (Circuits + Causal Abstraction):</strong> Formal frameworks for causal validation</li>
-      <li><strong>Week 10 (Skepticism):</strong> Detailed study of validation failures and how to avoid them</li>
-    </ul>
   </section>
 
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>
-      This week's exercise provides hands-on experience with causal intervention:
+      This week's exercise provides hands-on practice with visualization techniques:
     </p>
     <ul>
-      <li>Implement basic activation patching</li>
-      <li>Compare noise vs. clean patching</li>
-      <li>Compute causal effects (ACE, total effect, indirect effect)</li>
-      <li>Replicate ROME-style causal tracing on a small scale</li>
-      <li>Apply gradient-based attribution</li>
-      <li>Calculate AIE across components</li>
-      <li>Extract and test function vectors</li>
-      <li>Design and evaluate counterfactual datasets</li>
+      <li>Apply PCA to activation vectors and create 2D/3D visualizations</li>
+      <li>Compute and visualize mass mean-difference vectors</li>
+      <li>Explore token embedding and unembedding geometry</li>
+      <li>Perform semantic-vector arithmetic</li>
+      <li>Implement and apply the logit lens</li>
+      <li>Visualize attention patterns as heatmaps</li>
+      <li>Find and visualize induction heads</li>
+      <li>Test token vs. concept induction</li>
+      <li>Analyze multi-token word processing in concept induction</li>
     </ul>
 
     <a href="https://colab.research.google.com/drive/PLACEHOLDER" target="_blank" class="colab-button">
@@ -1059,74 +689,82 @@
     <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <p><strong>Due: Thursday of Week 4</strong></p>
+      <p><strong>Due: Thursday of Week 3</strong></p>
       <p>
-        Use activation patching and causal intervention techniques to localize where your concept is computed.
-        Move beyond correlation to establish causal relationships between components and concept processing.
+        Now that you've selected your model and built a benchmark, dive deep into how the model represents your concept
+        internally. Use visualization techniques to examine geometric structure across layers and token positions.
       </p>
 
-      <h4>Causal Intervention Experiments</h4>
+      <h4>Part 1: Logit Lens Analysis (Qualitative)</h4>
       <ul>
-        <li><strong>Prepare counterfactual examples:</strong>
+        <li><strong>Apply logit lens:</strong> Project activations to vocabulary space at each layer
           <ul>
-            <li>Select 15-25 minimal pairs from your benchmark dataset</li>
-            <li>One version exhibits your concept, one doesn't (everything else constant)</li>
-            <li>Validate that model behavior differs as expected</li>
+            <li>Track how predictions evolve for concept-relevant prompts</li>
+            <li>Which layer first shows strong signal for your concept?</li>
+            <li>Does the concept emerge gradually or suddenly?</li>
           </ul>
         </li>
-        <li><strong>Activation patching:</strong> Systematically swap activations between paired examples
+        <li><strong>Analyze multiple token positions:</strong> Not just the final token
           <ul>
-            <li>Test each layer: does patching activations from concept→no-concept change behavior?</li>
-            <li>Test both attention and MLP components separately</li>
-            <li>Test different token positions (subject, verb, final, etc.)</li>
+            <li>How does concept representation vary by position?</li>
+            <li>Where in the sequence does the model "realize" the concept?</li>
           </ul>
         </li>
-        <li><strong>Identify critical layers and positions:</strong>
+        <li><strong>Create visualizations:</strong> Show prediction evolution across layers
           <ul>
-            <li>Which layers have the largest causal effect when patched?</li>
-            <li>Which token positions are critical?</li>
-            <li>Are attention or MLP layers more important?</li>
+            <li>Heatmaps, line plots, or trajectory visualizations</li>
+            <li>Compare examples with vs. without your concept</li>
           </ul>
         </li>
-        <li><strong>Validate findings:</strong>
+      </ul>
+
+      <h4>Part 2: Geometric Structure Analysis</h4>
+      <ul>
+        <li><strong>Examine multiple layers:</strong> Don't just look at one layer
           <ul>
-            <li>Run multiple trials to ensure effects are consistent</li>
-            <li>Test on held-out examples</li>
-            <li>Check that effects are concept-specific (not generic)</li>
+            <li>Apply PCA or t-SNE to activations from layers 0, 25%, 50%, 75%, 100%</li>
+            <li>Do concept examples cluster? Is there clear separation?</li>
+            <li>Which layer has the cleanest geometric structure?</li>
+          </ul>
+        </li>
+        <li><strong>Analyze multiple token positions:</strong> Final token, subject token, verb token, etc.
+          <ul>
+            <li>Does geometric structure vary by position?</li>
+            <li>Where is the concept most clearly encoded?</li>
+          </ul>
+        </li>
+        <li><strong>Test linear separability:</strong>
+          <ul>
+            <li>Train simple linear classifiers on different (layer, position) combinations</li>
+            <li>Report accuracy to quantify geometric structure quality</li>
+            <li>Create heatmap showing separability across layers × positions</li>
           </ul>
         </li>
       </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Causal localization results:</strong>
+        <li><strong>Logit lens visualizations:</strong> Prediction evolution across layers for 5-10 examples</li>
+        <li><strong>Geometric structure analysis:</strong>
           <ul>
-            <li>Heatmap showing patching effects across layers × positions</li>
-            <li>Identification of critical layers (top 3-5 most important)</li>
-            <li>Identification of critical token positions</li>
-            <li>Comparison of attention vs MLP importance</li>
+            <li>PCA/t-SNE plots for multiple (layer, position) combinations</li>
+            <li>Heatmap of linear separability across layers and positions</li>
+            <li>Identification of optimal layer(s) and position(s) for your concept</li>
           </ul>
         </li>
-        <li><strong>Statistical validation:</strong>
+        <li><strong>Written summary:</strong> Key observations about how and where your concept is represented
           <ul>
-            <li>Effect sizes and significance tests</li>
-            <li>Consistency checks across examples</li>
-            <li>Control experiments (random patching baselines)</li>
+            <li>At which layer does the concept emerge?</li>
+            <li>Is it localized to specific positions or distributed?</li>
+            <li>Is the representation linear/geometric or more complex?</li>
           </ul>
         </li>
-        <li><strong>Mechanistic interpretation:</strong>
-          <ul>
-            <li>Is your concept processed locally (specific layers) or distributed?</li>
-            <li>Where in the computation does the concept emerge?</li>
-            <li>Does the causal structure match your geometric analysis from Week 3?</li>
-          </ul>
-        </li>
-        <li><strong>Code:</strong> Notebook with patching experiments and analysis</li>
+        <li><strong>Code:</strong> Notebook with all analysis and visualizations</li>
       </ul>
 
       <p><em>
-        These causal findings will guide Week 5's probe training: you'll focus on the layers and positions
-        identified as causally important here.
+        This analysis will guide your next steps: if you find a strong linear representation at specific layers/positions,
+        that's where you'll focus causal interventions (Week 4) and probe training (Week 5).
       </em></p>
     </div>
   </section>

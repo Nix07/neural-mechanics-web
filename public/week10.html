@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Week 10: Model Editing</title>
+  <title>Week 10: Human Understanding - Neural Mechanics</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/contrib/auto-render.min.js"
@@ -89,13 +89,6 @@
       color: #2c3e50;
     }
 
-    .warning-box {
-      background-color: #ffe8e8;
-      border-left: 4px solid #d32f2f;
-      padding: 15px;
-      margin: 20px 0;
-    }
-
     ul,
     ol {
       margin: 10px 0;
@@ -143,930 +136,874 @@
       display: block;
       margin: 20px auto;
     }
-
-    pre {
-      background-color: #f5f5f5;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-    }
   </style>
 </head>
 
 <body>
-  <h1>Week 10: Model Editing</h1>
+  <h1>Week 10: Human Understanding & Self-Description</h1>
 
   <div class="objectives">
     <h3>Learning Objectives</h3>
     <ul>
-      <li>Understand the spectrum from activation interventions to weight modifications</li>
-      <li>Learn surgical editing methods: ROME and MEMIT for factual updates</li>
-      <li>Master parameter-efficient fine-tuning with LoRA</li>
-      <li>Compare weight-space vs. activation-space interventions</li>
-      <li>Apply interpretability findings to modify model behavior through weights</li>
-      <li>Validate that your interpretability work is actionable and causal</li>
-      <li>Understand limitations and safety considerations for model editing</li>
+      <li>Understand the human-AI knowledge gap and why it matters</li>
+      <li>Distinguish active vs passive knowledge transfer from superhuman AI</li>
+      <li>Apply teachability and novelty criteria to evaluate discovered concepts</li>
+      <li>Design human studies to validate interpretability findings</li>
+      <li>Implement concept discovery methods (convex optimization)</li>
+      <li>Measure human improvement from AI exposure</li>
+      <li>Build concept taxonomies and organize your findings</li>
+      <li>Validate your project's interpretability claims</li>
+      <li>Assess knowledge transfer potential of your concept</li>
     </ul>
   </div>
 
-  <h2>1. From Understanding to Control</h2>
+  <div class="readings-section">
+    <h2>Required Readings</h2>
+    <ul class="reading-list">
+      <li>
+        <strong><a href="https://www.pnas.org/doi/10.1073/pnas.2406675122" target="_blank">Bridging the Human-AI Knowledge Gap through Concept Discovery and Transfer in AlphaZero</a></strong><br>
+        <em>Schut, Toma&#353;ev, McGrath, Hassabis, Paquet &amp; Kim (2025). End-to-end knowledge transfer from AI to humans&mdash;teaching chess grandmasters machine-discovered strategies.</em>
+      </li>
+      <li>
+        <strong><a href="https://arxiv.org/abs/2401.06102" target="_blank">Patchscopes: A Unifying Framework for Inspecting Hidden Representations</a></strong><br>
+        <em>Ghandeharioun et al. (2024). Using the model itself to decode its representations via patched prompts.</em>
+      </li>
+      <li>
+        <strong><a href="https://arxiv.org/abs/2510.08506" target="_blank">Neologism Learning for Controllability and Self-Verbalization</a></strong><br>
+        <em>Hewitt et al. (2025). Teaching models new words for internal concepts, enabling self-description.</em>
+      </li>
+    </ul>
+    <h3>Supplementary Readings</h3>
+    <ul class="reading-list">
+      <li>
+        <strong><a href="https://arxiv.org/abs/2502.07586" target="_blank">We Can't Understand AI Using our Existing Vocabulary</a></strong><br>
+        <em>Hewitt, Geirhos &amp; Kim (2025). Argues for developing new shared vocabulary for AI concepts.</em>
+      </li>
+    </ul>
+  </div>
 
-  <h3>Why Model Editing?</h3>
+  <h2>1. The Human-AI Knowledge Gap</h2>
+
+  <h3>What Is the Knowledge Gap?</h3>
+  <p>
+    Modern AI systems achieve <strong>superhuman performance</strong> on many tasks: AlphaZero dominates chess champions,
+    AlphaGo defeated the world's best Go players, and large language models process text at scales no human can match.
+  </p>
 
   <p>
-    Weeks 1-9 taught you to <strong>analyze</strong> neural networks: find features, trace circuits, and discover concepts. But interpretability research should be <strong>actionable</strong>.
+    But a fundamental question remains: <em>Do these AI systems know something we don't?</em>
   </p>
 
   <div class="key-insight">
-    <p><strong>The Action Test:</strong></p>
+    <p><strong>The Knowledge Gap Problem:</strong></p>
     <p>
-      If you truly understand how a model represents concept X:
+      AI systems learn from vast amounts of self-play or data, exploring strategy spaces far beyond human experience.
+      They may discover <strong>novel concepts, strategies, or patterns</strong> that humans haven't recognized. If
+      these discoveries remain hidden inside neural networks, we lose the opportunity to:
     </p>
     <ul>
-      <li>You should be able to <strong>modify</strong> that representation</li>
-      <li>The modification should <strong>change behavior</strong> predictably</li>
-      <li>Side effects should be <strong>minimal and understandable</strong></li>
+      <li>Improve human expertise in the domain</li>
+      <li>Validate that AI reasoning aligns with human values</li>
+      <li>Understand failure modes and limitations</li>
+      <li>Transfer insights across domains</li>
     </ul>
-    <p>
-      Model editing turns interpretability insights into concrete interventions by <strong>changing model weights</strong>.
-    </p>
   </div>
 
-  <h3>The Intervention Spectrum</h3>
-
-  <table>
-    <tr>
-      <th>Method</th>
-      <th>What Changes</th>
-      <th>Persistence</th>
-      <th>Scope</th>
-      <th>Cost</th>
-    </tr>
-    <tr>
-      <td><strong>Prompting</strong></td>
-      <td>Input only</td>
-      <td>Single inference</td>
-      <td>Narrow (one generation)</td>
-      <td>Free</td>
-    </tr>
-    <tr>
-      <td><strong>Steering (Week 2)</strong></td>
-      <td>Activations</td>
-      <td>Per-inference</td>
-      <td>Moderate (affects reasoning)</td>
-      <td>Low (add vectors)</td>
-    </tr>
-    <tr>
-      <td><strong>Model Editing (ROME/MEMIT)</strong></td>
-      <td>Specific weights</td>
-      <td>Permanent</td>
-      <td>Narrow (targeted facts)</td>
-      <td>Medium (compute edit)</td>
-    </tr>
-    <tr>
-      <td><strong>Fine-tuning (LoRA)</strong></td>
-      <td>Many weights</td>
-      <td>Permanent</td>
-      <td>Broad (task/domain)</td>
-      <td>High (training)</td>
-    </tr>
-    <tr>
-      <td><strong>Full retraining</strong></td>
-      <td>All weights</td>
-      <td>Permanent</td>
-      <td>Complete</td>
-      <td>Very high</td>
-    </tr>
-  </table>
+  <h3>Two Modes of Learning from Superhuman AI</h3>
 
   <p>
-    This week focuses on the middle ground: <strong>surgical edits</strong> (ROME/MEMIT) and <strong>efficient fine-tuning</strong> (LoRA).
+    This week explores two complementary approaches to bridging the knowledge gap:
   </p>
-
-  <h2>2. Locating Knowledge in Weights</h2>
-
-  <h3>Where Are Facts Stored?</h3>
-
-  <p>
-    Before editing, we need to know <strong>where</strong> to edit. Research shows factual knowledge in transformers is stored in <strong>MLP layers</strong>, particularly in middle-to-late layers.
-  </p>
-
-  <div class="paper-card">
-    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
-    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
-    <p><strong>Published:</strong> NeurIPS 2022</p>
-    <p><strong>Key contribution:</strong> Causal tracing reveals that facts are stored in mid-layer MLPs; introduces ROME for surgical editing</p>
-  </div>
-
-  <h3>Causal Tracing for Knowledge Localization</h3>
-
-  <div class="info-box">
-    <p><strong>Method:</strong> Corrupt activations at different layers, measure impact on factual recall</p>
-
-    <p><strong>Procedure:</strong></p>
-    <ol>
-      <li><strong>Clean run:</strong> "The Eiffel Tower is located in" → "Paris" (baseline)</li>
-      <li><strong>Corrupted run:</strong> Add noise to subject token ("Eiffel Tower") embedding → fails to recall "Paris"</li>
-      <li><strong>Restoration test:</strong> Restore activations at layer L → if recall recovers, knowledge flows through layer L</li>
-      <li><strong>Sweep:</strong> Test all layers to find where restoration is most effective</li>
-    </ol>
-
-    <p><strong>Finding:</strong> Mid-layer MLPs (layers 8-20 in GPT-2-XL) are critical for factual recall.</p>
-  </div>
-
-  <h3>Key Insights from Localization</h3>
-
-  <ul>
-    <li><strong>Early layers:</strong> Process syntax and surface form (not factual content)</li>
-    <li><strong>Mid layers:</strong> Store factual associations (subject → object mappings)</li>
-    <li><strong>Late layers:</strong> Refine predictions and adapt to context</li>
-    <li><strong>MLPs specifically:</strong> Attention retrieves context; MLPs store knowledge</li>
-  </ul>
-
-  <h2>3. ROME: Rank-One Model Editing</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Locating and Editing Factual Associations in GPT"</h4>
-    <p><strong>Authors:</strong> Kevin Meng, David Bau, Alex Andonian, Yonatan Belinkov</p>
-    <p><strong>Published:</strong> NeurIPS 2022</p>
-    <p><strong>Key contribution:</strong> Surgical fact editing via rank-one weight updates to MLP layers</p>
-  </div>
-
-  <h3>The Editing Problem</h3>
-
-  <p>
-    <strong>Goal:</strong> Change a specific fact without affecting other knowledge.
-  </p>
-
-  <div class="example-box">
-    <p><strong>Example:</strong></p>
-    <ul>
-      <li><strong>Current fact:</strong> "The Space Needle is located in Seattle"</li>
-      <li><strong>Desired update:</strong> "The Space Needle is located in Paris"</li>
-      <li><strong>Constraint:</strong> Don't break other facts ("Eiffel Tower is in Paris", "Seattle is in Washington")</li>
-    </ul>
-  </div>
-
-  <h3>How ROME Works</h3>
-
-  <div class="info-box">
-    <p><strong>Core idea:</strong> Modify MLP weights to map subject representation → new object</p>
-
-    <p><strong>Mathematical formulation:</strong></p>
-    <ol>
-      <li><strong>Identify critical layer:</strong> Use causal tracing to find layer \(L\) where fact is stored</li>
-      <li><strong>Extract subject representation:</strong> \(h = \text{MLP}_L(\text{subject\_activation})\)</li>
-      <li><strong>Define target:</strong> \(h^* = \) representation that predicts new object</li>
-      <li><strong>Compute rank-one update:</strong>
-        <p style="text-align: center;">
-          \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T k}\)
-        </p>
-        where \(k\) is the input to the MLP (subject activation).
-      </li>
-      <li><strong>Update weights:</strong> \(W_{\text{new}} = W_{\text{old}} + \Delta W\)</li>
-    </ol>
-
-    <p><strong>Why rank-one?</strong> Minimal change to weights → minimal side effects</p>
-  </div>
-
-  <h3>ROME Algorithm Step-by-Step</h3>
-
-  <div class="example-box">
-    <p><strong>Example: Editing "The Space Needle is in Seattle" → "The Space Needle is in Paris"</strong></p>
-
-    <p><strong>Step 1: Locate the fact</strong></p>
-    <ul>
-      <li>Run causal tracing on "The Space Needle is in [MASK]"</li>
-      <li>Find critical layer (e.g., layer 17 MLP)</li>
-    </ul>
-
-    <p><strong>Step 2: Gather statistics</strong></p>
-    <ul>
-      <li>Pass 1000 examples through the model</li>
-      <li>Collect covariance matrix \(C\) of MLP inputs at layer 17</li>
-      <li>This captures "typical" activation patterns</li>
-    </ul>
-
-    <p><strong>Step 3: Compute edit direction</strong></p>
-    <ul>
-      <li>Get current output: \(h = \text{MLP}_{17}(\text{subject})\) → predicts "Seattle"</li>
-      <li>Get target output: \(h^*\) = representation that predicts "Paris"</li>
-      <li>Compute: \(\Delta W = \frac{(h^* - h) \cdot k^T}{k^T C^{-1} k}\)</li>
-    </ul>
-
-    <p><strong>Step 4: Apply edit</strong></p>
-    <ul>
-      <li>Update layer 17 MLP weights: \(W_{17} \leftarrow W_{17} + \Delta W\)</li>
-      <li>No other layers changed</li>
-    </ul>
-
-    <p><strong>Step 5: Validate</strong></p>
-    <ul>
-      <li><strong>Efficacy:</strong> "The Space Needle is in" → "Paris" ✓</li>
-      <li><strong>Paraphrase:</strong> "Where is the Space Needle?" → "Paris" ✓</li>
-      <li><strong>Specificity:</strong> "The Eiffel Tower is in" → "Paris" (unchanged) ✓</li>
-    </ul>
-  </div>
-
-  <h3>ROME Evaluation Metrics</h3>
-
-  <table>
-    <tr>
-      <th>Metric</th>
-      <th>What It Measures</th>
-      <th>Ideal Value</th>
-    </tr>
-    <tr>
-      <td><strong>Efficacy Score (ES)</strong></td>
-      <td>Does the model now produce the new fact?</td>
-      <td>100%</td>
-    </tr>
-    <tr>
-      <td><strong>Paraphrase Score (PS)</strong></td>
-      <td>Does it generalize to reworded prompts?</td>
-      <td>100%</td>
-    </tr>
-    <tr>
-      <td><strong>Specificity Score (SS)</strong></td>
-      <td>Are unrelated facts unchanged?</td>
-      <td>100%</td>
-    </tr>
-    <tr>
-      <td><strong>Fluency Score</strong></td>
-      <td>Are generated texts still coherent?</td>
-      <td>No degradation</td>
-    </tr>
-  </table>
-
-  <h3>Limitations of ROME</h3>
-
-  <div class="warning-box">
-    <p><strong>Challenges:</strong></p>
-    <ul>
-      <li><strong>Single-edit only:</strong> ROME is designed for one fact at a time</li>
-      <li><strong>Fact dependencies:</strong> Changing "Seattle's location" may require updating "Washington's cities"</li>
-      <li><strong>Reasoning brittleness:</strong> May succeed on direct recall but fail on multi-hop reasoning</li>
-      <li><strong>Layer selection:</strong> Choosing wrong layer leads to poor generalization</li>
-    </ul>
-  </div>
-
-  <h2>4. MEMIT: Mass Editing Memory in a Transformer</h2>
-
-  <div class="paper-card">
-    <h4>Paper: "Mass-Editing Memory in a Transformer"</h4>
-    <p><strong>Authors:</strong> Kevin Meng, Arnab Sen Sharma, Alex Andonian, Yonatan Belinkov, David Bau</p>
-    <p><strong>Published:</strong> ICLR 2023</p>
-    <p><strong>Key contribution:</strong> Scale ROME to thousands of simultaneous edits without catastrophic interference</p>
-  </div>
-
-  <h3>The Scaling Problem</h3>
-
-  <p>
-    ROME works for single facts, but what if you need to update <strong>thousands</strong>?
-  </p>
-
-  <ul>
-    <li>Sequential ROME edits interfere with each other</li>
-    <li>Later edits can overwrite earlier ones</li>
-    <li>Cumulative rank-one updates degrade model performance</li>
-  </ul>
-
-  <p>
-    <strong>MEMIT solves this</strong> by computing a joint edit that updates many facts simultaneously.
-  </p>
-
-  <h3>How MEMIT Works</h3>
-
-  <div class="info-box">
-    <p><strong>Key insight:</strong> Instead of \(n\) sequential rank-one edits, compute one rank-\(n\) edit.</p>
-
-    <p><strong>Mathematical formulation:</strong></p>
-    <ol>
-      <li><strong>Collect all edits:</strong> \(\{(k_1, v_1^*), (k_2, v_2^*), \ldots, (k_n, v_n^*)\}\)
-        <ul>
-          <li>\(k_i\) = input activation for fact \(i\)</li>
-          <li>\(v_i^*\) = target output for fact \(i\)</li>
-        </ul>
-      </li>
-      <li><strong>Batch update:</strong>
-        <p style="text-align: center;">
-          \(\Delta W = (V^* - V) K^T (K K^T)^{-1}\)
-        </p>
-        where \(K = [k_1, k_2, \ldots, k_n]\) and \(V^* = [v_1^*, v_2^*, \ldots, v_n^*]\)
-      </li>
-      <li><strong>Apply across layers:</strong> MEMIT edits <em>multiple</em> MLP layers (e.g., layers 5, 8, 11) for robustness</li>
-    </ol>
-
-    <p><strong>Advantage:</strong> Edits don't interfere—each fact gets its own "slot" in the update matrix.</p>
-  </div>
-
-  <h3>MEMIT vs ROME</h3>
 
   <table>
     <tr>
       <th>Aspect</th>
-      <th>ROME</th>
-      <th>MEMIT</th>
+      <th>Passive Learning (Shin et al.)</th>
+      <th>Active Teaching (Schut et al.)</th>
+    </tr>
+    <tr>
+      <td><strong>Mechanism</strong></td>
+      <td>Humans observe AI play and spontaneously adopt novel strategies</td>
+      <td>Explicitly extract concepts from AI, filter, and teach humans</td>
     </tr>
     <tr>
       <td><strong>Scale</strong></td>
-      <td>Single edit</td>
-      <td>Thousands of edits</td>
+      <td>Population-level (all players improve)</td>
+      <td>Individual-level (train specific experts)</td>
     </tr>
     <tr>
-      <td><strong>Rank</strong></td>
-      <td>Rank-1 update</td>
-      <td>Rank-\(n\) update</td>
+      <td><strong>Evidence</strong></td>
+      <td>5.8M Go moves over 71 years</td>
+      <td>4 grandmasters, controlled study</td>
     </tr>
     <tr>
-      <td><strong>Layers edited</strong></td>
-      <td>Single layer</td>
-      <td>Multiple layers</td>
+      <td><strong>Control</strong></td>
+      <td>Observational (AI exists in environment)</td>
+      <td>Interventional (deliberate concept transfer)</td>
     </tr>
     <tr>
-      <td><strong>Edit time</strong></td>
-      <td>~1 second</td>
-      <td>~10 seconds (for 10k facts)</td>
-    </tr>
-    <tr>
-      <td><strong>Generalization</strong></td>
-      <td>Good for paraphrases</td>
-      <td>Better for reasoning (multi-layer)</td>
-    </tr>
-    <tr>
-      <td><strong>When to use</strong></td>
-      <td>Quick single-fact correction</td>
-      <td>Large-scale knowledge updates</td>
+      <td><strong>Novelty role</strong></td>
+      <td>Novel moves correlate with improvement</td>
+      <td>Novelty is a filter criterion</td>
     </tr>
   </table>
 
-  <h3>Example: Updating Historical Facts</h3>
-
-  <div class="example-box">
-    <p><strong>Scenario:</strong> A textbook from 2020 needs 500 fact updates for 2025 edition.</p>
-
-    <p><strong>Facts to update:</strong></p>
-    <ul>
-      <li>"The president of the USA is Donald Trump" → "Joe Biden"</li>
-      <li>"The capital of Kazakhstan is Astana" → "Nur-Sultan"</li>
-      <li>"The tallest building is Burj Khalifa" → "Jeddah Tower"</li>
-      <li>... (497 more)</li>
-    </ul>
-
-    <p><strong>MEMIT process:</strong></p>
-    <ol>
-      <li>Collect all 500 (subject, new_object) pairs</li>
-      <li>Run causal tracing to identify target layers (e.g., layers 8, 12, 16)</li>
-      <li>Compute joint update matrix for all facts</li>
-      <li>Apply to all three layers</li>
-      <li>Validate: 95% efficacy, 88% paraphrase, 97% specificity</li>
-    </ol>
-
-    <p><strong>Result:</strong> Model now answers with updated facts while preserving other knowledge.</p>
-  </div>
-
-  <h2>5. Parameter-Efficient Fine-Tuning: LoRA</h2>
+  <h2>2. Passive Learning: The Go Revolution (Shin et al., 2023)</h2>
 
   <div class="paper-card">
-    <h4>Paper: "LoRA: Low-Rank Adaptation of Large Language Models"</h4>
-    <p><strong>Authors:</strong> Edward Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen</p>
-    <p><strong>Published:</strong> ICLR 2022</p>
-    <p><strong>Key contribution:</strong> Fine-tune large models by adding trainable low-rank matrices, freezing original weights</p>
-  </div>
-
-  <h3>The Fine-Tuning Problem</h3>
-
-  <p>
-    Traditional fine-tuning updates <strong>all weights</strong>, which is:
-  </p>
-  <ul>
-    <li><strong>Expensive:</strong> Requires storing full model gradients</li>
-    <li><strong>Storage-heavy:</strong> Each fine-tuned version = full model copy</li>
-    <li><strong>Risky:</strong> Can catastrophically forget pre-training knowledge</li>
-  </ul>
-
-  <p>
-    <strong>LoRA</strong> makes fine-tuning efficient by only updating a small set of parameters.
-  </p>
-
-  <h3>How LoRA Works</h3>
-
-  <div class="info-box">
-    <p><strong>Core idea:</strong> Represent weight updates as low-rank decomposition</p>
-
-    <p><strong>For a weight matrix \(W \in \mathbb{R}^{d \times k}\):</strong></p>
-    <ol>
-      <li><strong>Freeze original:</strong> \(W\) remains unchanged during training</li>
-      <li><strong>Add low-rank update:</strong> \(W' = W + BA\)
-        <ul>
-          <li>\(B \in \mathbb{R}^{d \times r}\), \(A \in \mathbb{R}^{r \times k}\)</li>
-          <li>\(r \ll \min(d, k)\) (e.g., \(r = 8\) for \(d = 4096\))</li>
-        </ul>
-      </li>
-      <li><strong>Train only \(A\) and \(B\):</strong> Original weights \(W\) are frozen</li>
-      <li><strong>Merge at inference:</strong> \(y = (W + BA)x\)</li>
-    </ol>
-
-    <p><strong>Parameter reduction:</strong> Instead of \(d \times k\), train only \(r(d + k)\)</p>
-    <p>
-      For \(d = k = 4096\) and \(r = 8\): \(4096 \times 4096 = 16M\) parameters → \(8(4096 + 4096) = 65K\) parameters (250× reduction!)
+    <h4>Paper: "Superhuman Artificial Intelligence Can Improve Human Decision Making by Increasing Novelty"</h4>
+    <p><strong>Authors:</strong> Minkyu Shin, Jin Kim, Bas van Opheusden, Tom Griffiths</p>
+    <p><strong>Published:</strong> PNAS, 2023</p>
+    <p><strong>Key contribution:</strong> Quantitative evidence that superhuman AI improves human decision-making at scale
     </p>
   </div>
 
-  <h3>LoRA Architecture</h3>
+  <h3>The Natural Experiment</h3>
+
+  <p>
+    In 2016, <strong>AlphaGo defeated Lee Sedol</strong>, the world champion Go player. This marked a turning point:
+    AI became superhuman in a game with more possible board states than atoms in the universe.
+  </p>
+
+  <p>
+    Shin et al. asked: <em>Did human players improve after witnessing superhuman AI?</em>
+  </p>
+
+  <h3>Methodology</h3>
 
   <div class="example-box">
-    <p><strong>Applied to transformer attention:</strong></p>
-
-    <p><strong>Original:</strong></p>
-    <p style="text-align: center;">
-      \(Q = W_Q x, \quad K = W_K x, \quad V = W_V x\)
-    </p>
-
-    <p><strong>With LoRA:</strong></p>
-    <p style="text-align: center;">
-      \(Q = (W_Q + B_Q A_Q) x\)
-    </p>
-    <p style="text-align: center;">
-      \(K = (W_K + B_K A_K) x\)
-    </p>
-    <p style="text-align: center;">
-      \(V = (W_V + B_V A_V) x\)
-    </p>
-
-    <p><strong>Training:</strong> Only \(\{B_Q, A_Q, B_K, A_K, B_V, A_V\}\) are updated (< 1% of total parameters)</p>
-  </div>
-
-  <h3>Why Low-Rank Works</h3>
-
-  <div class="key-insight">
-    <p><strong>Intrinsic dimensionality hypothesis:</strong></p>
-    <p>
-      Fine-tuning for a specific task doesn't require changing the model's full representational capacity. The "adaptation" lives in a low-dimensional subspace.
-    </p>
-
-    <p><strong>Evidence:</strong></p>
+    <p><strong>Data:</strong></p>
     <ul>
-      <li>Empirically, \(r = 4\) to \(r = 16\) matches full fine-tuning performance</li>
-      <li>Higher \(r\) doesn't always improve results (suggests true intrinsic dimension is low)</li>
-      <li>LoRA updates capture task-specific changes, leaving general knowledge intact</li>
+      <li><strong>5.8 million moves</strong> by professional Go players</li>
+      <li><strong>71 years</strong> of gameplay (1950-2021)</li>
+      <li><strong>Before vs After AlphaGo</strong> comparison</li>
+    </ul>
+
+    <p><strong>Evaluation:</strong></p>
+    <ul>
+      <li>Used a <strong>superhuman AI</strong> to evaluate move quality</li>
+      <li>Compared win rates of actual moves vs AI-suggested alternatives</li>
+      <li>Generated <strong>58 billion counterfactual game patterns</strong></li>
+    </ul>
+
+    <p><strong>Novelty metric:</strong></p>
+    <ul>
+      <li>Classified moves as <em>novel</em> (never seen before in professional play) or <em>traditional</em></li>
+      <li>Tracked novelty rates and quality over time</li>
     </ul>
   </div>
 
-  <h3>LoRA Hyperparameters</h3>
+  <h3>Key Findings</h3>
 
-  <table>
-    <tr>
-      <th>Parameter</th>
-      <th>Typical Values</th>
-      <th>Effect</th>
-    </tr>
-    <tr>
-      <td><strong>Rank \(r\)</strong></td>
-      <td>4, 8, 16, 32</td>
-      <td>Higher = more capacity, but diminishing returns after 16</td>
-    </tr>
-    <tr>
-      <td><strong>α (scaling)</strong></td>
-      <td>16, 32</td>
-      <td>LoRA update scaled by \(\alpha / r\); controls learning rate</td>
-    </tr>
-    <tr>
-      <td><strong>Target modules</strong></td>
-      <td>\(W_Q, W_V\) or all attention</td>
-      <td>Which weight matrices get LoRA adapters</td>
-    </tr>
-    <tr>
-      <td><strong>Dropout</strong></td>
-      <td>0.05, 0.1</td>
-      <td>Regularization for LoRA layers</td>
-    </tr>
-  </table>
+  <div class="key-insight">
+    <p><strong>1. Humans improved significantly after AlphaGo</strong></p>
+    <p>
+      Human decision quality increased measurably after 2016. Players made moves closer to what superhuman AI would
+      choose.
+    </p>
 
-  <h2>6. Comparing Weight-Space vs Activation-Space Interventions</h2>
+    <p><strong>2. Novel moves drove improvement</strong></p>
+    <ul>
+      <li>Novel moves occurred <strong>more frequently</strong> after AlphaGo</li>
+      <li>Novel moves became associated with <strong>higher decision quality</strong></li>
+      <li>Before AlphaGo: novelty ≠ better; After AlphaGo: novelty = better</li>
+    </ul>
 
-  <h3>The Complementary Roles</h3>
+    <p><strong>3. Breaking from tradition works</strong></p>
+    <p>
+      Superhuman AI prompted players to <strong>explore beyond traditional strategies</strong>. This wasn't just
+      imitation—players discovered their own novel approaches, inspired by AI's creativity.
+    </p>
+  </div>
 
-  <table>
-    <tr>
-      <th>Aspect</th>
-      <th>Activation Interventions (Week 2)</th>
-      <th>Weight Edits (ROME/MEMIT)</th>
-      <th>Fine-Tuning (LoRA)</th>
-    </tr>
-    <tr>
-      <td><strong>What changes</strong></td>
-      <td>Per-inference activations</td>
-      <td>Specific weight entries</td>
-      <td>Weight subspace</td>
-    </tr>
-    <tr>
-      <td><strong>Persistence</strong></td>
-      <td>Temporary</td>
-      <td>Permanent</td>
-      <td>Permanent</td>
-    </tr>
-    <tr>
-      <td><strong>Scope</strong></td>
-      <td>Affects all downstream layers</td>
-      <td>Narrow (specific facts)</td>
-      <td>Broad (task/domain)</td>
-    </tr>
-    <tr>
-      <td><strong>Reversibility</strong></td>
-      <td>Fully reversible</td>
-      <td>Irreversible (unless backed up)</td>
-      <td>Reversible (swap LoRA weights)</td>
-    </tr>
-    <tr>
-      <td><strong>Use case</strong></td>
-      <td>Explore effects, steering behavior</td>
-      <td>Fact corrections, updates</td>
-      <td>Domain adaptation, task learning</td>
-    </tr>
-    <tr>
-      <td><strong>Cost</strong></td>
-      <td>Low (vector addition)</td>
-      <td>Medium (matrix inversion)</td>
-      <td>High (training loop)</td>
-    </tr>
-  </table>
+  <h3>Example: Move 37</h3>
 
-  <h3>When to Use Which?</h3>
+  <div class="example-box">
+    <p><strong>The most famous move in AI history:</strong></p>
+    <p>
+      In Game 2 of the AlphaGo vs Lee Sedol match, AlphaGo played <strong>Move 37</strong>—placing a stone on the 5th
+      line from the edge. Human commentators were shocked: "I thought it was a mistake."
+    </p>
+    <p>
+      This move violated centuries of Go wisdom. Yet it was <strong>exceptionally strong</strong>. Move 37 demonstrated
+      that AI had explored beyond human knowledge.
+    </p>
+    <p>
+      After witnessing this, professional players began experimenting with similar unconventional moves, many of which
+      proved effective.
+    </p>
+  </div>
+
+  <h3>Implications</h3>
+
+  <ul>
+    <li><strong>Superhuman AI can teach without explicit instruction:</strong> Simply existing in the environment
+      inspires humans to explore</li>
+    <li><strong>Novelty is learnable:</strong> Humans can recognize and adopt AI-discovered innovations</li>
+    <li><strong>Traditional knowledge isn't optimal:</strong> Conventions may persist due to lack of exploration, not
+      superiority</li>
+    <li><strong>Population-level effects:</strong> Impact extends beyond direct AI users to entire communities</li>
+  </ul>
+
+  <h2>3. Active Teaching: Extracting Chess Concepts (Schut et al., 2023/2025)</h2>
+
+  <div class="paper-card">
+    <h4>Paper: "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer in AlphaZero"</h4>
+    <p><strong>Authors:</strong> Lisa Schut, Nenad Tomasev, Tom McGrath, Demis Hassabis, Ulrich Paquet, Been Kim</p>
+    <p><strong>Published:</strong> arXiv 2023, PNAS 2025</p>
+    <p><strong>Key contribution:</strong> Systematic method to extract, filter, and teach novel concepts from superhuman
+      AI</p>
+  </div>
+
+  <h3>The Challenge</h3>
+
+  <p>
+    Unlike Shin et al.'s observational study, Schut et al. sought to <strong>actively extract</strong> knowledge from
+    AlphaZero and transfer it to human experts through deliberate training.
+  </p>
+
+  <p><strong>Key questions:</strong></p>
+  <ul>
+    <li>What concepts has AlphaZero learned that humans haven't?</li>
+    <li>Can we extract these concepts in human-understandable form?</li>
+    <li>Are they teachable to even the world's best players?</li>
+  </ul>
+
+  <h3>Methodology: Four-Stage Pipeline</h3>
+
+  <h4>Stage 1: Concept Discovery</h4>
+
+  <p>
+    Use <strong>convex optimization</strong> to find concept vectors in AlphaZero's latent space.
+  </p>
+
+  <div class="example-box">
+    <p><strong>How it works:</strong></p>
+    <ol>
+      <li>Collect chess positions where a concept might be relevant</li>
+      <li>Extract AlphaZero's internal representations (activations) for these positions</li>
+      <li>Find a <strong>direction in activation space</strong> that separates concept-present from concept-absent
+        positions</li>
+      <li>This direction is the <strong>Concept Activation Vector (CAV)</strong></li>
+    </ol>
+
+    <p><strong>Technical detail:</strong></p>
+    <p>
+      Train a linear classifier to distinguish concept examples from random counterexamples. The vector orthogonal to
+      the decision boundary is the CAV.
+    </p>
+  </div>
+
+  <h4>Stage 2: Filtering by Teachability</h4>
+
+  <p>
+    Not all extracted concepts are learnable by humans or other agents. <strong>Teachability test:</strong>
+  </p>
+
+  <div class="info-box">
+    <p><strong>Definition:</strong> A concept is <em>teachable</em> if another AI agent (student) can learn it from
+      examples.</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Generate prototype positions that strongly activate the concept vector</li>
+      <li>Train a student AI on these prototypes</li>
+      <li>Test if the student can generalize the concept to new positions</li>
+      <li>Measure improvement: Does the student now select the same moves as AlphaZero?</li>
+    </ol>
+
+    <p><strong>Why this matters:</strong> If even an AI student can't learn the concept, a human likely can't either.</p>
+  </div>
+
+  <h4>Stage 3: Filtering by Novelty</h4>
+
+  <p>
+    A teachable concept might still be something humans already know. <strong>Novelty test:</strong>
+  </p>
+
+  <div class="info-box">
+    <p><strong>Definition:</strong> A concept is <em>novel</em> if it's not present in human chess games.</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li>Collect a large database of human chess games</li>
+      <li>Test if the concept vector activates on human games</li>
+      <li>Low activation → concept is novel to humans</li>
+      <li>High activation → concept already exists in human play</li>
+    </ol>
+
+    <p><strong>Why this matters:</strong> We want to teach humans something <em>new</em>, not rediscover known
+      principles.</p>
+  </div>
+
+  <h4>Stage 4: Human Validation Study</h4>
+
+  <p>
+    The ultimate test: Can <strong>world chess champions</strong> learn these concepts?
+  </p>
+
+  <div class="example-box">
+    <p><strong>Study design:</strong></p>
+
+    <p><strong>Participants:</strong> 4 top chess grandmasters (all former or current world champions)</p>
+
+    <p><strong>Procedure:</strong></p>
+    <ol>
+      <li><strong>Pre-test:</strong> Grandmasters solve concept prototype positions (no instruction)</li>
+      <li><strong>Learning phase:</strong> Grandmasters study the positions with explanations</li>
+      <li><strong>Post-test:</strong> Grandmasters solve new positions involving the same concepts</li>
+    </ol>
+
+    <p><strong>Measurement:</strong> Improvement from pre-test to post-test</p>
+  </div>
+
+  <h3>Key Findings</h3>
+
+  <div class="key-insight">
+    <p><strong>All four grandmasters improved after the learning phase.</strong></p>
+
+    <p>
+      This demonstrates that:
+    </p>
+    <ul>
+      <li>AlphaZero encodes knowledge <strong>beyond existing human understanding</strong></li>
+      <li>This knowledge is <strong>not beyond human grasp</strong>—it can be learned</li>
+      <li>Even elite experts can learn from AI</li>
+    </ul>
+
+    <p><strong>Types of concepts discovered:</strong></p>
+    <ul>
+      <li><strong>Quiet moves to provoke long-term weaknesses</strong> (counterintuitive to classical principles)</li>
+      <li><strong>Strategic queen sacrifices</strong> in unexpected contexts</li>
+      <li><strong>Positional imbalances</strong> that traditional evaluation undervalues</li>
+    </ul>
+  </div>
+
+  <h3>Example Concept</h3>
+
+  <div class="example-box">
+    <p><strong>Concept: "Provoke Weakness Through Quiet Moves"</strong></p>
+
+    <p><strong>Classical chess principle:</strong> Active, forcing moves (checks, captures) are strong.</p>
+
+    <p><strong>AlphaZero's insight:</strong> Sometimes a quiet, non-forcing move creates <em>zugzwang</em>—opponent must
+      worsen their position.</p>
+
+    <p><strong>Why it's novel:</strong> Human games rarely show this pattern (low activation on human database).</p>
+
+    <p><strong>Why it's teachable:</strong> Student AI improved 15% on test positions after training.</p>
+
+    <p><strong>Human validation:</strong> Grandmasters improved from 40% to 65% accuracy on these positions after
+      studying examples.</p>
+  </div>
+
+  <h2>4. Comparing the Two Approaches</h2>
 
   <div class="comparison-box">
-    <p><strong>Use activation steering when:</strong></p>
-    <ul>
-      <li>You want temporary, reversible changes</li>
-      <li>You're exploring "what if" scenarios</li>
-      <li>You need dynamic control (different steering per input)</li>
-    </ul>
-
-    <p><strong>Use ROME/MEMIT when:</strong></p>
-    <ul>
-      <li>You have specific factual errors to fix</li>
-      <li>You need permanent updates without retraining</li>
-      <li>You want surgical precision (don't affect other knowledge)</li>
-    </ul>
-
-    <p><strong>Use LoRA when:</strong></p>
-    <ul>
-      <li>You're adapting to a new domain or task</li>
-      <li>You have training data and supervision</li>
-      <li>You want broad behavioral changes (not just facts)</li>
-      <li>You need multiple task-specific versions (LoRA adapters are modular)</li>
-    </ul>
+    <table>
+      <tr>
+        <th>Dimension</th>
+        <th>Shin et al. (Passive)</th>
+        <th>Schut et al. (Active)</th>
+      </tr>
+      <tr>
+        <td><strong>Research Question</strong></td>
+        <td>Do humans improve from AI exposure?</td>
+        <td>Can we extract and teach AI concepts?</td>
+      </tr>
+      <tr>
+        <td><strong>Scale</strong></td>
+        <td>Population (thousands of players)</td>
+        <td>Individual (4 grandmasters)</td>
+      </tr>
+      <tr>
+        <td><strong>Evidence Type</strong></td>
+        <td>Observational (71 years)</td>
+        <td>Experimental (controlled study)</td>
+      </tr>
+      <tr>
+        <td><strong>Novelty Role</strong></td>
+        <td>Outcome (novel moves = better)</td>
+        <td>Filter (select novel concepts)</td>
+      </tr>
+      <tr>
+        <td><strong>Teaching Method</strong></td>
+        <td>Implicit (watch AI play)</td>
+        <td>Explicit (study concept prototypes)</td>
+      </tr>
+      <tr>
+        <td><strong>Interpretability</strong></td>
+        <td>Black box (don't know what changed)</td>
+        <td>White box (extract specific concepts)</td>
+      </tr>
+      <tr>
+        <td><strong>Measurement</strong></td>
+        <td>Move quality via AI evaluation</td>
+        <td>Accuracy on concept test positions</td>
+      </tr>
+      <tr>
+        <td><strong>Strength</strong></td>
+        <td>Ecological validity (real-world effect)</td>
+        <td>Causal clarity (know what's taught)</td>
+      </tr>
+    </table>
   </div>
 
-  <h2>7. Validating Interpretability with Edits</h2>
-
-  <h3>The Actionability Test</h3>
+  <h3>Complementary Insights</h3>
 
   <p>
-    You've discovered a concept using probes, SAEs, or circuits (Weeks 5-8). How do you know it's real?
+    Together, these papers show that superhuman AI can improve humans through:
   </p>
-
-  <div class="key-insight">
-    <p><strong>Validation strategy: Edit the concept and measure behavioral change.</strong></p>
-
-    <p><strong>Strong evidence:</strong></p>
-    <ul>
-      <li>Editing the identified components changes behavior</li>
-      <li>Changes are specific to the concept (not general degradation)</li>
-      <li>Magnitude of behavior change correlates with edit magnitude</li>
-    </ul>
-
-    <p>
-      If your interpretability finding is correct, <strong>modifying it should predictably alter the model</strong>.
-    </p>
-  </div>
-
-  <h3>Example Workflow: Validating a Politeness Concept</h3>
-
-  <div class="example-box">
-    <p><strong>Research claim:</strong> "GPT-4 encodes politeness in layer 18, MLP neurons 234-267"</p>
-
-    <p><strong>Validation via editing:</strong></p>
-    <ol>
-      <li><strong>Extract concept vector:</strong> Use steering or probes (Weeks 2, 5) to find politeness direction \(v_{\text{polite}}\)</li>
-      <li><strong>Edit weights:</strong> Use ROME to modify layer 18 MLP to amplify \(v_{\text{polite}}\)</li>
-      <li><strong>Test specificity:</strong>
-        <ul>
-          <li><strong>Politeness test:</strong> "Please pass the salt" → "Would you be so kind as to pass the salt?" (more polite) ✓</li>
-          <li><strong>Factual test:</strong> "The capital of France is" → "Paris" (unchanged) ✓</li>
-          <li><strong>Sentiment test:</strong> "I love this product" → still positive (not corrupted) ✓</li>
-        </ul>
-      </li>
-      <li><strong>Dose-response:</strong> Vary edit magnitude, measure politeness increase</li>
-    </ol>
-
-    <p><strong>Strong evidence:</strong> Editing neurons 234-267 changes politeness specifically, not other attributes.</p>
-  </div>
-
-  <h2>8. Applying Edits to Your Research Project</h2>
-
-  <h3>Integration with Weeks 1-9</h3>
+  <ul>
+    <li><strong>Inspiration (Shin):</strong> Seeing AI play prompts exploration of novel strategies</li>
+    <li><strong>Instruction (Schut):</strong> Explicitly teaching extracted concepts</li>
+  </ul>
 
   <p>
-    Model editing closes the loop on interpretability research:
+    Both require <strong>novelty</strong>—humans learn by going beyond traditional knowledge.
   </p>
+
+  <h2>5. Designing Human Studies for Interpretability</h2>
+
+  <p>
+    How do you validate that your interpretability findings are meaningful? Human studies provide the gold standard.
+  </p>
+
+  <h3>Three Types of Evaluation (Doshi-Velez & Kim, 2017)</h3>
 
   <table>
     <tr>
-      <th>Week</th>
-      <th>Discovery Method</th>
-      <th>Editing Application</th>
+      <th>Type</th>
+      <th>When to Use</th>
+      <th>Example</th>
     </tr>
     <tr>
-      <td><strong>Week 4</strong></td>
-      <td>Causal tracing</td>
-      <td>Use traced layers as ROME/MEMIT targets</td>
+      <td><strong>Application-Grounded</strong></td>
+      <td>Real-world task with domain experts</td>
+      <td>Schut's grandmaster study</td>
     </tr>
     <tr>
-      <td><strong>Week 5</strong></td>
-      <td>Probes</td>
-      <td>Modify probe-identified subspace via LoRA</td>
+      <td><strong>Human-Grounded</strong></td>
+      <td>Simplified task with lay users</td>
+      <td>Show concept examples, ask "Does this make sense?"</td>
     </tr>
     <tr>
-      <td><strong>Week 7</strong></td>
-      <td>SAE features</td>
-      <td>Ablate or amplify specific features, measure behavior</td>
-    </tr>
-    <tr>
-      <td><strong>Week 8</strong></td>
-      <td>Circuits</td>
-      <td>Edit circuit components, validate causal role</td>
-    </tr>
-    <tr>
-      <td><strong>Week 9</strong></td>
-      <td>RSA comparison</td>
-      <td>Fine-tune with LoRA, check if concept structure persists (CKA)</td>
+      <td><strong>Functionally-Grounded</strong></td>
+      <td>No humans, use proxy metrics</td>
+      <td>Teachability test (AI student learns)</td>
     </tr>
   </table>
 
-  <h3>Project Workflow: From Discovery to Validation</h3>
+  <h3>Key Considerations for Study Design</h3>
 
   <div class="info-box">
-    <p><strong>Step 1: Discover concept (Weeks 5-8)</strong></p>
+    <p><strong>1. Who are your participants?</strong></p>
     <ul>
-      <li>Use probes, SAEs, or circuits to identify where/how concept X is encoded</li>
+      <li><strong>Domain experts</strong> (like grandmasters): High validity, but expensive and small sample</li>
+      <li><strong>Lay users:</strong> Larger sample, but may lack necessary background</li>
+      <li><strong>Trade-off:</strong> Schut used 4 experts; Shin used population-level data</li>
     </ul>
 
-    <p><strong>Step 2: Locate precisely (Week 4, 9)</strong></p>
+    <p><strong>2. What do you measure?</strong></p>
     <ul>
-      <li>Causal tracing: Which layers are critical?</li>
-      <li>CKA: Which layer most aligns with concept?</li>
+      <li><strong>Performance:</strong> Can they solve tasks better? (Schut: accuracy on test positions)</li>
+      <li><strong>Understanding:</strong> Can they explain the concept? (Free-response questions)</li>
+      <li><strong>Trust:</strong> Do they believe the explanation? (Likert scales)</li>
+      <li><strong>Warning:</strong> Trust ≠ utility (Bansal et al., Week 10)</li>
     </ul>
 
-    <p><strong>Step 3: Design intervention (Week 10)</strong></p>
+    <p><strong>3. Control conditions?</strong></p>
     <ul>
-      <li>Surgical edit (ROME): If concept is factual</li>
-      <li>LoRA fine-tuning: If concept is behavioral/distributional</li>
+      <li><strong>Pre-post design:</strong> Measure before and after learning (Schut)</li>
+      <li><strong>Comparison group:</strong> Concept group vs baseline explanation</li>
+      <li><strong>Temporal controls:</strong> Before vs after AI release (Shin)</li>
     </ul>
 
-    <p><strong>Step 4: Validate (Week 10)</strong></p>
+    <p><strong>4. Avoiding pitfalls (from Week 10):</strong></p>
     <ul>
-      <li><strong>Efficacy:</strong> Does edit change target behavior?</li>
-      <li><strong>Specificity:</strong> Are other behaviors unchanged?</li>
-      <li><strong>Dose-response:</strong> Does larger edit → larger effect?</li>
-    </ul>
-
-    <p><strong>Step 5: Report (Paper)</strong></p>
-    <ul>
-      <li>"We identified concept X in layer L using method M. Editing layer L changes behavior Y but not Z, validating our interpretation."</li>
-    </ul>
-  </div>
-
-  <h2>9. Limitations and Safety Considerations</h2>
-
-  <h3>What Can Go Wrong</h3>
-
-  <div class="warning-box">
-    <p><strong>1. Unintended side effects</strong></p>
-    <ul>
-      <li>Editing one fact may corrupt related facts</li>
-      <li>Example: Changing "Paris is in France" might affect "France's capital is Paris"</li>
-      <li><strong>Mitigation:</strong> Test broad specificity, check related facts</li>
-    </ul>
-
-    <p><strong>2. Reasoning brittleness</strong></p>
-    <ul>
-      <li>Model may recall edited fact but fail multi-hop reasoning</li>
-      <li>Example: "Space Needle is in Paris" but "Is Space Needle in Europe?" → "No"</li>
-      <li><strong>Mitigation:</strong> MEMIT across multiple layers improves consistency</li>
-    </ul>
-
-    <p><strong>3. Over-editing degradation</strong></p>
-    <ul>
-      <li>Too many edits (>10k for MEMIT) degrade fluency</li>
-      <li><strong>Mitigation:</strong> Monitor perplexity on held-out text</li>
-    </ul>
-
-    <p><strong>4. Malicious edits</strong></p>
-    <ul>
-      <li>Bad actors could inject false facts or biases</li>
-      <li><strong>Mitigation:</strong> Access control, edit provenance tracking</li>
+      <li>Don't cherry-pick examples that support your hypothesis</li>
+      <li>Use multiple evaluation metrics (accuracy, confidence, explanation quality)</li>
+      <li>Test robustness: Do concepts transfer to new contexts?</li>
+      <li>Report negative results: Which concepts weren't learnable?</li>
     </ul>
   </div>
 
-  <h3>Ethical Considerations</h3>
+  <h2>6. Building a Concept Atlas</h2>
+
+  <p>
+    As you discover concepts in your project, you need to <strong>organize them systematically</strong>. A concept
+    atlas maps the landscape of what your model knows.
+  </p>
+
+  <h3>Why Build an Atlas?</h3>
 
   <ul>
-    <li><strong>Fact verification:</strong> Ensure edits are factually correct</li>
-    <li><strong>Bias injection:</strong> Editing can amplify or introduce biases</li>
-    <li><strong>Transparency:</strong> Edited models should disclose modifications</li>
-    <li><strong>Reversibility:</strong> Keep backups; document all edits</li>
+    <li><strong>Locate your concept:</strong> How does your project concept relate to known concepts?</li>
+    <li><strong>Avoid redundancy:</strong> Is your "novel" concept actually a rediscovery?</li>
+    <li><strong>Find relationships:</strong> Do concepts compose, interfere, or prerequisite each other?</li>
+    <li><strong>Assess coverage:</strong> What fraction of model behavior do identified concepts explain?</li>
   </ul>
 
-  <h2>10. Practical Implementation</h2>
-
-  <h3>Code Example: ROME Edit</h3>
+  <h3>Organizing Dimensions</h3>
 
   <div class="example-box">
-    <p><strong>Using EasyEdit library:</strong></p>
-    <pre><code>from easyeditor import BaseEditor, ROMEHyperParams
+    <p><strong>1. Abstraction Level</strong></p>
+    <ul>
+      <li><strong>Low-level:</strong> "Edges," "colors," "individual words"</li>
+      <li><strong>Mid-level:</strong> "Object parts," "syntactic roles," "local patterns"</li>
+      <li><strong>High-level:</strong> "Objects," "semantic concepts," "strategic plans"</li>
+    </ul>
 
-# Initialize editor
-hparams = ROMEHyperParams.from_hparams('hparams/ROME/gpt2-xl')
-editor = BaseEditor.from_hparams(hparams)
+    <p><strong>2. Domain Specificity</strong></p>
+    <ul>
+      <li><strong>Universal:</strong> Position, number, negation (across tasks)</li>
+      <li><strong>Domain-specific:</strong> "Zugzwang" (chess), "ko threat" (Go)</li>
+    </ul>
 
-# Define edit
-request = {
-    "prompt": "The Space Needle is located in",
-    "target_new": "Paris",
-    "subject": "Space Needle"
-}
+    <p><strong>3. Complexity</strong></p>
+    <ul>
+      <li><strong>Atomic:</strong> Single feature</li>
+      <li><strong>Compositional:</strong> Combination of concepts (e.g., "quiet move that provokes weakness")</li>
+    </ul>
 
-# Apply edit
-edited_model, _ = editor.edit(
-    model=original_model,
-    prompts=[request['prompt']],
-    target_new=[request['target_new']],
-    subject=[request['subject']]
-)
+    <p><strong>4. Novelty (from Schut)</strong></p>
+    <ul>
+      <li><strong>Known:</strong> Present in human data</li>
+      <li><strong>Novel:</strong> Absent from human data</li>
+    </ul>
 
-# Validate
-print(edited_model.generate("The Space Needle is in"))
-# Output: "Paris"
-</code></pre>
+    <p><strong>5. Teachability (from Schut)</strong></p>
+    <ul>
+      <li><strong>Teachable:</strong> Student AI or humans can learn</li>
+      <li><strong>Unteachable:</strong> Too complex or ill-defined</li>
+    </ul>
   </div>
 
-  <h3>Code Example: LoRA Fine-Tuning</h3>
+  <h3>Building Your Project Atlas</h3>
+
+  <div class="info-box">
+    <p><strong>Step 1: Inventory</strong></p>
+    <p>List all concepts you've encountered in Weeks 1-10:</p>
+    <ul>
+      <li>From Week 5 (circuits): Which operations did you find?</li>
+      <li>From Week 6 (probes): What information is encoded where?</li>
+      <li>From Week 7 (SAEs): What features did the autoencoder discover?</li>
+      <li>From Week 9 (attribution): Which inputs matter for your concept?</li>
+    </ul>
+
+    <p><strong>Step 2: Characterize</strong></p>
+    <p>For each concept, assess:</p>
+    <ul>
+      <li>Abstraction level</li>
+      <li>Domain specificity</li>
+      <li>Novelty (is it in your training data?)</li>
+      <li>Teachability (could a human learn it?)</li>
+    </ul>
+
+    <p><strong>Step 3: Map Relationships</strong></p>
+    <ul>
+      <li><strong>Prerequisite:</strong> Does concept A require understanding concept B?</li>
+      <li><strong>Composition:</strong> Is concept C = A + B?</li>
+      <li><strong>Interference:</strong> Do A and B conflict?</li>
+    </ul>
+
+    <p><strong>Step 4: Assess Coverage</strong></p>
+    <ul>
+      <li>What fraction of model behavior do your concepts explain?</li>
+      <li>Where are the gaps?</li>
+    </ul>
+  </div>
+
+  <h2>7. Applying to Your Research Project</h2>
+
+  <h3>Validating Your Interpretability Claims</h3>
+
+  <p>
+    By Week 11, you should have discovered something about how your model represents your concept. Now validate it:
+  </p>
+
+  <div class="info-box">
+    <p><strong>Checklist for Rigorous Validation:</strong></p>
+
+    <p><strong>✓ Sanity Checks (Week 10)</strong></p>
+    <ul>
+      <li>Did you run model/data randomization tests?</li>
+      <li>Is your interpretation robust to methodological choices?</li>
+    </ul>
+
+    <p><strong>✓ Multiple Methods (Weeks 5-9)</strong></p>
+    <ul>
+      <li>Did circuits, probes, SAEs, and attribution agree?</li>
+      <li>If not, why? (Disagreement can be informative)</li>
+    </ul>
+
+    <p><strong>✓ Causal Validation (Week 8)</strong></p>
+    <ul>
+      <li>Did IIA confirm that your identified components are causal?</li>
+      <li>Can you intervene to change the concept?</li>
+    </ul>
+
+    <p><strong>✓ Novelty Assessment (Schut)</strong></p>
+    <ul>
+      <li>Is your concept in the training data?</li>
+      <li>If yes: rediscovery (still valid!)</li>
+      <li>If no: potential superhuman insight</li>
+    </ul>
+
+    <p><strong>✓ Teachability Assessment (Schut)</strong></p>
+    <ul>
+      <li>Can you explain the concept to a colleague?</li>
+      <li>Can they use it to improve their understanding?</li>
+      <li>If you trained a simple model on concept examples, does it generalize?</li>
+    </ul>
+
+    <p><strong>✓ Human Study (if feasible)</strong></p>
+    <ul>
+      <li>Even a small study (n=3-5) is valuable</li>
+      <li>Pre-post design or comparison with baseline</li>
+      <li>Measure performance, not just trust</li>
+    </ul>
+  </div>
+
+  <h3>Knowledge Transfer Potential</h3>
+
+  <p>
+    Ask: <strong>Could a domain expert learn from your finding?</strong>
+  </p>
 
   <div class="example-box">
-    <p><strong>Using Hugging Face PEFT:</strong></p>
-    <pre><code>from peft import LoraConfig, get_peft_model
-from transformers import AutoModelForCausalLM
+    <p><strong>Example: Musical Key Representation</strong></p>
 
-# Load base model
-model = AutoModelForCausalLM.from_pretrained("gpt2-xl")
+    <p><strong>Finding:</strong> LLM uses specific attention heads to track musical key.</p>
 
-# Configure LoRA
-lora_config = LoraConfig(
-    r=8,                      # rank
-    lora_alpha=16,            # scaling
-    target_modules=["c_attn"], # which layers to adapt
-    lora_dropout=0.05,
-    bias="none"
-)
+    <p><strong>Novelty check:</strong> Is key tracking in music theory textbooks? (Yes → not novel)</p>
 
-# Apply LoRA
-model = get_peft_model(model, lora_config)
+    <p><strong>Teachability check:</strong> Could a musician learn which contexts activate key tracking? (Possibly)</p>
 
-# Only 0.1% of parameters are trainable
-model.print_trainable_parameters()
-# Output: "trainable params: 294,912 || all params: 1,557,611,200 || trainable%: 0.019"
+    <p><strong>Knowledge transfer value:</strong> Moderate—validates human understanding but doesn't extend it.</p>
 
-# Train as usual (only LoRA weights update)
-# ...
+    <hr>
 
-# Save LoRA weights (tiny file, ~2MB instead of 6GB)
-model.save_pretrained("my_lora_adapter")
-</code></pre>
+    <p><strong>Example: Protein Stability Representations</strong></p>
+
+    <p><strong>Finding:</strong> LLM predicts protein mutations that improve stability using a novel attention pattern.
+    </p>
+
+    <p><strong>Novelty check:</strong> Pattern not present in biochemistry literature? (Novel)</p>
+
+    <p><strong>Teachability check:</strong> Can a biologist learn to recognize this pattern? (Test needed)</p>
+
+    <p><strong>Knowledge transfer value:</strong> High—could guide wet-lab experiments.</p>
   </div>
 
-  <h2>11. Summary</h2>
+  <h2>8. Limitations and Open Questions</h2>
+
+  <h3>Limitations of Current Approaches</h3>
+
+  <div class="info-box">
+    <p><strong>From Shin et al.:</strong></p>
+    <ul>
+      <li>Can't identify <em>which</em> concepts humans learned (black box improvement)</li>
+      <li>Correlation, not causation (did AlphaGo cause the improvement or just coincide?)</li>
+      <li>Domain-specific (Go); generalizes to other domains?</li>
+    </ul>
+
+    <p><strong>From Schut et al.:</strong></p>
+    <ul>
+      <li>Linear concept assumption (CAVs are linear directions)</li>
+      <li>Small sample (4 grandmasters, but they're world champions)</li>
+      <li>Chess-specific; method complexity for other domains?</li>
+      <li>Doesn't extract <em>all</em> concepts, just some filtered subset</li>
+    </ul>
+  </div>
+
+  <h3>Open Research Questions</h3>
+
+  <ul>
+    <li><strong>Completeness:</strong> How do we know we've found all the important concepts?</li>
+    <li><strong>Compositionality:</strong> How do simple concepts combine into complex strategies?</li>
+    <li><strong>Transfer across models:</strong> Are concepts universal or model-specific?</li>
+    <li><strong>Long-term retention:</strong> Do humans retain AI-taught concepts over months/years?</li>
+    <li><strong>Misalignment detection:</strong> What if AI discovers <em>harmful</em> concepts?</li>
+    <li><strong>Scaling:</strong> Can these methods work for domains more complex than chess/Go?</li>
+  </ul>
+
+  <h2>9. Best Practices for Your Paper</h2>
+
+  <div class="info-box">
+    <h3>Making Rigorous Claims</h3>
+
+    <p><strong>✓ DO:</strong></p>
+    <ul>
+      <li>Use multiple validation methods (circuits + probes + SAEs + IIA)</li>
+      <li>Report which concepts were teachable and which weren't</li>
+      <li>Assess novelty (compare with training data or domain literature)</li>
+      <li>Design human studies, even small ones</li>
+      <li>Show when your interpretation fails (edge cases)</li>
+      <li>Compare your concepts to known domain knowledge</li>
+    </ul>
+
+    <p><strong>✗ DON'T:</strong></p>
+    <ul>
+      <li>Claim "superhuman" insight without novelty evidence</li>
+      <li>Cherry-pick examples that support your interpretation</li>
+      <li>Rely on single method (e.g., only probes)</li>
+      <li>Assume teachability without testing</li>
+      <li>Over-generalize from one model or task</li>
+      <li>Ignore Week 10's skepticism lessons</li>
+    </ul>
+  </div>
+
+  <h2>10. Summary and Integration</h2>
 
   <h3>Key Takeaways</h3>
 
   <ul>
-    <li><strong>Model editing validates interpretability:</strong> If you understand a concept, you should be able to modify it</li>
-    <li><strong>ROME/MEMIT for surgical edits:</strong> Update specific facts in MLP weights with minimal side effects</li>
-    <li><strong>LoRA for efficient fine-tuning:</strong> Adapt models to new tasks using low-rank weight updates</li>
-    <li><strong>Weight vs activation interventions:</strong> Permanent vs temporary, narrow vs broad scope</li>
-    <li><strong>Causal validation:</strong> Editing identified components should produce predictable behavioral changes</li>
-    <li><strong>Safety matters:</strong> Edits can have unintended consequences; test specificity thoroughly</li>
+    <li><strong>The knowledge gap is real:</strong> AI systems learn beyond human knowledge (Shin: novelty improves
+      humans; Schut: extractable novel concepts)</li>
+    <li><strong>Two pathways:</strong> Passive (observation) and active (explicit teaching) knowledge transfer</li>
+    <li><strong>Novelty + teachability:</strong> Framework for filtering valuable concepts</li>
+    <li><strong>Human studies matter:</strong> Validate interpretability claims with human performance</li>
+    <li><strong>Concept atlases:</strong> Organize findings systematically</li>
+    <li><strong>Integration:</strong> Combine methods from Weeks 1-10 for rigorous validation</li>
   </ul>
 
-  <h3>Best Practices</h3>
+  <h3>Your Research Workflow</h3>
 
-  <div class="info-box">
-    <ul>
-      <li>Always validate edits on three dimensions: efficacy, paraphrase, specificity</li>
-      <li>Test dose-response: Does edit magnitude correlate with behavior change?</li>
-      <li>Check reasoning, not just recall: Multi-hop questions reveal brittleness</li>
-      <li>Monitor fluency: Perplexity on held-out text detects degradation</li>
-      <li>Combine methods: Use activation steering to explore, then commit to weight edits</li>
-      <li>Keep backups: Weight edits are irreversible without copies</li>
-    </ul>
-  </div>
+  <ol>
+    <li><strong>Weeks 1-9:</strong> Discover concepts using multiple methods</li>
+    <li><strong>Week 10:</strong> Apply skepticism—run sanity checks</li>
+    <li><strong>Week 9:</strong>
+      <ul>
+        <li>Assess novelty (is it in training data?)</li>
+        <li>Assess teachability (can humans/students learn it?)</li>
+        <li>Design human study (even small)</li>
+        <li>Build concept atlas (organize findings)</li>
+        <li>Validate with multiple methods</li>
+      </ul>
+    </li>
+    <li><strong>Week 12:</strong> Present findings with rigorous evidence</li>
+  </ol>
+
+  <h3>Looking Ahead</h3>
+
+  <p>
+    The field of interpretability is moving toward <strong>actionable insights</strong>—not just understanding what
+    models do, but using that understanding to improve human knowledge, align AI systems, and enable human-AI
+    collaboration.
+  </p>
+
+  <p>
+    Your project contributes to this by characterizing how LLMs represent non-CS concepts—a crucial step toward AI
+    systems that can truly collaborate with domain experts across all fields.
+  </p>
 
   <h2>References & Resources</h2>
 
   <h3>Core Papers</h3>
   <ul>
-    <li><strong>Meng et al. (2022):</strong> "Locating and Editing Factual Associations in GPT." <em>NeurIPS</em>. <a href="https://arxiv.org/abs/2202.05262" target="_blank">arXiv:2202.05262</a></li>
-    <li><strong>Meng et al. (2023):</strong> "Mass-Editing Memory in a Transformer." <em>ICLR</em>. <a href="https://arxiv.org/abs/2210.07229" target="_blank">arXiv:2210.07229</a></li>
-    <li><strong>Hu et al. (2022):</strong> "LoRA: Low-Rank Adaptation of Large Language Models." <em>ICLR</em>. <a href="https://arxiv.org/abs/2106.09685" target="_blank">arXiv:2106.09685</a></li>
+    <li><strong>Shin et al. (2023):</strong> "Superhuman Artificial Intelligence Can Improve Human Decision Making by
+      Increasing Novelty." <em>PNAS</em>, 120(12), e2214840120. <a
+        href="https://www.pnas.org/doi/full/10.1073/pnas.2214840120" target="_blank">Link</a></li>
+    <li><strong>Schut et al. (2023/2025):</strong> "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer
+      in AlphaZero." <em>PNAS</em>, 122, e2406675122. <a href="https://arxiv.org/abs/2310.16410"
+        target="_blank">arXiv:2310.16410</a></li>
   </ul>
 
   <h3>Related Work</h3>
   <ul>
-    <li><strong>Mitchell et al. (2022):</strong> "Fast Model Editing at Scale." <em>ICLR</em>.</li>
-    <li><strong>Dai et al. (2022):</strong> "Knowledge Neurons in Pretrained Transformers." <em>ACL</em>.</li>
-    <li><strong>De Cao et al. (2021):</strong> "Editing Factual Knowledge in Language Models." <em>EMNLP</em>.</li>
-    <li><strong>Geva et al. (2021):</strong> "Transformer Feed-Forward Layers Are Key-Value Memories." <em>EMNLP</em>.</li>
+    <li><strong>AlphaGo:</strong> Silver et al. (2016). "Mastering the game of Go with deep neural networks and tree
+      search." <em>Nature</em>, 529, 484-489.</li>
+    <li><strong>AlphaZero:</strong> Silver et al. (2018). "A general reinforcement learning algorithm that masters
+      chess, shogi, and Go through self-play." <em>Science</em>, 362(6419), 1140-1144.</li>
+    <li><strong>TCAV:</strong> Kim et al. (2018). "Interpretability Beyond Feature Attribution: Quantitative Testing
+      with Concept Activation Vectors." <em>ICML</em>. (If moved from Week 6)</li>
+    <li><strong>Doshi-Velez & Kim (2017):</strong> "Towards A Rigorous Science of Interpretable Machine Learning." <a
+        href="https://arxiv.org/abs/1702.08608" target="_blank">arXiv:1702.08608</a></li>
   </ul>
 
-  <h3>Tools and Code</h3>
+  <h3>Supplementary Reading</h3>
   <ul>
-    <li><strong>EasyEdit:</strong> Unified library for model editing methods <a href="https://github.com/zjunlp/EasyEdit" target="_blank">GitHub</a></li>
-    <li><strong>PEFT (Hugging Face):</strong> Parameter-efficient fine-tuning including LoRA <a href="https://github.com/huggingface/peft" target="_blank">GitHub</a></li>
-    <li><strong>MEMIT implementation:</strong> <a href="https://github.com/kmeng01/memit" target="_blank">GitHub</a></li>
+    <li>Atanasova et al. (2020). "A Diagnostic Study of Explainability Techniques for Text Classification."
+      <em>EMNLP</em>.</li>
+    <li>Bansal et al. (2021). "Does the Whole Exceed its Parts?" <em>CHI</em>. (From Week 10)</li>
+    <li>AlphaStar case study: DeepMind blog on discovering novel StarCraft strategies</li>
   </ul>
 
   <section id="milestone">
     <h2>Project Milestone</h2>
 
     <div class="assignment-box">
-      <p><strong>Due: Thursday of Week 10</strong></p>
+      <p><strong>Due: Thursday of Week 11</strong></p>
       <p>
-        Demonstrate actionable control over your concept: use model editing techniques to enhance, suppress,
-        or modify the concept. Show that your interpretability findings enable meaningful interventions.
+        Design and conduct a human validation study to test whether your interpretability findings
+        help humans understand or predict model behavior related to your concept.
       </p>
 
-      <h4>Model Editing Demonstration</h4>
+      <h4>Human Validation Study</h4>
       <ul>
-        <li><strong>Choose editing approach:</strong>
+        <li><strong>Design study:</strong>
           <ul>
-            <li>ROME/MEMIT: Direct weight editing at critical MLP layers (if your concept is localized)</li>
-            <li>LoRA: Fine-tuning to enhance/suppress concept (if distributed or complex)</li>
-            <li>Hybrid: Combine editing approaches</li>
+            <li>What is your research question? (e.g., "Do explanations help humans predict model errors?")</li>
+            <li>What will you show participants? (explanations, examples, circuit diagrams)</li>
+            <li>What will you ask them to do? (predict behavior, identify errors, categorize examples)</li>
+            <li>How will you measure understanding? (accuracy, confidence, response time)</li>
           </ul>
         </li>
-        <li><strong>Design intervention:</strong>
+        <li><strong>Create materials:</strong>
           <ul>
-            <li>What change do you want to make? (enhance, suppress, redirect concept)</li>
-            <li>Which components will you target? (use findings from Weeks 4, 8)</li>
-            <li>How will you validate success?</li>
+            <li>Control condition: humans with no explanation</li>
+            <li>Experimental condition: humans with your interpretability findings</li>
+            <li>Test cases: mix of typical and edge cases</li>
+            <li>Instructions and training examples</li>
           </ul>
         </li>
-        <li><strong>Implement and test:</strong>
+        <li><strong>Recruit participants:</strong>
           <ul>
-            <li>Apply your chosen editing method</li>
-            <li>Test on benchmark: did the edit work as intended?</li>
-            <li>Test on held-out examples: does it generalize?</li>
-            <li>Test for side effects: are other capabilities preserved?</li>
+            <li>Target: 10-20 participants minimum</li>
+            <li>Consider expertise level: domain experts vs novices</li>
+            <li>Randomize assignment to conditions</li>
           </ul>
         </li>
-        <li><strong>Compare with steering:</strong>
+        <li><strong>Run study and analyze:</strong>
           <ul>
-            <li>How does editing compare to activation steering (Week 1)?</li>
-            <li>Which provides better control? More persistent changes?</li>
-            <li>What are the trade-offs?</li>
+            <li>Collect responses</li>
+            <li>Compare performance: explanation vs no-explanation</li>
+            <li>Statistical significance testing</li>
+            <li>Qualitative feedback: what was helpful? confusing?</li>
           </ul>
         </li>
       </ul>
 
       <h4>Deliverables:</h4>
       <ul>
-        <li><strong>Editing results:</strong>
+        <li><strong>Study design document:</strong>
           <ul>
-            <li>Before/after comparison on benchmark</li>
-            <li>Quantitative metrics showing intervention effect</li>
-            <li>Examples demonstrating successful concept modification</li>
+            <li>Research question and hypotheses</li>
+            <li>Methods: participants, materials, procedure</li>
+            <li>Planned analyses</li>
           </ul>
         </li>
-        <li><strong>Validation:</strong>
+        <li><strong>Results:</strong>
           <ul>
-            <li>Generalization test: does edit work on new examples?</li>
-            <li>Side effects test: are other capabilities preserved?</li>
-            <li>Specificity test: is the edit concept-specific?</li>
+            <li>Quantitative: performance comparison with statistical tests</li>
+            <li>Qualitative: participant feedback and observations</li>
+            <li>Visualization: accuracy, confidence, or other metrics by condition</li>
           </ul>
         </li>
-        <li><strong>Analysis:</strong>
+        <li><strong>Interpretation:</strong>
           <ul>
-            <li>Why did this editing approach work (or not work)?</li>
-            <li>How do results connect to your mechanistic understanding (Week 8)?</li>
-            <li>What does this demonstrate about the nature of your concept?</li>
+            <li>Do your explanations help humans?</li>
+            <li>What aspects are most/least helpful?</li>
+            <li>What does this reveal about the quality of your interpretability work?</li>
           </ul>
         </li>
-        <li><strong>Code:</strong> Notebook with editing implementation and evaluation</li>
+        <li><strong>Materials:</strong> Study materials, data, and analysis code</li>
       </ul>
 
       <p><em>
-        Successful editing validates your interpretability work: if you truly understand where and how a concept
-        is computed, you should be able to modify it in predictable ways.
+        The ultimate test of interpretability: do your findings help humans understand the model?
+        Even small, well-designed studies can provide valuable validation.
       </em></p>
     </div>
   </section>
