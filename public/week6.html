@@ -1152,6 +1152,99 @@
       <li>Report when concept detection fails</li>
     </ul>
   </section>
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Training a Pun Detector Probe</h2>
+    <p>
+      Building on our pun dataset and geometric analysis, we will train probes to detect puns from model activations
+      and analyze whether pun understanding is linearly accessible.
+    </p>
+
+    <h3>Part 1: Probe Training Setup (15 min)</h3>
+    <p>
+      Prepare your pun dataset for probe training:
+    </p>
+    <ol>
+      <li><strong>Load your pun dataset:</strong> Use examples from Weeks 3-4 (at least 100 puns, 100 non-puns)</li>
+      <li><strong>Extract activations:</strong> Run all examples through the model, save activations at key layers
+        <ul>
+          <li>Focus on layers identified as important in Week 5's causal analysis</li>
+          <li>Extract from the final token position (punchline)</li>
+        </ul>
+      </li>
+      <li><strong>Split data:</strong> 70% train, 15% validation, 15% test</li>
+    </ol>
+
+    <h3>Part 2: Train and Evaluate Probes (25 min)</h3>
+    <p>
+      Train linear probes across multiple layers:
+    </p>
+    <ol>
+      <li><strong>Train layer-by-layer:</strong>
+        <ul>
+          <li>For layers 0, 5, 10, 15, 20, 25, 30 (adjust for your model size)</li>
+          <li>Train a logistic regression classifier: pun (1) vs non-pun (0)</li>
+        </ul>
+      </li>
+      <li><strong>Evaluate performance:</strong>
+        <ul>
+          <li>Report accuracy on test set for each layer</li>
+          <li>Create layer-wise accuracy plot</li>
+        </ul>
+      </li>
+      <li><strong>Compare with Week 4:</strong>
+        <ul>
+          <li>Does probe accuracy peak at the same layers where PCA showed separation?</li>
+          <li>Compare probe weight direction to your mass-mean-difference "pun direction"</li>
+          <li>Compute cosine similarity between probe weights and pun direction</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 3: Control Tasks and Validation (20 min)</h3>
+    <p>
+      Validate that your probe is detecting humor, not confounds:
+    </p>
+    <ol>
+      <li><strong>Random label baseline:</strong>
+        <ul>
+          <li>Shuffle labels and retrain probes</li>
+          <li>If accuracy is still high, probe is overfitting</li>
+        </ul>
+      </li>
+      <li><strong>Selectivity test:</strong>
+        <ul>
+          <li>Does your pun probe fire on non-pun wordplay?</li>
+          <li>Does it fire on jokes that are not puns?</li>
+          <li>Test on edge cases to understand what it really detects</li>
+        </ul>
+      </li>
+      <li><strong>Linear vs MLP comparison:</strong>
+        <ul>
+          <li>Train a 1-hidden-layer MLP probe at the best layer</li>
+          <li>Is accuracy much higher? If so, pun representation may be nonlinear</li>
+        </ul>
+      </li>
+      <li><strong>Causal validation:</strong>
+        <ul>
+          <li>Use your probe weight vector as a steering direction</li>
+          <li>Does steering along this direction affect pun-like outputs?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> What does probe accuracy tell us about how the model represents humor?
+      Is "pun detection" a linearly accessible concept, or does the model use more complex representations?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK6_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>

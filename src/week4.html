@@ -659,6 +659,77 @@
     </p>
   </section>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Visualizing the Geometry of Puns</h2>
+    <p>
+      Building on our pun dataset from Week 3, we will visualize how the model represents puns versus non-puns
+      and attempt to find a "pun direction" in activation space.
+    </p>
+
+    <h3>Part 1: Collecting Activations (15 min)</h3>
+    <p>
+      Using the provided notebook, load your pun dataset from Week 3 and extract activations:
+    </p>
+    <ol>
+      <li>Load 20-30 puns and 20-30 non-pun sentences</li>
+      <li>Run each through the model and extract the residual stream at multiple layers</li>
+      <li>Focus on the final token position (where the punchline lands)</li>
+      <li>Store activations for analysis</li>
+    </ol>
+    <p>
+      <strong>Questions to consider:</strong> Should we extract from the punchline token specifically?
+      What about the setup? Does position matter for pun representations?
+    </p>
+
+    <h3>Part 2: PCA Visualization (20 min)</h3>
+    <p>
+      Apply PCA to visualize whether puns and non-puns separate in activation space:
+    </p>
+    <ol>
+      <li><strong>Layer comparison:</strong> Create PCA plots for early (layer 5), middle (layer 15), and late (layer 25) layers</li>
+      <li><strong>Color by category:</strong> Puns in one color, non-puns in another</li>
+      <li><strong>Examine structure:</strong> Do they cluster? Is there overlap? Linear separation?</li>
+      <li><strong>Try different positions:</strong> Final token vs. middle of sentence</li>
+    </ol>
+    <p>
+      <strong>Discussion:</strong> At which layer do puns most clearly separate from non-puns?
+      Is the separation clean or fuzzy? What might this tell us about how the model processes humor?
+    </p>
+
+    <h3>Part 3: Finding the "Pun Direction" (25 min)</h3>
+    <p>
+      Compute a mass mean-difference vector to find the "pun direction":
+    </p>
+    <ol>
+      <li><strong>Compute means:</strong>
+        <ul>
+          <li><code>mean_pun = average(activations for pun sentences)</code></li>
+          <li><code>mean_nonpun = average(activations for non-pun sentences)</code></li>
+        </ul>
+      </li>
+      <li><strong>Difference vector:</strong> <code>pun_direction = mean_pun - mean_nonpun</code></li>
+      <li><strong>Test the direction:</strong>
+        <ul>
+          <li>Project held-out examples onto pun_direction</li>
+          <li>Do puns have higher scores than non-puns?</li>
+          <li>What is the classification accuracy using this simple linear classifier?</li>
+        </ul>
+      </li>
+      <li><strong>Compare layers:</strong> Which layer gives the best pun direction?</li>
+    </ol>
+    <p>
+      <strong>Extension:</strong> Try the same analysis for different types of puns (wordplay vs. situation comedy).
+      Do they have different directions?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK4_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>

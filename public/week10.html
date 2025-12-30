@@ -930,6 +930,109 @@
     <li>AlphaStar case study: DeepMind blog on discovering novel StarCraft strategies</li>
   </ul>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Decoding Pun Representations with Patchscopes</h2>
+    <p>
+      In this final pun exercise, we use Patchscopes—the model's own language generation—to decode and
+      describe what information is encoded in pun representations. This helps us understand what the model
+      "sees" when processing humor.
+    </p>
+
+    <h3>Part 1: Patchscopes Setup (15 min)</h3>
+    <p>
+      Understand the Patchscopes technique:
+    </p>
+    <ol>
+      <li><strong>Review the method:</strong>
+        <ul>
+          <li>Patchscopes "patches" a hidden state from one context into a different prompt</li>
+          <li>The model then generates text describing that hidden state</li>
+          <li>Example: patch the representation of "Time flies like an arrow" into a prompt like "The following text is about: "</li>
+        </ul>
+      </li>
+      <li><strong>Select examples:</strong>
+        <ul>
+          <li>Choose 5 puns where your probe shows high pun-recognition</li>
+          <li>Choose 5 similar non-puns for comparison</li>
+        </ul>
+      </li>
+      <li><strong>Design prompts:</strong> Create 2-3 different "decoder" prompts for Patchscopes
+        <ul>
+          <li>"This sentence is: "</li>
+          <li>"The hidden meaning is: "</li>
+          <li>"This is funny because: "</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 2: Decoding Pun Representations (25 min)</h3>
+    <p>
+      Apply Patchscopes to understand what the model encodes about puns:
+    </p>
+    <ol>
+      <li><strong>Extract representations:</strong>
+        <ul>
+          <li>Run each pun/non-pun through the model</li>
+          <li>Extract the hidden state at the punchline position</li>
+          <li>Focus on the layer with best pun probe accuracy (from Week 6)</li>
+        </ul>
+      </li>
+      <li><strong>Apply Patchscopes:</strong>
+        <ul>
+          <li>Patch the hidden state into each decoder prompt</li>
+          <li>Generate 3-5 tokens of completion</li>
+          <li>Record the model's "interpretation" of each representation</li>
+        </ul>
+      </li>
+      <li><strong>Compare pun vs non-pun:</strong>
+        <ul>
+          <li>Do pun representations produce different descriptions than non-puns?</li>
+          <li>Does the model mention humor, wordplay, or double meanings?</li>
+          <li>Are the descriptions meaningful or random?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 3: Probing Specific Features (20 min)</h3>
+    <p>
+      Test whether the model can articulate specific aspects of puns:
+    </p>
+    <ol>
+      <li><strong>Test the double meaning:</strong>
+        <ul>
+          <li>For a pun like "Time flies like an arrow; fruit flies like a banana"</li>
+          <li>Use prompt: "The word 'flies' here means: "</li>
+          <li>Does the patched representation produce both meanings?</li>
+        </ul>
+      </li>
+      <li><strong>Test humor awareness:</strong>
+        <ul>
+          <li>Use prompt: "This sentence is [humorous/serious]: "</li>
+          <li>Does the model correctly classify puns as humorous?</li>
+        </ul>
+      </li>
+      <li><strong>Compare layers:</strong>
+        <ul>
+          <li>Try Patchscopes at early, middle, and late layers</li>
+          <li>At which layer does the model best understand the pun?</li>
+          <li>Does this match your causal tracing results from Week 5?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> Can the model articulate its own understanding of puns?
+      What does this tell us about whether humor understanding is explicit or implicit in the model?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK10_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="milestone">
     <h2>Project Milestone</h2>
 

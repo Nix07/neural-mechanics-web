@@ -1400,6 +1400,95 @@ assert drop_with_important_removed > drop_with_random_removed
     </li>
   </ul>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Which Words Make a Pun Punny?</h2>
+    <p>
+      Using attribution methods, we will identify which input tokens are most important for the model's
+      "pun recognition"—helping us understand what linguistic cues trigger humor processing.
+    </p>
+
+    <h3>Part 1: Attribution Setup (15 min)</h3>
+    <p>
+      Prepare for attribution analysis on your pun dataset:
+    </p>
+    <ol>
+      <li><strong>Select examples:</strong> Choose 10 puns where the model shows clear pun recognition (from your probe analysis)</li>
+      <li><strong>Define target:</strong> Use your pun probe's output as the attribution target
+        <ul>
+          <li>Which inputs increase the "pun" score?</li>
+        </ul>
+      </li>
+      <li><strong>Choose methods:</strong> We will compare Integrated Gradients, Input×Gradient, and Attention Rollout</li>
+    </ol>
+
+    <h3>Part 2: Compute and Compare Attributions (25 min)</h3>
+    <p>
+      Apply multiple attribution methods and analyze agreement:
+    </p>
+    <ol>
+      <li><strong>Run integrated gradients:</strong> Compute token-level attributions for each pun</li>
+      <li><strong>Visualize heatmaps:</strong> Which words have highest attribution?
+        <ul>
+          <li>Is it the punchline word (double meaning)?</li>
+          <li>Is it the setup words that create the context?</li>
+          <li>Do both parts contribute?</li>
+        </ul>
+      </li>
+      <li><strong>Compare methods:</strong>
+        <ul>
+          <li>Do IG and Input×Gradient agree on important tokens?</li>
+          <li>How does Attention Rollout compare?</li>
+          <li>Compute correlation between method rankings</li>
+        </ul>
+      </li>
+      <li><strong>Aggregate patterns:</strong>
+        <ul>
+          <li>Across all puns, what types of tokens are important?</li>
+          <li>Are punchlines always critical, or does context matter more?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 3: Validate with Interventions (20 min)</h3>
+    <p>
+      Test whether attribution accurately identifies important tokens:
+    </p>
+    <ol>
+      <li><strong>Ablate high-attribution tokens:</strong>
+        <ul>
+          <li>Remove or mask the top-3 highest-attribution tokens</li>
+          <li>Does the pun probe score drop significantly?</li>
+        </ul>
+      </li>
+      <li><strong>Ablate low-attribution tokens:</strong>
+        <ul>
+          <li>Remove tokens with low attribution</li>
+          <li>Pun recognition should remain relatively stable</li>
+        </ul>
+      </li>
+      <li><strong>Compute correlation:</strong>
+        <ul>
+          <li>Plot: attribution score vs. effect of ablating that token</li>
+          <li>If correlation is low, attribution may not be faithful</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> What have you learned about how the model "sees" puns?
+      Are the important tokens what you would expect, or are there surprises?
+    </p>
+
+    <div class="colab-button" style="display: inline-block; background-color: #0055a4; color: white; padding: 10px 20px; border-radius: 4px; margin: 10px 0; font-weight: bold;">
+      <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK7_INCLASS" target="_blank" style="color: white; text-decoration: none;">
+        Open In-Class Notebook
+      </a>
+    </div>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="milestone">
     <h2>Project Milestone</h2>
 

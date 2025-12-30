@@ -550,6 +550,83 @@
     </ol>
   </section>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Finding and Steering with Humor Features</h2>
+    <p>
+      This exercise introduces Neuronpedia as a tool for finding concept vectors, using puns and humor as our running example.
+      We'll explore what features the model has learned about humor and test whether we can steer model behavior.
+    </p>
+
+    <h3>Part 1: Neuronpedia Exploration (20 min)</h3>
+    <p>
+      Go to <a href="https://www.neuronpedia.org/" target="_blank">Neuronpedia</a> and search for features related to
+      humor, jokes, and puns. Try searches like:
+    </p>
+    <ul>
+      <li><code>humor</code>, <code>joke</code>, <code>pun</code>, <code>funny</code></li>
+      <li><code>wordplay</code>, <code>comedy</code>, <code>laughter</code></li>
+    </ul>
+    <p>
+      For each interesting feature you find:
+    </p>
+    <ol>
+      <li>Note the feature ID and which model/layer it comes from</li>
+      <li>Examine the top activating examples—what patterns do you see?</li>
+      <li>Is this a "clean" humor feature or does it also activate for other concepts?</li>
+      <li>Look at negative examples—what doesn't activate this feature?</li>
+    </ol>
+    <p>
+      <strong>Discussion:</strong> Share your findings with the class. Did different people find different features?
+      Are there multiple "types" of humor features (setup vs punchline, wordplay vs situation comedy, etc.)?
+    </p>
+
+    <h3>Part 2: Feature Analysis (15 min)</h3>
+    <p>
+      Pick your most promising humor feature and analyze it more deeply:
+    </p>
+    <ol>
+      <li><strong>Activation patterns:</strong> At what positions in sentences does it activate? Beginning, middle, or punchline?</li>
+      <li><strong>Polysemanticity:</strong> Does this feature respond to non-humor contexts? What else activates it?</li>
+      <li><strong>Compare layers:</strong> Search for similar features in earlier and later layers. How do they differ?</li>
+    </ol>
+    <p>
+      Record your observations—you'll use these features in the steering exercise.
+    </p>
+
+    <h3>Part 3: Steering with Humor Features (25 min)</h3>
+    <p>
+      Using the provided Colab notebook, apply your humor feature as a steering vector:
+    </p>
+    <ol>
+      <li><strong>Load the feature vector</strong> from Neuronpedia for your chosen feature</li>
+      <li><strong>Test prompts:</strong> Try steering on prompts like:
+        <ul>
+          <li>"Tell me about time"</li>
+          <li>"What's a banana?"</li>
+          <li>"Explain why the chicken crossed the road"</li>
+        </ul>
+      </li>
+      <li><strong>Vary the coefficient:</strong> Try α = 0.5, 1.0, 2.0, 5.0. What happens at different strengths?</li>
+      <li><strong>Negative steering:</strong> Try α = -1.0. Does it make outputs less funny?</li>
+    </ol>
+    <p>
+      <strong>Questions to discuss:</strong>
+    </p>
+    <ul>
+      <li>Does steering produce actual jokes or just "joke-adjacent" text?</li>
+      <li>Is there a threshold effect where steering suddenly kicks in?</li>
+      <li>What unintended side effects do you observe?</li>
+      <li>How does this relate to the linear representation hypothesis?</li>
+    </ul>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK2_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>

@@ -992,6 +992,90 @@
     </ul>
   </section>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Where Is Humor Localized?</h2>
+    <p>
+      Building on our pun dataset and representation analysis from previous weeks, we will now use causal tracing
+      to determine where in the model pun understanding is actually computed.
+    </p>
+
+    <h3>Part 1: Setting Up Counterfactuals (15 min)</h3>
+    <p>
+      Create minimal pairs for causal intervention:
+    </p>
+    <ol>
+      <li><strong>Select pun pairs:</strong> For each pun, create a non-pun version that is structurally identical
+        <ul>
+          <li>Pun: "Time flies like an arrow; fruit flies like a banana"</li>
+          <li>Non-pun: "Time passes like an arrow; fruit falls like a stone"</li>
+        </ul>
+      </li>
+      <li><strong>Verify behavior difference:</strong> Confirm the model shows different logit patterns for pun vs non-pun</li>
+      <li><strong>Prepare 10-15 pairs</strong> for patching experiments</li>
+    </ol>
+
+    <h3>Part 2: Causal Tracing for Puns (25 min)</h3>
+    <p>
+      Apply ROME-style causal tracing to locate pun processing:
+    </p>
+    <ol>
+      <li><strong>Corrupt baseline:</strong> Run the pun with noise added to embeddings</li>
+      <li><strong>Systematic restoration:</strong> For each (layer, position) pair:
+        <ul>
+          <li>Restore clean activations only at that location</li>
+          <li>Measure: How much does this restore the "pun signature" in model outputs?</li>
+        </ul>
+      </li>
+      <li><strong>Create heatmap:</strong> Plot causal importance across layers × positions</li>
+    </ol>
+    <p>
+      <strong>Key questions:</strong>
+    </p>
+    <ul>
+      <li>Is pun processing localized to specific layers, or distributed?</li>
+      <li>Which token positions are critical? The punchline? The setup?</li>
+      <li>Are MLPs or attention heads more important for pun understanding?</li>
+    </ul>
+
+    <h3>Part 3: Cross-Patching Experiments (20 min)</h3>
+    <p>
+      Use activation patching to test specific hypotheses:
+    </p>
+    <ol>
+      <li><strong>Pun → Non-pun patching:</strong>
+        <ul>
+          <li>Run the non-pun sentence</li>
+          <li>Patch in activations from the pun version at key locations</li>
+          <li>Does this make the model treat the non-pun as a pun?</li>
+        </ul>
+      </li>
+      <li><strong>Component-specific patching:</strong>
+        <ul>
+          <li>Patch only MLP outputs vs. only attention outputs</li>
+          <li>Which component type carries the "pun signal"?</li>
+        </ul>
+      </li>
+      <li><strong>Compare to your Week 4 findings:</strong>
+        <ul>
+          <li>Do the causally important layers match where you found the best pun/non-pun separation?</li>
+          <li>Does your "pun direction" from Week 4 align with the causal structure?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> How does pun localization compare to factual knowledge localization (ROME)?
+      Are semantic concepts like humor processed similarly to factual associations?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK5_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="code-exercise">
     <h2>Code Exercise</h2>
     <p>

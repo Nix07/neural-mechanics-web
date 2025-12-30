@@ -739,6 +739,95 @@
     </p>
   </section>
 
+  <section id="in-class-exercise">
+    <h2>In-Class Exercise: Discovering Pun Circuits</h2>
+    <p>
+      We will attempt automated circuit discovery for pun processing, synthesizing insights from previous weeks
+      to map the computational pathway from setup to punchline recognition.
+    </p>
+
+    <h3>Part 1: Synthesize Previous Findings (15 min)</h3>
+    <p>
+      Before automated discovery, compile what you already know:
+    </p>
+    <ol>
+      <li><strong>From Week 2 (Neuronpedia):</strong> Which SAE features related to humor did you find?</li>
+      <li><strong>From Week 4 (Geometry):</strong> Which layers showed best pun/non-pun separation?</li>
+      <li><strong>From Week 5 (Causal tracing):</strong> Which layers × positions were causally important?</li>
+      <li><strong>From Week 6 (Probes):</strong> Where did pun probes perform best?</li>
+      <li><strong>From Week 7 (Attribution):</strong> Which input tokens had highest attribution?</li>
+    </ol>
+    <p>
+      Create a hypothesis: "Pun processing likely involves [specific layers], activated by [specific positions],
+      and uses [specific attention patterns]."
+    </p>
+
+    <h3>Part 2: EAP-IG Circuit Discovery (25 min)</h3>
+    <p>
+      Apply gradient-based attribution to discover which attention heads matter for pun recognition:
+    </p>
+    <ol>
+      <li><strong>Define the task:</strong>
+        <ul>
+          <li>Use your trained pun probe as the target (or logit difference for pun-related tokens)</li>
+          <li>Run EAP-IG to compute importance scores for each attention head</li>
+        </ul>
+      </li>
+      <li><strong>Analyze head importance:</strong>
+        <ul>
+          <li>Which heads have highest importance for pun recognition?</li>
+          <li>Are they in the layers you predicted?</li>
+          <li>Create a visualization: head importance across layers</li>
+        </ul>
+      </li>
+      <li><strong>Compare to your hypothesis:</strong>
+        <ul>
+          <li>Do automatically discovered components match your manual findings?</li>
+          <li>Any surprises (important heads you did not predict)?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Part 3: Path Patching Validation (20 min)</h3>
+    <p>
+      Validate the discovered circuit with causal interventions:
+    </p>
+    <ol>
+      <li><strong>Identify candidate circuit:</strong>
+        <ul>
+          <li>Take top-5 most important heads from EAP-IG</li>
+          <li>These form your candidate "pun circuit"</li>
+        </ul>
+      </li>
+      <li><strong>Path patching test:</strong>
+        <ul>
+          <li>Patch activations from pun → non-pun at these heads only</li>
+          <li>Does this transfer pun recognition?</li>
+          <li>Compute: what percentage of total effect is captured by this circuit?</li>
+        </ul>
+      </li>
+      <li><strong>Ablation test:</strong>
+        <ul>
+          <li>Ablate the candidate circuit heads</li>
+          <li>Does pun probe accuracy drop?</li>
+          <li>How much of the pun effect is eliminated?</li>
+        </ul>
+      </li>
+    </ol>
+
+    <p>
+      <strong>Discussion:</strong> Does pun understanding have a clean, minimal circuit, or is it
+      distributed across many components? How does this compare to simpler circuits like induction?
+    </p>
+
+    <a href="https://colab.research.google.com/drive/PLACEHOLDER_WEEK8_INCLASS" target="_blank" class="colab-button">
+      Open In-Class Notebook
+    </a>
+    <p style="margin-top: 10px; color: #666; font-size: 0.9em;">
+      <em>Note: The Colab notebook will be linked here.</em>
+    </p>
+  </section>
+
   <section id="milestone">
     <h2>Project Milestone</h2>
 
