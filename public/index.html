@@ -68,54 +68,44 @@
       background-color: #f0f0f0;
     }
 
-    /* Staff grid (Instructor + TAs) */
-    .staff {
+    /* Compact staff row */
+    .staff-row {
+      display: flex;
+      gap: 30px;
+      align-items: center;
       margin-bottom: 20px;
     }
 
-    .staff-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 6px;
-      align-items: start;
-      grid-auto-flow: column;
-      grid-auto-columns: 1fr;
+    .staff-member {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
-    .staff-card {
-      text-align: center;
-      width: 100px;
-      /* same as your grid min size */
-      margin: 0 auto;
-      /* centers the whole card in its grid cell */
-      text-align: center;
-
-    }
-
-    .staff-card img {
-      width: 80px;
-      height: 80px;
+    .staff-member img {
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid #ddd;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .staff-card img:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+    .staff-member .info {
+      line-height: 1.3;
     }
 
-    .staff-card .name {
-      margin-top: 8px;
+    .staff-member .name {
       font-weight: bold;
     }
 
-    .staff-card .role {
-      margin: 2px 0 0;
-      font-size: 0.9em;
+    .staff-member .role {
+      font-size: 0.85em;
       color: #666;
+    }
+
+    h4 {
+      margin: 15px 0 5px 0;
+      font-size: 1em;
     }
   </style>
 </head>
@@ -126,64 +116,40 @@
     <img src="imgs/ne.png" alt="Northeastern Logo">
     <h1>Neural Mechanics</h1>
   </header>
-  <h3>Northeastern University, Spring 2026</h3>
+  <p style="margin-top: -20px; margin-bottom: 15px;">Northeastern University, Spring 2026</p>
 
-  <section id="staff" class="staff">
-
-    <div class="staff-grid">
-      <!-- Instructor -->
-      <figure class="staff-card">
-        <img src="imgs/staff/david.webp" alt="David Bau" loading="lazy">
-        <figcaption>
-          <div class="name">Prof. David <br>Bau</div>
-          <div class="role">Instructor</div>
-        </figcaption>
-      </figure>
-
-      <!-- TAs -->
-      <figure class="staff-card">
-        <img src="imgs/staff/np.jpg" alt="Nikhil Prakash" loading="lazy">
-        <figcaption>
-          <div class="name">Nikhil <br>Prakash</div>
-          <div class="role">TA</div>
-        </figcaption>
-      </figure>
+  <div class="staff-row">
+    <div class="staff-member">
+      <img src="imgs/staff/david.webp" alt="David Bau">
+      <div class="info">
+        <div class="name"><a href="https://baulab.info/">David Bau</a></div>
+        <div class="role">Instructor</div>
+      </div>
     </div>
-  </section>
+    <div class="staff-member">
+      <img src="imgs/staff/np.jpg" alt="Nikhil Prakash">
+      <div class="info">
+        <div class="name"><a href="https://nix07.github.io/">Nikhil Prakash</a></div>
+        <div class="role">TA</div>
+      </div>
+    </div>
+  </div>
 
-
-  <section id="instructor-staff">
-    <h2>Instructor</h2>
-    <p><a href="https://baulab.info/">David Bau</a><br>
-      Email: <a href="mailto:davidbau@northeastern.edu">davidbau@northeastern.edu</a></p>
-    <h2>Staff</h2>
-    <p><a href="https://nix07.github.io/">Nikhil Prakash</a><br>
-      Email: <a href="mailto:prakash.nik@northeastern.edu">prakash.nik@northeastern.edu</a></p>
-  </section>
-
-  <section id="course-description">
-    <h2>Course Description</h2>
+  <section id="about">
+    <h2>About This Course</h2>
     <p>
-      Modern AI systems (like large language models) are incredibly powerful but also <i>mysteriously</i> opaque: they work astonishingly well, yet even the engineers who build them don't fully understand what the billions of artificial "neurons" are actually doing inside. This class focuses on post-hoc interpretability, trying to understand trained models, like a biologist studying a complex organism. Instead of simplifying the model to make it human-readable, we will probe existing neural networks to uncover <i>what internal structures, features, or "concepts"</i> they've learned, and how those parts combine to produce behavior.
-      <br><br>
-      We will form interdisciplinary teams consisting of a non-CS PhD student, a CS PhD student with a background in machine learning, and a <a href="https://baulab.info/" target="_blank">BauLab</a> member who is an expert in interpretability to collaborate on a research project.
-    </p>
-
-    <h2>Course Goals</h2>
-    <p>
-      The aim of this class is to study how LLMs encode non-CS concepts, an area often neglected in interpretability research, and to produce <strong>publication-quality research papers</strong> suitable for submission to machine learning venues (NeurIPS, ICLR, ICML conferences or workshops).
+      Modern AI systems are powerful but opaque: even their creators don't fully understand what the billions of artificial neurons are doing inside. This class teaches methods for probing neural networks to uncover <em>what concepts they've learned</em> and <em>where those concepts are encoded</em>.
     </p>
     <p>
-      Teams will conduct original research following the complete workflow: from concept selection and exploration, through systematic application of interpretability methods, to writing and peer review. The timeline is ambitious&mdash;some teams may target NeurIPS 2026 (May deadline), while others may polish their work over the summer for later venues. Both paths represent successful outcomes.
+      <strong>Goal:</strong> Produce publication-quality research papers studying how LLMs encode concepts from fields outside CS&mdash;an area often neglected in interpretability research. Teams will target venues like NeurIPS, ICLR, or ICML.
     </p>
     <p>
-      <strong>Success metrics:</strong> Rigorous investigation with proper controls and validation. Negative results with careful analysis are just as publishable as positive findings. The focus is on research quality, not necessarily acceptance to a specific venue.
+      <strong>Teams:</strong> Interdisciplinary groups of a domain-expert PhD student, a CS/ML PhD student, and a <a href="https://baulab.info/">BauLab</a> interpretability researcher.
     </p>
-  </section>
-
-  <section id="prerequisites">
-    <h2>Pre-requisites</h2>
-    <p> Familiarity with linear algebra, probability, calculus, deep learning, Python, and PyTorch is recommended. Understanding transformer architecture and having experience building them from scratch is a plus.</p>
+    <h4>Prerequisites</h4>
+    <p style="margin-top: 5px;">
+      Linear algebra, probability, deep learning, Python, PyTorch. Familiarity with transformers is a plus.
+    </p>
   </section>
 
 
@@ -339,7 +305,13 @@
   </section>
 
   <section id="grading">
-    <h2> Grading </h2>
+    <h2>Grading</h2>
+    <ul>
+      <li><strong>25%</strong> Final paper and presentation</li>
+      <li><strong>25%</strong> Weekly project milestones</li>
+      <li><strong>25%</strong> Peer reviews</li>
+      <li><strong>25%</strong> Class participation</li>
+    </ul>
   </section>
 
   <section id="office-hours">
