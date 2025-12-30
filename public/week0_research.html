@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finding a Good Research Question - Neural Mechanics Course</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fff;
+        }
+        h1 {
+            font-size: 2.2em;
+            font-weight: 600;
+            margin-bottom: 0.5em;
+            color: #1a1a1a;
+        }
+        h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-top: 1.8em;
+            margin-bottom: 0.8em;
+            color: #2c3e50;
+        }
+        p {
+            margin-bottom: 1.2em;
+            text-align: justify;
+        }
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        strong {
+            font-weight: 600;
+        }
+        ul {
+            margin-bottom: 1.2em;
+            padding-left: 1.5em;
+        }
+        li {
+            margin-bottom: 0.6em;
+        }
+        .references {
+            margin-top: 3em;
+            padding-top: 2em;
+            border-top: 1px solid #e0e0e0;
+        }
+        .references p {
+            text-align: left;
+            margin-bottom: 0.8em;
+            padding-left: 2em;
+            text-indent: -2em;
+        }
+    </style>
+</head>
+<body>
+
+<p style="margin-bottom: 20px;"><a href="index.html">&larr; Course Home</a> | <a href="week0.html">Week 0: Course Overview &rarr;</a></p>
+
+<h1>Finding a Good Research Question</h1>
+
+<h2>Introduction</h2>
+
+<p>Before you invest months of effort into a research project, you should ask: is this the right question? The literature on research methodology offers surprisingly useful guidance here, even though most of it comes from fields far removed from machine learning.</p>
+
+<p>Three essays deserve your attention. Richard Hamming's 1986 talk <a href="papers/hamming-1986-you-and-your-research.pdf">"You and Your Research"</a> asks why some scientists make lasting contributions while others are forgotten. His central provocation: "If you do not work on an important problem, it's unlikely you'll do important work." Michael Nielsen's <a href="papers/nielsen-2004-principles-of-effective-research.pdf">"Principles of Effective Research"</a> (2004) distinguishes problem-solvers from problem-creators and argues that most researchers underinvest in the latter. And Cummings, Browner, and Hulley's chapter <a href="papers/cummings-2013-conceiving-the-research-question.pdf">"Conceiving the Research Question"</a> from <em>Designing Clinical Research</em> offers the FINER framework: a good research question should be Feasible, Interesting, Novel, Ethical, and Relevant.</p>
+
+<p>The FINER framework was designed for clinical medicine, but it adapts well to mechanistic interpretability. What follows is my attempt at that adaptation.</p>
+
+<p>A note on the structure of this course: we are forming interdisciplinary teams, pairing PhD students from outside AI with graduate students in machine learning. This is not an accident. In the era of large language models, the greatest societal impacts will ultimately occur outside computer science: in law, medicine, education, science, policy, economics, the humanities. Yet almost no interpretability research examines how models represent concepts from these domains. The lawyer on your team knows what legal reasoning actually requires. The biologist knows which representations would matter for scientific discovery. The economist knows which decision-making processes have consequences. This is your advantage. Use it.</p>
+
+<h2>Feasibility</h2>
+
+<p>Can you actually look inside an AI that exhibits the phenomenon you care about?</p>
+
+<p>This question has layers. You need a model that (1) exhibits the behavior, (2) is small enough to study, and (3) actually reveals something when you look inside. Many projects fail at step three: the model exhibits the behavior, but the internal representations are opaque, distributed, or otherwise resistant to interpretation.</p>
+
+<p>A practical workflow:</p>
+
+<p><strong>Choose a class of phenomena.</strong> What aspect of model behavior interests you? Factual recall, reasoning, safety-relevant behaviors, linguistic competence, multimodal integration? Your choice here reflects your taste and your bets about what matters.</p>
+
+<p><strong>Narrow down by eliciting the behavior in a frontier model.</strong> Before committing to a phenomenon, verify that you can reliably elicit it. Use ChatGPT, Claude, or Gemini. Can you construct prompts that consistently produce the behavior? If the behavior is fragile or inconsistent even in the best models, interpretability work will be harder.</p>
+
+<p><strong>Find the smallest open model that reproduces it.</strong> You will spend many hours staring at activations, running interventions, and iterating on hypotheses. This is far easier in a 1B parameter model than a 70B parameter model. The goal is to find the smallest model where the phenomenon still appears. Pythia, Llama, Gemma, and Qwen all offer families of models at multiple scales.</p>
+
+<p><strong>Look for signs of life.</strong> Here is where feasibility becomes concrete. Run your probes. Compute your activation patching. Look at attention patterns. Do you see internal representations that suggest the model is processing the concept you care about? If the first few hours of exploration reveal nothing: either your tools are wrong, your hypotheses are wrong, or the phenomenon may not be interpretable with current methods.</p>
+
+<p>Signs of life matter. A project with clear internal structure visible from the start will likely yield results. A project where everything looks like noise may never converge.</p>
+
+<p>One more consideration: as your research matures, you will need to show that your findings generalize beyond the toy model where you developed them. Keep an eye on whether the phenomenon appears in multiple models. If your circuit exists only in Pythia-70M and nowhere else, reviewers will question whether you have discovered something general.</p>
+
+<h2>Interesting</h2>
+
+<p>Is this question interesting to you and to your field?</p>
+
+<p>The two are not identical. Hamming spent Friday lunches discussing "great thoughts" with colleagues: not the problems they were currently solving, but the problems they believed mattered most. He found that many smart people worked on problems they themselves did not consider important.</p>
+
+<p>Your own interest sustains you through the months of debugging, failed experiments, and rejected papers. But you should also ask: if I solve this, will anyone care? Talk to colleagues. Present your question at lab meetings before you have results. Their reactions reveal whether you are onto something.</p>
+
+<p>Here is where interdisciplinary teams have an advantage. The interpretability community has developed strong intuitions about which questions matter for AI safety and for understanding deep learning. But we have weak intuitions about which questions matter for medicine, for law, for scientific discovery, for education. Your non-CS collaborators have those intuitions. When the legal scholar on your team gets excited about a research direction, that signal contains information you could not generate yourself.</p>
+
+<p>The inverse also holds. If you propose a question and your domain expert shrugs, ask why. Perhaps the phenomenon you find technically fascinating does not correspond to anything practitioners actually care about. Better to learn this in week two than in month eight.</p>
+
+<p>A warning: the most interesting phenomena may be the hardest to study. There is a tradeoff between importance and tractability. Hamming again: "It's not the consequence that makes a problem important, it is that you have a reasonable attack."</p>
+
+<h2>Novelty</h2>
+
+<p>There are problems that have been explored many times in the interpretability literature: sentiment classification circuits, subject-verb agreement, numerical representations in small transformers. These were good first targets. They are no longer novel.</p>
+
+<p>Do something new.</p>
+
+<p>The interdisciplinary structure of this course points toward vast unexplored territory. How do language models represent causal reasoning? Legal precedent? Biological mechanism? Historical contingency? Moral uncertainty? These are not idle questions. Models are already being deployed in domains where such representations matter. Yet we have almost no interpretability research examining them.</p>
+
+<p>This is the opportunity. This course will equip you with the interpretability methods: probing classifiers, activation patching, circuit analysis, sparse autoencoders. These techniques will be familiar to the machine learning students on your team. The domain expert contributes something equally essential: knowledge of which concepts matter, how they relate, and what would constitute genuine understanding versus superficial pattern matching. Neither could do this work alone. Together, you can ask questions no one else is asking.</p>
+
+<p>A note of caution: stay open-minded about what you will find. The internal workings of large language models are largely unknown. They may organize their computations in ways that are surprising, or even foreign to the way humans think about these domains. The legal scholar's intuitions about how precedent <em>should</em> work may not match how the model actually processes it. This is not a failure; it is a discovery.</p>
+
+<p>Novelty can come from several sources: a new phenomenon, a new method, a new model family, or a new way of connecting interpretability findings to downstream applications. But finding a new phenomenon in an important domain is perhaps the highest-leverage form of novelty available right now.</p>
+
+<p>Nielsen distinguishes problem-solvers from problem-creators. Problem-solvers attack well-posed questions that the community already recognizes as important. Problem-creators identify new questions. Both paths can succeed, but problem-creation has higher variance and higher potential upside. If you find a question no one else has asked, and it turns out to be important, you get the territory to yourself.</p>
+
+<h2>Ethics</h2>
+
+<p>Avoid chasing problems that would endanger or disempower people.</p>
+
+<p>Interpretability research is often motivated by safety: we want to understand models so we can make them more reliable, more honest, less prone to catastrophic failures. But interpretability tools can also be misused. A method for identifying deceptive circuits could be inverted to train models that deceive more effectively. A technique for locating safety-relevant representations could be used to ablate them.</p>
+
+<p>Think through the implications of your work before you begin. If your method would primarily enable harm, reconsider.</p>
+
+<p>This is not a call for timidity. Understanding how models work is valuable. But researchers have choices about which capabilities to develop and how to communicate them.</p>
+
+<h2>Relevance</h2>
+
+<p>AI is transforming every field. Is the question you are asking relevant to what is actually happening?</p>
+
+<p>Consider where large language models are being deployed: medical diagnosis, legal research, scientific literature review, educational tutoring, policy analysis, financial modeling. The highest-stakes applications are almost entirely outside computer science. Yet the interpretability research community remains focused on questions that matter primarily to machine learning researchers: how do transformers implement algorithms? How do they store factual knowledge? How do safety fine-tuning techniques work?</p>
+
+<p>These are good questions. But they are not the only questions. A doctor deciding whether to trust a model's differential diagnosis needs to know whether the model is reasoning from symptoms to pathophysiology or merely pattern-matching on surface features. A lawyer using a model for case research needs to know whether it understands precedent or is hallucinating citations. These domain-specific questions are at least as important as the CS-centric questions that dominate current research, and they are far less explored.</p>
+
+<p>Relevance is not the same as trendiness. A question can be relevant without appearing in this week's Twitter discourse. But a question can also be irrelevant despite being technically interesting: a deep study of positional encoding schemes that no one uses anymore, or a circuit analysis of a model architecture that has been abandoned.</p>
+
+<p>Ask yourself: if I answer this question completely, what changes? Does it inform how practitioners build or deploy models? Does it advance our theoretical understanding of learning and representation? Does it connect to concerns that people in other fields actually have?</p>
+
+<p>Cummings and colleagues suggest imagining the various possible outcomes of your research and asking whether each would "advance scientific knowledge, influence practice guidelines and health policy, or guide further research." The same test applies here. What would each possible finding mean: not just for machine learning, but for the domains where these models are being used?</p>
+
+<h2>The Iterative Process</h2>
+
+<p>Research questions are not found; they are developed. You start with a vague interest, narrow it through reading and exploration, test it against feasibility constraints, refine it through conversation with colleagues, and often abandon it in favor of something better.</p>
+
+<p>Cummings describes this as "an iterative process of making incremental changes in the study's design, estimating the sample size, reviewing with colleagues, pretesting key features, and revising." The interpretability version: make incremental changes in your experimental setup, estimate what compute you need, review with colleagues, run pilot experiments, and revise.</p>
+
+<p>Write down your research question early, even if it feels premature. A one-paragraph description of what you want to learn and why forces clarity. Show it to your advisor. Show it to other students. Their confusions reveal where your thinking is still muddled.</p>
+
+<h2>Summary</h2>
+
+<p>Before committing to a research project, ask:</p>
+
+<ul>
+    <li><strong>Feasible:</strong> Can I find a model where the phenomenon appears and where I can see inside? Are there signs of life in the internal representations?</li>
+    <li><strong>Interesting:</strong> Does this question excite me? Would my colleagues consider it important?</li>
+    <li><strong>Novel:</strong> Has this been done before? What is new about my approach?</li>
+    <li><strong>Ethical:</strong> Would this work primarily enable harm?</li>
+    <li><strong>Relevant:</strong> If I answer this question, what changes for the field?</li>
+</ul>
+
+<p>These criteria are not a checklist to satisfy once and forget. Return to them throughout your project. The best research often involves discovering, midstream, that you were asking the wrong question&mdash;and having the flexibility to ask a better one.</p>
+
+<div class="references">
+<h2>References</h2>
+
+<p>Cummings, S. R., Browner, W. S., &amp; Hulley, S. B. (2013). <a href="papers/cummings-2013-conceiving-the-research-question.pdf">Conceiving the research question and developing the study plan</a>. In S. B. Hulley et al. (Eds.), <em>Designing Clinical Research</em> (4th ed., pp. 14&ndash;22). Lippincott Williams &amp; Wilkins.</p>
+
+<p>Hamming, R. W. (1986, March 7). <a href="papers/hamming-1986-you-and-your-research.pdf">You and your research</a> [Colloquium presentation]. Bell Communications Research, Morristown, NJ.</p>
+
+<p>Nielsen, M. A. (2004). <a href="papers/nielsen-2004-principles-of-effective-research.pdf">Principles of effective research</a> (Technical Note 0404). University of Queensland.</p>
+</div>
+
+<p style="margin-top: 3em; padding-top: 2em; border-top: 1px solid #e0e0e0;"><a href="index.html">&larr; Course Home</a> | <a href="week0.html">Week 0: Course Overview &rarr;</a></p>
+
+</body>
+</html>
