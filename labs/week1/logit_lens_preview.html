@@ -26,6 +26,13 @@
     <h1>Logit Lens Visualization Preview</h1>
     <p class="note">Using real Llama 3.1 70B data via NDIF. Open in browser - no notebook needed.</p>
     <div class="preview-container" id="viz"></div>
+    <p style="margin-top: 20px;">
+        <button id="duplicate-btn" style="padding: 8px 16px; font-size: 14px; cursor: pointer;">
+            Duplicate Widget with Same State
+        </button>
+        <span id="state-display" style="margin-left: 10px; font-size: 11px; color: #666;"></span>
+    </p>
+    <div class="preview-container" id="viz2" style="margin-top: 20px;"></div>
 
 <script>
 // Use real data from NDIF via JSONP (preview_data.js)
@@ -39,7 +46,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
 var LogitLensWidget = (function() {
     var instanceCount = 0;
 
-    return function(containerId, widgetData) {
+    return function(containerId, widgetData, uiState) {
         var uid = "ll_interact_" + instanceCount++;
         var container = document.getElementById(containerId);
         if (!container) {
@@ -170,39 +177,49 @@ var LogitLensWidget = (function() {
         `;
 
         // Widget logic (same as original, just using uid and widgetData)
-        (function() {
+        var widgetInterface = (function() {
             var nLayers = widgetData.layers.length;
-            var chartHeight = 140;
+
+            // UI state variables - can be restored from uiState parameter
+            var chartHeight = (uiState && uiState.chartHeight) || 140;
+            var inputTokenWidth = (uiState && uiState.inputTokenWidth) || 100;
+
             var minChartHeight = 60;
             var maxChartHeight = 400;
             var chartMargin = { top: 10, right: 8, bottom: 25, left: 10 };
             function getChartInnerHeight() { return chartHeight - chartMargin.top - chartMargin.bottom; }
             var minCellWidth = 10;
             var maxCellWidth = 200;
-
-            var inputTokenWidth = 100;
-            var currentCellWidth = 44;
+            var currentCellWidth = (uiState && uiState.cellWidth) || 44;
             var currentVisibleIndices = [];
-            var currentMaxRows = null;
-            var maxTableWidth = null;  // null means use container width
+            var currentMaxRows = (uiState && uiState.maxRows !== undefined) ? uiState.maxRows : null;
+            var maxTableWidth = (uiState && uiState.maxTableWidth !== undefined) ? uiState.maxTableWidth : null;
             var openPopupCell = null;
             var currentHoverPos = widgetData.tokens.length - 1;
-            var colorMode = "top";
-            var customTitle = "Logit Lens: Top Predictions by Layer";
+            var colorMode = (uiState && uiState.colorMode) || "top";
+            var customTitle = (uiState && uiState.title) || "Logit Lens: Top Predictions by Layer";
 
-            var pinnedGroups = [];
-            var lastPinnedGroupIndex = -1;
             var colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
-            var colorIndex = 0;
+            var colorIndex = (uiState && uiState.colorIndex) || 0;
+            var pinnedGroups = (uiState && uiState.pinnedGroups) ? JSON.parse(JSON.stringify(uiState.pinnedGroups)) : [];
+            var lastPinnedGroupIndex = (uiState && uiState.lastPinnedGroupIndex !== undefined) ? uiState.lastPinnedGroupIndex : -1;
 
-            // Pinned rows: array of {pos: number, lineStyle: string}
-            var pinnedRows = [];
+            // Pinned rows: array of {pos: number, lineStyle: object}
             var lineStyles = [
                 { dash: "", name: "solid" },
                 { dash: "8,4", name: "dashed" },
                 { dash: "2,3", name: "dotted" },
                 { dash: "8,4,2,4", name: "dash-dot" }
             ];
+
+            // Restore pinned rows from uiState, mapping lineStyle names back to objects
+            var pinnedRows = [];
+            if (uiState && uiState.pinnedRows) {
+                pinnedRows = uiState.pinnedRows.map(function(pr) {
+                    var style = lineStyles.find(function(ls) { return ls.name === pr.lineStyleName; }) || lineStyles[0];
+                    return { pos: pr.pos, lineStyle: style };
+                });
+            }
 
             function getNextColor() {
                 var c = colors[colorIndex % colors.length];
@@ -1614,18 +1631,55 @@ var LogitLensWidget = (function() {
                 }
             });
 
+            // Function to get current UI state for serialization
+            function getState() {
+                return {
+                    chartHeight: chartHeight,
+                    inputTokenWidth: inputTokenWidth,
+                    cellWidth: currentCellWidth,
+                    maxRows: currentMaxRows,
+                    maxTableWidth: maxTableWidth,
+                    colorMode: colorMode,
+                    title: customTitle,
+                    colorIndex: colorIndex,
+                    pinnedGroups: JSON.parse(JSON.stringify(pinnedGroups)),
+                    lastPinnedGroupIndex: lastPinnedGroupIndex,
+                    pinnedRows: pinnedRows.map(function(pr) {
+                        return { pos: pr.pos, lineStyleName: pr.lineStyle.name };
+                    })
+                };
+            }
+
             // Initial build with container width
             var containerWidth = getContainerWidth();
             var result = computeVisibleLayers(currentCellWidth, containerWidth);
             buildTable(currentCellWidth, result.indices, currentMaxRows);
+
+            // Return widget interface
+            return {
+                getState: getState
+            };
         })();
 
-        return { uid: uid };
+        return {
+            uid: uid,
+            getState: widgetInterface.getState
+        };
     };
 })();
 
 // Create widget instance
-LogitLensWidget("viz", data);
+var widget1 = LogitLensWidget("viz", data);
+
+// Duplicate button handler
+document.getElementById("duplicate-btn").addEventListener("click", function() {
+    var state = widget1.getState();
+    document.getElementById("state-display").textContent = "State: " + JSON.stringify(state).substring(0, 100) + "...";
+
+    // Clear viz2 and create new widget with same state
+    document.getElementById("viz2").innerHTML = "";
+    LogitLensWidget("viz2", data, state);
+});
 </script>
 </body>
 </html>
