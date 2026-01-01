@@ -69,7 +69,9 @@ def logit_lens_heatmap(prompt, model, target_token=None, remote=True,
     """
     Display an interactive logit lens heatmap.
 
-    Hover over cells to see top-k predictions at each layer/position.
+    Layout: Input tokens on left margin (top to bottom), layers as columns (left to right).
+    The rightmost column shows predictions from the final layer.
+    Hover over cells to see top-k predictions.
 
     Args:
         prompt: Input text
@@ -96,12 +98,17 @@ def logit_lens_heatmap(prompt, model, target_token=None, remote=True,
     else:
         target_id = None
 
-    # Build HTML
+    # Build HTML - rows are token positions, columns are layers
     rows_html = []
 
-    for layer_idx in reversed(layer_indices):  # Top to bottom = last to first layer
+    for pos in range(seq_len):
         cells = []
-        for pos in range(seq_len):
+        # First cell: input token label
+        tok_display = html.escape(token_strs[pos])
+        cells.append(f'<td class="token-label" title="{tok_display}">{tok_display}</td>')
+
+        # One cell per layer
+        for layer_idx in layer_indices:
             logits = stacked_logits[layer_idx, pos]
             probs = torch.softmax(logits, dim=-1)
             top_probs, top_indices = probs.topk(top_k)
@@ -115,29 +122,28 @@ def logit_lens_heatmap(prompt, model, target_token=None, remote=True,
             color = prob_to_color(cell_prob)
 
             # Build tooltip content
-            tooltip_lines = []
+            tooltip_lines = [f'Layer {layer_idx}']
             for p, idx in zip(top_probs, top_indices):
                 tok = model.tokenizer.decode([idx])
                 tok_escaped = html.escape(repr(tok)[1:-1])
                 prob_pct = p.item() * 100
                 tooltip_lines.append(f'{tok_escaped}: {prob_pct:.1f}%')
 
-            tooltip = '&#10;'.join(tooltip_lines)  # &#10; is newline in title attr
+            tooltip = '&#10;'.join(tooltip_lines)
 
             cells.append(
-                f'<td style="background:{color}; width:{cell_size}px; height:{cell_size}px;" '
-                f'title="Layer {layer_idx}, Pos {pos}&#10;{tooltip}"></td>'
+                f'<td class="heatmap-cell" style="background:{color};" '
+                f'title="{tooltip}"></td>'
             )
 
-        row_html = f'<tr><td class="layer-label">{layer_idx}</td>{"".join(cells)}</tr>'
-        rows_html.append(row_html)
+        rows_html.append(f'<tr>{"".join(cells)}</tr>')
 
-    # Token header row
-    token_headers = ''.join(
-        f'<th class="token-label" title="{html.escape(t)}">{html.escape(t[:4])}</th>'
-        for t in token_strs
+    # Layer header row (at bottom, as footer)
+    layer_headers = ''.join(
+        f'<th class="layer-label">{layer_idx}</th>'
+        for layer_idx in layer_indices
     )
-    header_row = f'<tr><th></th>{token_headers}</tr>'
+    footer_row = f'<tr><th class="corner-label">Layer</th>{layer_headers}</tr>'
 
     # Title
     if target_token:
@@ -166,45 +172,56 @@ def logit_lens_heatmap(prompt, model, target_token=None, remote=True,
         }}
         .logit-lens-table {{
             border-collapse: collapse;
-            font-size: 10px;
+            font-size: 11px;
         }}
         .logit-lens-table td, .logit-lens-table th {{
             padding: 0;
             border: 1px solid #e0e0e0;
         }}
-        .logit-lens-table td:hover {{
+        .heatmap-cell {{
+            width: {cell_size}px;
+            height: {cell_size}px;
+        }}
+        .heatmap-cell:hover {{
             outline: 2px solid #333;
             outline-offset: -1px;
             cursor: pointer;
         }}
+        .token-label {{
+            padding: 2px 8px !important;
+            text-align: right;
+            font-weight: 500;
+            color: #333;
+            background: #f8f8f8;
+            border: none !important;
+            white-space: nowrap;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
         .layer-label {{
-            padding: 2px 6px !important;
+            padding: 4px 2px !important;
+            text-align: center;
+            font-weight: 500;
+            color: #666;
+            background: #f8f8f8;
+            width: {cell_size}px;
+        }}
+        .corner-label {{
+            padding: 4px 8px !important;
             text-align: right;
             font-weight: 500;
             color: #666;
             background: #f8f8f8;
             border: none !important;
         }}
-        .token-label {{
-            padding: 4px 2px !important;
-            text-align: center;
-            font-weight: 500;
-            max-width: {cell_size}px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            background: #f8f8f8;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            height: 60px;
-        }}
     </style>
     <div class="logit-lens-container">
         <div class="logit-lens-title">{title}</div>
         <div class="logit-lens-subtitle">{subtitle}</div>
         <table class="logit-lens-table">
-            {header_row}
             {"".join(rows_html)}
+            {footer_row}
         </table>
     </div>
     '''
