@@ -79,6 +79,8 @@ var LogitLensWidget = (function() {
                 position: relative;
             }
             #${uid} .input-token:hover { background: #e8e8e8; }
+            #${uid} tr:has(.input-token:hover) { outline: 2px solid rgba(255, 193, 7, 0.8); outline-offset: -1px; }
+            #${uid} tr:has(.input-token:hover) .input-token { background: #fff59d !important; }
             #${uid} .layer-hdr {
                 padding: 4px 2px; text-align: center; font-weight: 500; color: #666;
                 background: #f5f5f5; font-size: 9px; position: relative;
@@ -181,6 +183,15 @@ var LogitLensWidget = (function() {
             var colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
             var colorIndex = 0;
 
+            // Pinned rows: array of {pos: number, lineStyle: string}
+            var pinnedRows = [];
+            var lineStyles = [
+                { dash: "", name: "solid" },
+                { dash: "8,4", name: "dashed" },
+                { dash: "2,3", name: "dotted" },
+                { dash: "8,4,2,4", name: "dash-dot" }
+            ];
+
             function getNextColor() {
                 var c = colors[colorIndex % colors.length];
                 colorIndex++;
@@ -239,6 +250,81 @@ var LogitLensWidget = (function() {
                     }
                 }
                 return winningGroup;
+            }
+
+            function findPinnedRow(pos) {
+                for (var i = 0; i < pinnedRows.length; i++) {
+                    if (pinnedRows[i].pos === pos) return i;
+                }
+                return -1;
+            }
+
+            function getLineStyleForRow(pos) {
+                var idx = findPinnedRow(pos);
+                if (idx >= 0) return pinnedRows[idx].lineStyle;
+                return lineStyles[0];  // default solid
+            }
+
+            function allPinnedGroupsBelowThreshold(pos, threshold) {
+                // Check if all pinned groups have max prob < threshold at this position
+                if (pinnedGroups.length === 0) return true;
+                for (var i = 0; i < pinnedGroups.length; i++) {
+                    var traj = getGroupTrajectory(pinnedGroups[i], pos);
+                    var maxProb = Math.max.apply(null, traj);
+                    if (maxProb >= threshold) return false;
+                }
+                return true;
+            }
+
+            function findHighestProbToken(pos, minLayer, minProb) {
+                // Find the token that achieves highest probability at this position
+                // considering only layers >= minLayer, and only if max prob >= minProb
+                var bestToken = null;
+                var bestProb = 0;
+
+                // Look through all cells at this position
+                for (var li = minLayer; li < widgetData.cells[pos].length; li++) {
+                    var cellData = widgetData.cells[pos][li];
+                    // Check top-1 token
+                    if (cellData.prob > bestProb) {
+                        bestProb = cellData.prob;
+                        bestToken = cellData.token;
+                    }
+                    // Also check topk
+                    for (var ki = 0; ki < cellData.topk.length; ki++) {
+                        if (cellData.topk[ki].prob > bestProb) {
+                            bestProb = cellData.topk[ki].prob;
+                            bestToken = cellData.topk[ki].token;
+                        }
+                    }
+                }
+
+                if (bestProb >= minProb) return bestToken;
+                return null;
+            }
+
+            function togglePinnedRow(pos) {
+                var idx = findPinnedRow(pos);
+                if (idx >= 0) {
+                    // Unpin the row
+                    pinnedRows.splice(idx, 1);
+                    return false;
+                } else {
+                    // Check if we should auto-pin a token
+                    if (allPinnedGroupsBelowThreshold(pos, 0.01)) {
+                        var bestToken = findHighestProbToken(pos, 2, 0.05);
+                        if (bestToken && findGroupForToken(bestToken) < 0) {
+                            // Pin this token
+                            var newGroup = { color: getNextColor(), tokens: [bestToken] };
+                            pinnedGroups.push(newGroup);
+                            lastPinnedGroupIndex = pinnedGroups.length - 1;
+                        }
+                    }
+                    // Pin the row with next available line style
+                    var styleIdx = pinnedRows.length % lineStyles.length;
+                    pinnedRows.push({ pos: pos, lineStyle: lineStyles[styleIdx] });
+                    return true;
+                }
             }
 
             function escapeHtml(text) {
@@ -364,8 +450,29 @@ var LogitLensWidget = (function() {
                 visiblePositions.forEach(function(pos, rowIdx) {
                     var tok = widgetData.tokens[pos];
                     var isFirstVisibleRow = rowIdx === 0;
+                    var isPinnedRow = findPinnedRow(pos) >= 0;
+                    var rowLineStyle = getLineStyleForRow(pos);
+
                     html += "<tr>";
-                    html += '<td class="input-token" data-pos="' + pos + '" title="' + escapeHtml(tok) + '" style="width:' + inputTokenWidth + 'px; max-width:' + inputTokenWidth + 'px;">';
+
+                    // Input token cell with optional yellow background for pinned rows
+                    var inputStyle = "width:" + inputTokenWidth + "px; max-width:" + inputTokenWidth + "px;";
+                    if (isPinnedRow) {
+                        inputStyle += " background: #fff59d;";
+                    }
+
+                    html += '<td class="input-token' + (isPinnedRow ? ' pinned-row' : '') + '" data-pos="' + pos + '" title="' + escapeHtml(tok) + '" style="' + inputStyle + '">';
+
+                    // Mini SVG line style indicator for pinned rows (wider to show dash-dot pattern)
+                    if (isPinnedRow) {
+                        html += '<svg width="20" height="10" style="vertical-align: middle; margin-right: 2px;">';
+                        html += '<line x1="0" y1="5" x2="20" y2="5" stroke="#333" stroke-width="1.5"';
+                        if (rowLineStyle.dash) {
+                            html += ' stroke-dasharray="' + rowLineStyle.dash + '"';
+                        }
+                        html += '/></svg>';
+                    }
+
                     html += escapeHtml(tok);
                     if (isFirstVisibleRow) {
                         html += '<div class="resize-handle-input" data-col="-1"></div>';
@@ -593,23 +700,51 @@ var LogitLensWidget = (function() {
                 document.querySelectorAll("#" + uid + " .pred-cell, #" + uid + " .input-token").forEach(function(cell) {
                     var pos = parseInt(cell.dataset.pos);
                     if (isNaN(pos)) return;
+                    var isInputToken = cell.classList.contains("input-token");
 
                     cell.addEventListener("mouseenter", function() {
                         currentHoverPos = pos;
-                        var li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
-                        var cellData = widgetData.cells[pos][li] || widgetData.cells[pos][0];
                         var chartInnerWidth = updateChartDimensions();
-                        var isPinned = findGroupForToken(cellData.token) >= 0;
-                        var hoverTraj = isPinned ? null : cellData.trajectory;
-                        var hoverColor = isPinned ? null : "#999";
-                        var hoverLabel = isPinned ? null : cellData.token;
-                        drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
+
+                        if (isInputToken) {
+                            // For input tokens, show the token that would be auto-pinned (if any)
+                            var bestToken = findHighestProbToken(pos, 2, 0.05);
+                            if (bestToken && findGroupForToken(bestToken) < 0) {
+                                var traj = getTrajectoryForToken(bestToken, pos);
+                                drawAllTrajectories(traj, "#999", bestToken, chartInnerWidth, pos);
+                            } else {
+                                drawAllTrajectories(null, null, null, chartInnerWidth, pos);
+                            }
+                        } else {
+                            // For prediction cells, show that cell's token
+                            var li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
+                            var cellData = widgetData.cells[pos][li] || widgetData.cells[pos][0];
+                            var isPinned = findGroupForToken(cellData.token) >= 0;
+                            var hoverTraj = isPinned ? null : cellData.trajectory;
+                            var hoverColor = isPinned ? null : "#999";
+                            var hoverLabel = isPinned ? null : cellData.token;
+                            drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
+                        }
                     });
 
                     cell.addEventListener("mouseleave", function() {
                         // Clear hover trajectory when leaving cell
                         var chartInnerWidth = updateChartDimensions();
                         drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
+                    });
+                });
+
+                // Input token click handler for row pinning
+                document.querySelectorAll("#" + uid + " .input-token").forEach(function(cell) {
+                    var pos = parseInt(cell.dataset.pos);
+                    if (isNaN(pos)) return;
+
+                    cell.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        closePopup();
+                        document.getElementById(uid + "_color_menu").classList.remove("visible");
+                        togglePinnedRow(pos);
+                        buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
                     });
                 });
 
@@ -875,77 +1010,238 @@ var LogitLensWidget = (function() {
                 yLabel.textContent = "Probability";
                 svg.appendChild(yLabel);
 
+                // Determine which positions to show trajectories for
+                var positionsToShow = [];
+                if (pinnedRows.length > 0) {
+                    // Only show pinned rows
+                    pinnedRows.forEach(function(pr) { positionsToShow.push(pr.pos); });
+                } else {
+                    // Show current hover position
+                    positionsToShow.push(pos);
+                }
+
                 var allProbs = [];
-                pinnedGroups.forEach(function(group) {
-                    var traj = getGroupTrajectory(group, pos);
-                    allProbs = allProbs.concat(traj);
+                positionsToShow.forEach(function(showPos) {
+                    pinnedGroups.forEach(function(group) {
+                        var traj = getGroupTrajectory(group, showPos);
+                        allProbs = allProbs.concat(traj);
+                    });
                 });
                 if (hoverTrajectory) allProbs = allProbs.concat(hoverTrajectory);
-                var maxProb = Math.max.apply(null, allProbs.concat([0.1]));
+                var rawMaxProb = Math.max.apply(null, allProbs.concat([0.001]));  // 0.1% minimum
 
-                var legendY = chartMargin.top + 10;
-                pinnedGroups.forEach(function(group, groupIdx) {
-                    var traj = getGroupTrajectory(group, pos);
-                    var groupLabel = getGroupLabel(group);
-                    drawSingleTrajectory(g, traj, group.color, maxProb, groupLabel, false, chartInnerWidth);
+                // Round up to a nice scale value
+                function niceMax(p) {
+                    if (p >= 0.95) return 1.0;
+                    var niceValues = [0.003, 0.005, 0.01, 0.02, 0.03, 0.05, 0.1, 0.2, 0.3, 0.5, 1.0];
+                    for (var i = 0; i < niceValues.length; i++) {
+                        if (p <= niceValues[i]) return niceValues[i];
+                    }
+                    return 1.0;
+                }
+                var maxProb = niceMax(rawMaxProb);
 
-                    var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    legendItem.setAttribute("transform", "translate(18, " + legendY + ")");
-                    legendItem.style.cursor = "pointer";
+                // Format percentage label with minimal digits
+                function formatPct(p) {
+                    var pct = p * 100;
+                    if (pct >= 1) return Math.round(pct) + "%";
+                    if (pct >= 0.1) return pct.toFixed(1) + "%";
+                    return pct.toFixed(2) + "%";
+                }
 
-                    var hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
-                    hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
-                    hitTarget.setAttribute("fill", "transparent");
-                    legendItem.appendChild(hitTarget);
+                // Draw max scale tick and label at top of y-axis
+                var tickY = 0;  // top of chart
+                var tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                tickLine.setAttribute("x1", -3); tickLine.setAttribute("y1", tickY);
+                tickLine.setAttribute("x2", 3); tickLine.setAttribute("y2", tickY);
+                tickLine.setAttribute("stroke", "#999");
+                g.appendChild(tickLine);
 
-                    var closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    closeBtn.setAttribute("class", "legend-close");
-                    closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
-                    closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
-                    closeBtn.style.display = "none";
-                    closeBtn.textContent = "\u00d7";
-                    legendItem.appendChild(closeBtn);
+                var tickLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                tickLabel.setAttribute("x", -5); tickLabel.setAttribute("y", tickY + 3);
+                tickLabel.setAttribute("text-anchor", "end");
+                tickLabel.setAttribute("font-size", "8");
+                tickLabel.setAttribute("fill", "#666");
+                tickLabel.textContent = formatPct(maxProb);
+                g.appendChild(tickLabel);
 
-                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
-                    line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
-                    line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
-                    legendItem.appendChild(line);
+                // Calculate legend entry count for vertical centering
+                var legendEntryCount = 0;
+                if (pinnedRows.length > 1 && pinnedGroups.length === 1) {
+                    legendEntryCount = 1 + pinnedRows.length;  // title + row entries
+                } else {
+                    legendEntryCount = pinnedGroups.length;
+                }
+                if (hoverTrajectory && hoverLabel) {
+                    legendEntryCount += 1;  // hover entry
+                }
+                var legendTotalHeight = legendEntryCount * 14;
+                var legendY = chartMargin.top + Math.max(10, (chartInnerHeight - legendTotalHeight) / 2);
 
-                    var clipId = uid + "_legend_clip_" + groupIdx;
-                    var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-                    clipPath.setAttribute("id", clipId);
-                    var clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
-                    clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
-                    clipPath.appendChild(clipRect);
-                    legendItem.appendChild(clipPath);
+                // Draw trajectories for each position with appropriate line style
+                positionsToShow.forEach(function(showPos) {
+                    var lineStyle = getLineStyleForRow(showPos);
 
-                    var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", "20"); text.setAttribute("y", "4");
-                    text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
-                    text.setAttribute("clip-path", "url(#" + clipId + ")");
-                    text.textContent = groupLabel;
-                    legendItem.appendChild(text);
-
-                    legendItem.addEventListener("mouseenter", function() { closeBtn.style.display = "block"; });
-                    legendItem.addEventListener("mouseleave", function() { closeBtn.style.display = "none"; });
-                    closeBtn.addEventListener("click", function(e) {
-                        e.stopPropagation();
-                        pinnedGroups.splice(groupIdx, 1);
-                        if (lastPinnedGroupIndex >= pinnedGroups.length) {
-                            lastPinnedGroupIndex = pinnedGroups.length - 1;
-                        }
-                        buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                    pinnedGroups.forEach(function(group, groupIdx) {
+                        var traj = getGroupTrajectory(group, showPos);
+                        var groupLabel = getGroupLabel(group);
+                        drawSingleTrajectory(g, traj, group.color, maxProb, groupLabel, false, chartInnerWidth, lineStyle.dash);
                     });
-
-                    legendG.appendChild(legendItem);
-                    legendY += 14;
                 });
 
+                // Draw legend entries
+                // Special case: multiple pinned rows with single group - show group as title, rows as entries
+                if (pinnedRows.length > 1 && pinnedGroups.length === 1) {
+                    var group = pinnedGroups[0];
+                    var groupLabel = getGroupLabel(group);
+
+                    // Title entry (group label, no line, outdented, clipped to not exceed y-axis)
+                    var titleItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    titleItem.setAttribute("transform", "translate(5, " + legendY + ")");
+
+                    var titleClipId = uid + "_legend_title_clip";
+                    var titleClipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                    titleClipPath.setAttribute("id", titleClipId);
+                    var titleClipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    titleClipRect.setAttribute("x", "0"); titleClipRect.setAttribute("y", "-10");
+                    titleClipRect.setAttribute("width", actualInputRight - 10); titleClipRect.setAttribute("height", "20");
+                    titleClipPath.appendChild(titleClipRect);
+                    titleItem.appendChild(titleClipPath);
+
+                    var titleText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    titleText.setAttribute("x", "0"); titleText.setAttribute("y", "4");
+                    titleText.setAttribute("font-size", "10"); titleText.setAttribute("fill", group.color);
+                    titleText.setAttribute("font-weight", "600");
+                    titleText.setAttribute("clip-path", "url(#" + titleClipId + ")");
+                    titleText.textContent = groupLabel;
+                    titleItem.appendChild(titleText);
+                    legendG.appendChild(titleItem);
+                    legendY += 14;
+
+                    // Entry per pinned row
+                    pinnedRows.forEach(function(pr, prIdx) {
+                        var rowToken = widgetData.tokens[pr.pos];
+                        var lineStyle = pr.lineStyle;
+
+                        var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                        legendItem.setAttribute("transform", "translate(18, " + legendY + ")");
+                        legendItem.style.cursor = "pointer";
+
+                        var hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
+                        hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
+                        hitTarget.setAttribute("fill", "transparent");
+                        legendItem.appendChild(hitTarget);
+
+                        var closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        closeBtn.setAttribute("class", "legend-close");
+                        closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
+                        closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
+                        closeBtn.style.display = "none";
+                        closeBtn.textContent = "\u00d7";
+                        legendItem.appendChild(closeBtn);
+
+                        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
+                        line.setAttribute("x2", "20"); line.setAttribute("y2", "0");
+                        line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
+                        if (lineStyle.dash) {
+                            line.setAttribute("stroke-dasharray", lineStyle.dash);
+                        }
+                        legendItem.appendChild(line);
+
+                        var clipId = uid + "_legend_row_clip_" + prIdx;
+                        var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                        clipPath.setAttribute("id", clipId);
+                        var clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        clipRect.setAttribute("x", "25"); clipRect.setAttribute("y", "-10");
+                        clipRect.setAttribute("width", inputTokenWidth - 50); clipRect.setAttribute("height", "20");
+                        clipPath.appendChild(clipRect);
+                        legendItem.appendChild(clipPath);
+
+                        var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        text.setAttribute("x", "25"); text.setAttribute("y", "4");
+                        text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
+                        text.setAttribute("clip-path", "url(#" + clipId + ")");
+                        text.textContent = visualizeSpaces(rowToken);
+                        legendItem.appendChild(text);
+
+                        legendItem.addEventListener("mouseenter", function() { closeBtn.style.display = "block"; });
+                        legendItem.addEventListener("mouseleave", function() { closeBtn.style.display = "none"; });
+                        closeBtn.addEventListener("click", function(e) {
+                            e.stopPropagation();
+                            // Unpin this row
+                            pinnedRows.splice(prIdx, 1);
+                            buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                        });
+
+                        legendG.appendChild(legendItem);
+                        legendY += 14;
+                    });
+                } else {
+                    // Standard legend: one entry per pinned group
+                    pinnedGroups.forEach(function(group, groupIdx) {
+                        var groupLabel = getGroupLabel(group);
+
+                        var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                        legendItem.setAttribute("transform", "translate(18, " + legendY + ")");
+                        legendItem.style.cursor = "pointer";
+
+                        var hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
+                        hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
+                        hitTarget.setAttribute("fill", "transparent");
+                        legendItem.appendChild(hitTarget);
+
+                        var closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        closeBtn.setAttribute("class", "legend-close");
+                        closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
+                        closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
+                        closeBtn.style.display = "none";
+                        closeBtn.textContent = "\u00d7";
+                        legendItem.appendChild(closeBtn);
+
+                        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
+                        line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
+                        line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
+                        legendItem.appendChild(line);
+
+                        var clipId = uid + "_legend_clip_" + groupIdx;
+                        var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                        clipPath.setAttribute("id", clipId);
+                        var clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                        clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
+                        clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
+                        clipPath.appendChild(clipRect);
+                        legendItem.appendChild(clipPath);
+
+                        var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        text.setAttribute("x", "20"); text.setAttribute("y", "4");
+                        text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
+                        text.setAttribute("clip-path", "url(#" + clipId + ")");
+                        text.textContent = groupLabel;
+                        legendItem.appendChild(text);
+
+                        legendItem.addEventListener("mouseenter", function() { closeBtn.style.display = "block"; });
+                        legendItem.addEventListener("mouseleave", function() { closeBtn.style.display = "none"; });
+                        closeBtn.addEventListener("click", function(e) {
+                            e.stopPropagation();
+                            pinnedGroups.splice(groupIdx, 1);
+                            if (lastPinnedGroupIndex >= pinnedGroups.length) {
+                                lastPinnedGroupIndex = pinnedGroups.length - 1;
+                            }
+                            buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                        });
+
+                        legendG.appendChild(legendItem);
+                        legendY += 14;
+                    });
+                }
+
+                // Show hover trajectory for comparison (even when rows are pinned)
                 if (hoverTrajectory && hoverLabel) {
-                    drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth);
+                    drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth, "");
 
                     var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
                     legendItem.setAttribute("class", "legend-item hover-legend");
@@ -980,7 +1276,7 @@ var LogitLensWidget = (function() {
                 }
             }
 
-            function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {
+            function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth, dashPattern) {
                 if (!trajectory || trajectory.length === 0) return;
 
                 var chartInnerHeight = getChartInnerHeight();
@@ -1006,7 +1302,12 @@ var LogitLensWidget = (function() {
                 pathEl.setAttribute("fill", "none");
                 pathEl.setAttribute("stroke", color);
                 pathEl.setAttribute("stroke-width", isHover ? "1.5" : "2");
-                if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
+                // Use provided dash pattern, or default hover pattern
+                if (isHover) {
+                    pathEl.setAttribute("stroke-dasharray", "4,2");
+                } else if (dashPattern) {
+                    pathEl.setAttribute("stroke-dasharray", dashPattern);
+                }
                 g.appendChild(pathEl);
 
                 currentVisibleIndices.forEach(function(layerIdx) {
