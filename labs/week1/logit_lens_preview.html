@@ -25,7 +25,6 @@
     <h1>Logit Lens Visualization Preview</h1>
     <p class="note">This preview uses mock data. Open in browser - no notebook needed.</p>
     <div class="preview-container" id="viz">
-        <!-- Visualization HTML structure -->
         <style>
             #ll_preview {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -36,10 +35,10 @@
             }
             #ll_preview .ll-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
             #ll_preview .color-mode-btn {
-                display: inline-block; padding: 2px 6px; border: 1px solid #999;
-                border-radius: 3px; font-size: 12px; cursor: pointer; font-family: monospace;
+                display: inline-block; padding: 2px 8px; background: #e8e8e8;
+                border-radius: 4px; font-size: 14px; cursor: pointer; color: #333;
             }
-            #ll_preview .color-mode-btn:hover { border-color: #333; }
+            #ll_preview .color-mode-btn:hover { background: #d8d8d8; }
             #ll_preview .ll-table { border-collapse: collapse; font-size: 10px; table-layout: fixed; }
             #ll_preview .ll-table td, #ll_preview .ll-table th { border: 1px solid #ddd; }
             #ll_preview .pred-cell {
@@ -50,15 +49,16 @@
             #ll_preview .pred-cell.selected { outline: 3px solid #2196F3; outline-offset: -1px; }
             #ll_preview .input-token {
                 padding: 2px 8px; text-align: right; font-weight: 500; color: #333;
-                background: #f5f5f5; white-space: nowrap; max-width: 100px; overflow: hidden;
+                background: #f5f5f5; white-space: nowrap; overflow: hidden;
                 text-overflow: ellipsis; font-family: monospace; font-size: 10px; cursor: pointer;
+                position: relative;
             }
             #ll_preview .input-token:hover { background: #e8e8e8; }
             #ll_preview .layer-hdr {
                 padding: 4px 2px; text-align: center; font-weight: 500; color: #666;
                 background: #f5f5f5; font-size: 9px; position: relative;
             }
-            #ll_preview .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: #f5f5f5; }
+            #ll_preview .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: #f5f5f5; position: relative; }
             #ll_preview .chart-container { margin-top: 8px; background: #fafafa; border-radius: 4px; padding: 8px 0; }
             #ll_preview .popup {
                 display: none; position: absolute; background: white; border: 1px solid #ddd;
@@ -83,6 +83,11 @@
                 cursor: col-resize; right: -3px; top: 0; z-index: 10;
             }
             #ll_preview .resize-handle:hover, #ll_preview .resize-handle.dragging { background: rgba(33, 150, 243, 0.4); }
+            #ll_preview .resize-handle-input {
+                position: absolute; width: 6px; height: 100%; background: transparent;
+                cursor: col-resize; right: -3px; top: 0; z-index: 10;
+            }
+            #ll_preview .resize-handle-input:hover, #ll_preview .resize-handle-input.dragging { background: rgba(76, 175, 80, 0.4); }
             #ll_preview .table-wrapper { position: relative; display: inline-block; }
             #ll_preview .resize-hint { font-size: 9px; color: #999; margin-top: 4px; }
             #ll_preview .color-menu {
@@ -101,7 +106,7 @@
             <div class="table-wrapper">
                 <table class="ll-table" id="ll_preview_table"></table>
             </div>
-            <div class="resize-hint" id="ll_preview_resize_hint">drag first layer column border to resize</div>
+            <div class="resize-hint" id="ll_preview_resize_hint">drag column borders to resize</div>
             <div class="chart-container" id="ll_preview_chart_container">
                 <svg id="ll_preview_chart" height="140"></svg>
             </div>
@@ -117,14 +122,13 @@
     </div>
 
 <script>
-// Mock data simulating output from collect_logit_lens_topk
+// Mock data
 const mockData = {
     layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
     tokens: ["Why", " do", " electric", "ians", " make", " good", " swim", "mers", "?", " Because", " they", " know", " the"],
     cells: []
 };
 
-// Generate mock cell data
 const tokenOptions = [" current", " water", " rules", " best", " way", " answer", " truth", " secret"];
 mockData.tokens.forEach((tok, pos) => {
     const posData = [];
@@ -133,13 +137,11 @@ mockData.tokens.forEach((tok, pos) => {
         const trajectory = mockData.layers.map((l, i) => {
             return Math.min(0.95, 0.02 + (i / 20) * 0.5 + (pos / 13) * 0.3 + Math.random() * 0.1);
         });
-
         const topk = tokenOptions.slice(0, 5).map((t, ki) => ({
             token: t,
             prob: Math.max(0.01, baseProbCurrent - ki * 0.15 + Math.random() * 0.05),
             trajectory: mockData.layers.map((l, i) => Math.max(0, 0.02 + (i / 20) * (0.5 - ki * 0.1) + Math.random() * 0.08))
         }));
-
         posData.push({
             token: topk[0].token,
             prob: topk[0].prob,
@@ -157,10 +159,10 @@ mockData.tokens.forEach((tok, pos) => {
     const chartHeight = 140;
     const chartMargin = { top: 10, right: 10, bottom: 25, left: 10 };
     const chartInnerHeight = chartHeight - chartMargin.top - chartMargin.bottom;
-    const inputTokenWidth = 100;
-    const minCellWidth = 30;
+    const minCellWidth = 10;  // Much smaller min
     const maxCellWidth = 200;
 
+    let inputTokenWidth = 100;
     let currentCellWidth = 44;
     let currentVisibleIndices = [];
     let openPopupCell = null;
@@ -235,9 +237,18 @@ mockData.tokens.forEach((tok, pos) => {
         const table = document.getElementById(uid + "_table");
         let html = "";
 
+        // Determine which columns get resize handles (up to halfway)
+        const halfwayCol = Math.floor(visibleLayerIndices.length / 2);
+
         data.tokens.forEach((tok, pos) => {
             html += "<tr>";
-            html += `<td class="input-token" data-pos="${pos}" title="${escapeHtml(tok)}">${escapeHtml(tok)}</td>`;
+            // Input token column with its own resize handle
+            html += `<td class="input-token" data-pos="${pos}" title="${escapeHtml(tok)}" style="width:${inputTokenWidth}px; max-width:${inputTokenWidth}px;">`;
+            html += `${escapeHtml(tok)}`;
+            if (pos === 0) {
+                html += `<div class="resize-handle-input" data-col="-1"></div>`;
+            }
+            html += `</td>`;
 
             visibleLayerIndices.forEach((li, colIdx) => {
                 const cellData = data.cells[pos][li];
@@ -257,17 +268,22 @@ mockData.tokens.forEach((tok, pos) => {
             html += "</tr>";
         });
 
-        html += "<tr><th class='corner-hdr'>Layer</th>";
+        // Footer row with layer numbers and resize handles
+        html += "<tr>";
+        html += `<th class="corner-hdr" style="width:${inputTokenWidth}px; max-width:${inputTokenWidth}px;">Layer<div class="resize-handle-input" data-col="-1"></div></th>`;
         visibleLayerIndices.forEach((li, colIdx) => {
+            const hasHandle = colIdx < halfwayCol;
             html += `<th class="layer-hdr" style="width:${cellWidth}px; max-width:${cellWidth}px;">${data.layers[li]}`;
-            if (colIdx === 0) html += `<div class="resize-handle" id="${uid}_resize"></div>`;
+            if (hasHandle) {
+                html += `<div class="resize-handle" data-col="${colIdx}"></div>`;
+            }
             html += `</th>`;
         });
         html += "</tr>";
 
         table.innerHTML = html;
         attachCellListeners();
-        attachResizeListener();
+        attachResizeListeners();
 
         const chartInnerWidth = updateChartDimensions();
         drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
@@ -276,20 +292,15 @@ mockData.tokens.forEach((tok, pos) => {
         const hint = document.getElementById(uid + "_resize_hint");
         const stride = visibleLayerIndices.length < nLayers ? Math.ceil(nLayers / visibleLayerIndices.length) : 1;
         hint.textContent = stride > 1 ?
-            `showing every ~${stride} layers ending at ${nLayers-1} (drag column border to adjust)` :
+            `showing every ~${stride} layers ending at ${nLayers-1} (drag column borders to adjust)` :
             `showing all ${nLayers} layers`;
     }
 
     function updateTitle() {
         const titleEl = document.getElementById(uid + "_title");
-        const lastPos = data.tokens.length - 1;
-        const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
-        const topToken = data.cells[lastPos][lastLayerIdx].token;
-        const topProb = data.cells[lastPos][lastLayerIdx].prob;
-        const displayToken = colorMode === "top" ? topToken : colorMode;
-        const probColor = probToColor(topProb);
+        const displayLabel = colorMode === "top" ? "Top prediction" : colorMode;
 
-        titleEl.innerHTML = `Logit Lens: Top Predictions by Layer <span class="color-mode-btn" id="${uid}_color_btn" style="background: ${probColor};">[${escapeHtml(displayToken.slice(0,8))}*]</span>`;
+        titleEl.innerHTML = `Logit Lens: Top Predictions by Layer (<span class="color-mode-btn" id="${uid}_color_btn">${escapeHtml(displayLabel)}</span>)`;
         document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
     }
 
@@ -307,8 +318,14 @@ mockData.tokens.forEach((tok, pos) => {
         const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
         const topToken = data.cells[lastPos][lastLayerIdx].token;
 
-        let html = `<div class="color-menu-item" data-mode="top">Top prediction (per cell)</div>`;
-        html += `<div class="color-menu-item" data-mode="${escapeHtml(topToken)}">Current: ${escapeHtml(topToken)}</div>`;
+        let html = `<div class="color-menu-item" data-mode="top">Top prediction</div>`;
+
+        // Add final prediction token if not already pinned
+        if (!pinnedTrajectories.has(topToken)) {
+            html += `<div class="color-menu-item" data-mode="${escapeHtml(topToken)}">${escapeHtml(topToken)}</div>`;
+        }
+
+        // Add pinned tokens
         pinnedTrajectories.forEach((v, token) => {
             html += `<div class="color-menu-item" data-mode="${escapeHtml(token)}" style="border-left: 3px solid ${v.color};">${escapeHtml(token)}</div>`;
         });
@@ -326,44 +343,79 @@ mockData.tokens.forEach((tok, pos) => {
         });
     }
 
-    function attachResizeListener() {
-        const resizeHandle = document.getElementById(uid + "_resize");
-        if (!resizeHandle) return;
+    function attachResizeListeners() {
+        // Input column resize handles
+        document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(handle => {
+            let isDragging = false, startX = 0, startWidth = inputTokenWidth;
 
-        let isDragging = false, startX = 0, startWidth = currentCellWidth;
+            handle.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startWidth = inputTokenWidth;
+                handle.classList.add("dragging");
+                e.preventDefault();
+                e.stopPropagation();
+            });
 
-        resizeHandle.addEventListener("mousedown", (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startWidth = currentCellWidth;
-            resizeHandle.classList.add("dragging");
-            e.preventDefault();
-            e.stopPropagation();
+            document.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                const delta = e.clientX - startX;
+                inputTokenWidth = Math.max(40, Math.min(200, startWidth + delta));
+                buildTable(currentCellWidth, currentVisibleIndices);
+            });
+
+            document.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(h => h.classList.remove("dragging"));
+                }
+            });
         });
 
-        document.addEventListener("mousemove", (e) => {
-            if (!isDragging) return;
-            const delta = e.clientX - startX;
-            const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + delta * 0.3));
-            if (Math.abs(newWidth - currentCellWidth) > 2) {
-                currentCellWidth = newWidth;
-                const { indices } = computeVisibleLayers(currentCellWidth, 900);
-                buildTable(currentCellWidth, indices);
-            }
-        });
+        // Layer column resize handles
+        document.querySelectorAll(`#${uid} .resize-handle`).forEach(handle => {
+            const colIdx = parseInt(handle.dataset.col);
+            let isDragging = false, startX = 0, startWidth = currentCellWidth;
 
-        document.addEventListener("mouseup", () => {
-            if (isDragging) {
-                isDragging = false;
-                const handle = document.getElementById(uid + "_resize");
-                if (handle) handle.classList.remove("dragging");
-            }
+            handle.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startWidth = currentCellWidth;
+                handle.classList.add("dragging");
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            document.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                const delta = e.clientX - startX;
+                // Number of columns to the left of this border (including this one)
+                const numCols = colIdx + 1;
+                // Each column changes by delta/numCols to make border move by delta pixels
+                const widthDelta = delta / numCols;
+                const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + widthDelta));
+
+                if (Math.abs(newWidth - currentCellWidth) > 1) {
+                    currentCellWidth = newWidth;
+                    const { indices } = computeVisibleLayers(currentCellWidth, 900);
+                    buildTable(currentCellWidth, indices);
+                }
+            });
+
+            document.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.querySelectorAll(`#${uid} .resize-handle`).forEach(h => h.classList.remove("dragging"));
+                }
+            });
         });
     }
 
     function attachCellListeners() {
         document.querySelectorAll(`#${uid} .pred-cell, #${uid} .input-token`).forEach(cell => {
             const pos = parseInt(cell.dataset.pos);
+            if (isNaN(pos)) return;
+
             cell.addEventListener("mouseenter", () => {
                 currentHoverPos = pos;
                 const li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
@@ -517,6 +569,14 @@ mockData.tokens.forEach((tok, pos) => {
 
             const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
             legendItem.setAttribute("transform", `translate(5, ${legendY})`);
+            legendItem.style.cursor = "pointer";
+
+            // Invisible hit target rectangle covering the full legend width
+            const hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            hitTarget.setAttribute("x", "-5"); hitTarget.setAttribute("y", "-8");
+            hitTarget.setAttribute("width", inputTokenWidth); hitTarget.setAttribute("height", "14");
+            hitTarget.setAttribute("fill", "transparent");
+            legendItem.appendChild(hitTarget);
 
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
@@ -535,7 +595,7 @@ mockData.tokens.forEach((tok, pos) => {
             closeBtn.setAttribute("x", inputTokenWidth - 15); closeBtn.setAttribute("y", "4");
             closeBtn.setAttribute("font-size", "11"); closeBtn.setAttribute("fill", "#999");
             closeBtn.style.display = "none";
-            closeBtn.textContent = "x";
+            closeBtn.textContent = "×";
             legendItem.appendChild(closeBtn);
 
             legendItem.addEventListener("mouseenter", () => { closeBtn.style.display = "block"; });
@@ -558,17 +618,42 @@ mockData.tokens.forEach((tok, pos) => {
     function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {
         if (!trajectory || trajectory.length === 0) return;
 
-        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        if (isHover) pathEl.style.opacity = "0.7";
-
         const nVisibleCols = currentVisibleIndices.length;
         const colWidth = chartInnerWidth / nVisibleCols;
 
+        // Build a map from layer index to x position
+        function layerToX(layerIdx) {
+            // Find where this layer falls among visible columns
+            // Interpolate based on visible layer indices
+            const firstVisible = currentVisibleIndices[0];
+            const lastVisible = currentVisibleIndices[currentVisibleIndices.length - 1];
+
+            if (layerIdx <= firstVisible) {
+                return 0.5 * colWidth;
+            }
+            if (layerIdx >= lastVisible) {
+                return (nVisibleCols - 0.5) * colWidth;
+            }
+
+            // Find which two visible columns this layer falls between
+            for (let i = 0; i < currentVisibleIndices.length - 1; i++) {
+                const left = currentVisibleIndices[i];
+                const right = currentVisibleIndices[i + 1];
+                if (layerIdx >= left && layerIdx <= right) {
+                    // Interpolate between column i and i+1
+                    const t = (layerIdx - left) / (right - left);
+                    return (i + 0.5 + t) * colWidth;
+                }
+            }
+            return 0;
+        }
+
+        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        if (isHover) pathEl.style.opacity = "0.7";
+
         let d = "";
         trajectory.forEach((p, layerIdx) => {
-            let x = nVisibleCols === nLayers ?
-                (layerIdx + 0.5) * colWidth :
-                ((layerIdx + 0.5) / (nLayers - 1)) * chartInnerWidth;
+            const x = layerToX(layerIdx);
             const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
             d += (layerIdx === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
         });
@@ -580,9 +665,10 @@ mockData.tokens.forEach((tok, pos) => {
         if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
         g.appendChild(pathEl);
 
+        // Draw dots at visible layer positions - use same x calculation
         currentVisibleIndices.forEach((layerIdx, colIdx) => {
             const p = trajectory[layerIdx];
-            const x = (colIdx + 0.5) * colWidth;
+            const x = (colIdx + 0.5) * colWidth;  // This is exactly where the line goes through for visible layers
             const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
 
             const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");

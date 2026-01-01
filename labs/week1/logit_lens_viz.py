@@ -691,15 +691,15 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         }}
         #{uid} .color-mode-btn {{
             display: inline-block;
-            padding: 2px 6px;
-            border: 1px solid #999;
-            border-radius: 3px;
-            font-size: 12px;
+            padding: 2px 8px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            font-size: 14px;
             cursor: pointer;
-            font-family: monospace;
+            color: #333;
         }}
         #{uid} .color-mode-btn:hover {{
-            border-color: #333;
+            background: #d8d8d8;
         }}
         #{uid} .ll-table {{
             border-collapse: collapse;
@@ -842,6 +842,20 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         #{uid} .resize-handle.dragging {{
             background: rgba(33, 150, 243, 0.4);
         }}
+        #{uid} .resize-handle-input {{
+            position: absolute;
+            width: 6px;
+            height: 100%;
+            background: transparent;
+            cursor: col-resize;
+            right: -3px;
+            top: 0;
+            z-index: 10;
+        }}
+        #{uid} .resize-handle-input:hover,
+        #{uid} .resize-handle-input.dragging {{
+            background: rgba(76, 175, 80, 0.4);
+        }}
         #{uid} .table-wrapper {{
             position: relative;
             display: inline-block;
@@ -910,8 +924,8 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         const chartHeight = {chart_height};
         const chartMargin = {{ top: {margin['top']}, right: {margin['right']}, bottom: {margin['bottom']}, left: {margin['left']} }};
         const chartInnerHeight = {inner_height};
-        const inputTokenWidth = 100;
-        const minCellWidth = 30;
+        let inputTokenWidth = 100;
+        const minCellWidth = 10;
         const maxCellWidth = 200;
 
         let currentCellWidth = {cell_width};
@@ -994,9 +1008,18 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             const table = document.getElementById(uid + "_table");
             let html = "";
 
+            // Determine which columns get resize handles (up to halfway)
+            const halfwayCol = Math.floor(visibleLayerIndices.length / 2);
+
             data.tokens.forEach((tok, pos) => {{
                 html += "<tr>";
-                html += `<td class="input-token" data-pos="${{pos}}" title="${{escapeHtml(tok)}}">${{escapeHtml(tok)}}</td>`;
+                // Input token column with its own resize handle
+                html += `<td class="input-token" data-pos="${{pos}}" title="${{escapeHtml(tok)}}" style="width:${{inputTokenWidth}}px; max-width:${{inputTokenWidth}}px; position:relative;">`;
+                html += `${{escapeHtml(tok)}}`;
+                if (pos === 0) {{
+                    html += `<div class="resize-handle-input" data-col="-1"></div>`;
+                }}
+                html += `</td>`;
 
                 visibleLayerIndices.forEach((li, colIdx) => {{
                     const cellData = data.cells[pos][li];
@@ -1023,13 +1046,14 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 html += "</tr>";
             }});
 
+            // Footer row with layer numbers and resize handles
             html += "<tr>";
-            html += `<th class="corner-hdr">Layer</th>`;
+            html += `<th class="corner-hdr" style="width:${{inputTokenWidth}}px; max-width:${{inputTokenWidth}}px; position:relative;">Layer<div class="resize-handle-input" data-col="-1"></div></th>`;
             visibleLayerIndices.forEach((li, colIdx) => {{
-                const hasHandle = colIdx === 0;
+                const hasHandle = colIdx < halfwayCol;
                 html += `<th class="layer-hdr" style="width:${{cellWidth}}px; max-width:${{cellWidth}}px;">${{data.layers[li]}}`;
                 if (hasHandle) {{
-                    html += `<div class="resize-handle" id="${{uid}}_resize"></div>`;
+                    html += `<div class="resize-handle" data-col="${{colIdx}}"></div>`;
                 }}
                 html += `</th>`;
             }});
@@ -1038,7 +1062,7 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             table.innerHTML = html;
 
             attachCellListeners();
-            attachResizeListener();
+            attachResizeListeners();
 
             const chartInnerWidth = updateChartDimensions();
             drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
@@ -1055,15 +1079,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
 
         function updateTitle() {{
             const titleEl = document.getElementById(uid + "_title");
-            const lastPos = data.tokens.length - 1;
-            const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
-            const topToken = data.cells[lastPos][lastLayerIdx].token;
-            const topProb = data.cells[lastPos][lastLayerIdx].prob;
 
-            const displayToken = colorMode === "top" ? topToken : colorMode;
-            const probColor = probToColor(topProb);
+            const displayLabel = colorMode === "top" ? "Top prediction" : colorMode;
 
-            titleEl.innerHTML = `Logit Lens: Top Predictions by Layer <span class="color-mode-btn" id="${{uid}}_color_btn" style="background: ${{probColor}};">[${{escapeHtml(displayToken.slice(0,8))}}*]</span>`;
+            titleEl.innerHTML = `Logit Lens: Top Predictions by Layer (<span class="color-mode-btn" id="${{uid}}_color_btn">${{escapeHtml(displayLabel)}}</span>)`;
 
             document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
         }}
@@ -1082,9 +1101,14 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
             const topToken = data.cells[lastPos][lastLayerIdx].token;
 
-            let html = `<div class="color-menu-item" data-mode="top">Top prediction (per cell)</div>`;
-            html += `<div class="color-menu-item" data-mode="${{escapeHtml(topToken)}}">Current: ${{escapeHtml(topToken)}}</div>`;
+            let html = `<div class="color-menu-item" data-mode="top">Top prediction</div>`;
 
+            // Add final prediction token if not already pinned
+            if (!pinnedTrajectories.has(topToken)) {{
+                html += `<div class="color-menu-item" data-mode="${{escapeHtml(topToken)}}">${{escapeHtml(topToken)}}</div>`;
+            }}
+
+            // Add pinned tokens
             pinnedTrajectories.forEach((v, token) => {{
                 html += `<div class="color-menu-item" data-mode="${{escapeHtml(token)}}" style="border-left: 3px solid ${{v.color}};">${{escapeHtml(token)}}</div>`;
             }});
@@ -1102,47 +1126,72 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             }});
         }}
 
-        function attachResizeListener() {{
-            const resizeHandle = document.getElementById(uid + "_resize");
-            if (!resizeHandle) return;
+        function attachResizeListeners() {{
+            // Input column resize handles
+            document.querySelectorAll(`#${{uid}} .resize-handle-input`).forEach(handle => {{
+                let isDragging = false, startX = 0, startWidth = inputTokenWidth;
 
-            let isDragging = false;
-            let startX = 0;
-            let startWidth = currentCellWidth;
+                handle.addEventListener("mousedown", (e) => {{
+                    isDragging = true;
+                    startX = e.clientX;
+                    startWidth = inputTokenWidth;
+                    handle.classList.add("dragging");
+                    e.preventDefault();
+                    e.stopPropagation();
+                }});
 
-            resizeHandle.addEventListener("mousedown", (e) => {{
-                isDragging = true;
-                startX = e.clientX;
-                startWidth = currentCellWidth;
-                resizeHandle.classList.add("dragging");
-                e.preventDefault();
-                e.stopPropagation();
+                document.addEventListener("mousemove", (e) => {{
+                    if (!isDragging) return;
+                    const delta = e.clientX - startX;
+                    inputTokenWidth = Math.max(40, Math.min(200, startWidth + delta));
+                    buildTable(currentCellWidth, currentVisibleIndices);
+                }});
+
+                document.addEventListener("mouseup", () => {{
+                    if (isDragging) {{
+                        isDragging = false;
+                        document.querySelectorAll(`#${{uid}} .resize-handle-input`).forEach(h => h.classList.remove("dragging"));
+                    }}
+                }});
             }});
 
-            const onMouseMove = (e) => {{
-                if (!isDragging) return;
+            // Layer column resize handles
+            document.querySelectorAll(`#${{uid}} .resize-handle`).forEach(handle => {{
+                const colIdx = parseInt(handle.dataset.col);
+                let isDragging = false, startX = 0, startWidth = currentCellWidth;
 
-                const delta = e.clientX - startX;
-                const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + delta * 0.3));
+                handle.addEventListener("mousedown", (e) => {{
+                    isDragging = true;
+                    startX = e.clientX;
+                    startWidth = currentCellWidth;
+                    handle.classList.add("dragging");
+                    e.preventDefault();
+                    e.stopPropagation();
+                }});
 
-                if (Math.abs(newWidth - currentCellWidth) > 2) {{
-                    currentCellWidth = newWidth;
-                    const containerWidth = 900;
-                    const {{ indices }} = computeVisibleLayers(currentCellWidth, containerWidth);
-                    buildTable(currentCellWidth, indices);
-                }}
-            }};
+                document.addEventListener("mousemove", (e) => {{
+                    if (!isDragging) return;
+                    const delta = e.clientX - startX;
+                    // Number of columns to the left of this border (including this one)
+                    const numCols = colIdx + 1;
+                    // Each column changes by delta/numCols to make border move by delta pixels
+                    const widthDelta = delta / numCols;
+                    const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + widthDelta));
 
-            const onMouseUp = () => {{
-                if (isDragging) {{
-                    isDragging = false;
-                    const handle = document.getElementById(uid + "_resize");
-                    if (handle) handle.classList.remove("dragging");
-                }}
-            }};
+                    if (Math.abs(newWidth - currentCellWidth) > 1) {{
+                        currentCellWidth = newWidth;
+                        const {{ indices }} = computeVisibleLayers(currentCellWidth, 900);
+                        buildTable(currentCellWidth, indices);
+                    }}
+                }});
 
-            document.addEventListener("mousemove", onMouseMove);
-            document.addEventListener("mouseup", onMouseUp);
+                document.addEventListener("mouseup", () => {{
+                    if (isDragging) {{
+                        isDragging = false;
+                        document.querySelectorAll(`#${{uid}} .resize-handle`).forEach(h => h.classList.remove("dragging"));
+                    }}
+                }});
+            }});
         }}
 
         function attachCellListeners() {{
@@ -1319,6 +1368,16 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 legendItem.setAttribute("class", "legend-item");
                 legendItem.setAttribute("transform", `translate(5, ${{legendY}})`);
+                legendItem.style.cursor = "pointer";
+
+                // Invisible hit target rectangle covering the full legend width
+                const hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                hitTarget.setAttribute("x", "-5");
+                hitTarget.setAttribute("y", "-8");
+                hitTarget.setAttribute("width", inputTokenWidth);
+                hitTarget.setAttribute("height", "14");
+                hitTarget.setAttribute("fill", "transparent");
+                legendItem.appendChild(hitTarget);
 
                 const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 line.setAttribute("x1", "0");
@@ -1343,8 +1402,8 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 closeBtn.setAttribute("y", "4");
                 closeBtn.setAttribute("font-size", "11");
                 closeBtn.setAttribute("fill", "#999");
-                closeBtn.setAttribute("style", "display:none;");
-                closeBtn.textContent = "x";
+                closeBtn.style.display = "none";
+                closeBtn.textContent = "\u00d7";
                 legendItem.appendChild(closeBtn);
 
                 legendItem.addEventListener("mouseenter", () => {{
@@ -1371,20 +1430,40 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {{
             if (!trajectory || trajectory.length === 0) return;
 
-            const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            if (isHover) pathEl.style.opacity = "0.7";
-
             const nVisibleCols = currentVisibleIndices.length;
             const colWidth = chartInnerWidth / nVisibleCols;
 
+            // Build a function to map layer index to x position
+            function layerToX(layerIdx) {{
+                const firstVisible = currentVisibleIndices[0];
+                const lastVisible = currentVisibleIndices[currentVisibleIndices.length - 1];
+
+                if (layerIdx <= firstVisible) {{
+                    return 0.5 * colWidth;
+                }}
+                if (layerIdx >= lastVisible) {{
+                    return (nVisibleCols - 0.5) * colWidth;
+                }}
+
+                // Find which two visible columns this layer falls between
+                for (let i = 0; i < currentVisibleIndices.length - 1; i++) {{
+                    const left = currentVisibleIndices[i];
+                    const right = currentVisibleIndices[i + 1];
+                    if (layerIdx >= left && layerIdx <= right) {{
+                        // Interpolate between column i and i+1
+                        const t = (layerIdx - left) / (right - left);
+                        return (i + 0.5 + t) * colWidth;
+                    }}
+                }}
+                return 0;
+            }}
+
+            const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            if (isHover) pathEl.style.opacity = "0.7";
+
             let d = "";
             trajectory.forEach((p, layerIdx) => {{
-                let x;
-                if (nVisibleCols === nLayers) {{
-                    x = (layerIdx + 0.5) * colWidth;
-                }} else {{
-                    x = ((layerIdx + 0.5) / (nLayers - 1)) * chartInnerWidth;
-                }}
+                const x = layerToX(layerIdx);
                 const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
                 d += (layerIdx === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
             }});
@@ -1396,9 +1475,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
             g.appendChild(pathEl);
 
+            // Draw dots at visible layer positions - use same x calculation as line
             currentVisibleIndices.forEach((layerIdx, colIdx) => {{
                 const p = trajectory[layerIdx];
-                const x = (colIdx + 0.5) * colWidth;
+                const x = (colIdx + 0.5) * colWidth;  // Exact position for visible layers
                 const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
 
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
