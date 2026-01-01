@@ -523,77 +523,75 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         return container.offsetWidth || 900;
     }
 
-    function attachResizeListeners() {
-        // Input column resize handles
-        document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(handle => {
-            let isDragging = false, startX = 0, startWidth = inputTokenWidth;
+    // Shared drag state for column resizing (prevents listener accumulation)
+    let colResizeDrag = { active: false, type: null, startX: 0, startWidth: 0, colIdx: 0 };
+    // Shared drag state for y-axis resizing
+    let yAxisDrag = { active: false, startX: 0, startWidth: 0 };
 
+    function attachResizeListeners() {
+        // Input column resize handles - only attach mousedown
+        document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(handle => {
             handle.addEventListener("mousedown", (e) => {
-                closePopup();  // Dismiss popup on drag start
-                isDragging = true;
-                startX = e.clientX;
-                startWidth = inputTokenWidth;
+                closePopup();
+                colResizeDrag = { active: true, type: 'input', startX: e.clientX, startWidth: inputTokenWidth, colIdx: 0 };
                 handle.classList.add("dragging");
                 e.preventDefault();
                 e.stopPropagation();
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (!isDragging) return;
-                const delta = e.clientX - startX;
-                inputTokenWidth = Math.max(40, Math.min(200, startWidth + delta));
-                // Recalculate visible layers since available width changed
-                const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                buildTable(currentCellWidth, indices, currentMaxRows);
-            });
-
-            document.addEventListener("mouseup", () => {
-                if (isDragging) {
-                    isDragging = false;
-                    document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(h => h.classList.remove("dragging"));
-                }
             });
         });
 
-        // Layer column resize handles
+        // Layer column resize handles - only attach mousedown
         document.querySelectorAll(`#${uid} .resize-handle`).forEach(handle => {
             const colIdx = parseInt(handle.dataset.col);
-            let isDragging = false, startX = 0, startWidth = currentCellWidth;
-
             handle.addEventListener("mousedown", (e) => {
-                closePopup();  // Dismiss popup on drag start
-                isDragging = true;
-                startX = e.clientX;
-                startWidth = currentCellWidth;
+                closePopup();
+                colResizeDrag = { active: true, type: 'column', startX: e.clientX, startWidth: currentCellWidth, colIdx };
                 handle.classList.add("dragging");
                 e.preventDefault();
                 e.stopPropagation();
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (!isDragging) return;
-                const delta = e.clientX - startX;
-                // Number of columns to the left of this border (including this one)
-                const numCols = colIdx + 1;
-                // Each column changes by delta/numCols to make border move by delta pixels
-                const widthDelta = delta / numCols;
-                const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + widthDelta));
-
-                if (Math.abs(newWidth - currentCellWidth) > 1) {
-                    currentCellWidth = newWidth;
-                    const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                    buildTable(currentCellWidth, indices, currentMaxRows);
-                }
-            });
-
-            document.addEventListener("mouseup", () => {
-                if (isDragging) {
-                    isDragging = false;
-                    document.querySelectorAll(`#${uid} .resize-handle`).forEach(h => h.classList.remove("dragging"));
-                }
             });
         });
     }
+
+    // Single document-level listeners for column resize (added once)
+    document.addEventListener("mousemove", (e) => {
+        if (!colResizeDrag.active) return;
+        const delta = e.clientX - colResizeDrag.startX;
+
+        if (colResizeDrag.type === 'input') {
+            inputTokenWidth = Math.max(40, Math.min(200, colResizeDrag.startWidth + delta));
+            const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
+            buildTable(currentCellWidth, indices, currentMaxRows);
+        } else if (colResizeDrag.type === 'column') {
+            const numCols = colResizeDrag.colIdx + 1;
+            const widthDelta = delta / numCols;
+            const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, colResizeDrag.startWidth + widthDelta));
+            if (Math.abs(newWidth - currentCellWidth) > 1) {
+                currentCellWidth = newWidth;
+                const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                buildTable(currentCellWidth, indices, currentMaxRows);
+            }
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (colResizeDrag.active) {
+            colResizeDrag.active = false;
+            document.querySelectorAll(`#${uid} .resize-handle-input, #${uid} .resize-handle`).forEach(h => h.classList.remove("dragging"));
+        }
+        if (yAxisDrag.active) {
+            yAxisDrag.active = false;
+        }
+    });
+
+    // Y-axis drag handling (single listener, uses shared yAxisDrag state)
+    document.addEventListener("mousemove", (e) => {
+        if (!yAxisDrag.active) return;
+        const delta = e.clientX - yAxisDrag.startX;
+        inputTokenWidth = Math.max(40, Math.min(200, yAxisDrag.startWidth + delta));
+        const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
+        buildTable(currentCellWidth, indices, currentMaxRows);
+    });
 
     function attachCellListeners() {
         document.querySelectorAll(`#${uid} .pred-cell, #${uid} .input-token`).forEach(cell => {
@@ -856,28 +854,13 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         yAxisGroup.appendChild(yAxis);
         g.appendChild(yAxisGroup);
 
-        // Make Y-axis draggable to resize input column
-        let yAxisDragging = false, yAxisStartX = 0, yAxisStartWidth = inputTokenWidth;
+        // Make Y-axis draggable to resize input column (uses shared yAxisDrag state)
         yAxisGroup.addEventListener("mousedown", (e) => {
             closePopup();
-            yAxisDragging = true;
-            yAxisStartX = e.clientX;
-            yAxisStartWidth = inputTokenWidth;
+            yAxisDrag = { active: true, startX: e.clientX, startWidth: inputTokenWidth };
             yAxis.setAttribute("stroke", "rgba(76, 175, 80, 0.6)");
             e.preventDefault();
             e.stopPropagation();
-        });
-        document.addEventListener("mousemove", (e) => {
-            if (!yAxisDragging) return;
-            const delta = e.clientX - yAxisStartX;
-            inputTokenWidth = Math.max(40, Math.min(200, yAxisStartWidth + delta));
-            const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-            buildTable(currentCellWidth, indices, currentMaxRows);
-        });
-        document.addEventListener("mouseup", () => {
-            if (yAxisDragging) {
-                yAxisDragging = false;
-            }
         });
 
         // Y axis label (vertical)
