@@ -93,6 +93,11 @@
             }
             #ll_preview .resize-handle-input:hover, #ll_preview .resize-handle-input.dragging { background: rgba(76, 175, 80, 0.4); }
             #ll_preview .table-wrapper { position: relative; display: inline-block; }
+            #ll_preview .resize-handle-bottom {
+                position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+                cursor: row-resize; background: transparent;
+            }
+            #ll_preview .resize-handle-bottom:hover, #ll_preview .resize-handle-bottom.dragging { background: rgba(33, 150, 243, 0.4); }
             #ll_preview .resize-hint { font-size: 9px; color: #999; margin-top: 4px; }
             #ll_preview .color-menu {
                 display: none; position: absolute; background: white; border: 1px solid #ddd;
@@ -109,6 +114,7 @@
             <div class="ll-title" id="ll_preview_title">Logit Lens: Top Predictions by Layer</div>
             <div class="table-wrapper">
                 <table class="ll-table" id="ll_preview_table"></table>
+                <div class="resize-handle-bottom" id="ll_preview_resize_bottom"></div>
             </div>
             <div class="resize-hint" id="ll_preview_resize_hint">drag column borders to resize</div>
             <div class="chart-container" id="ll_preview_chart_container">
@@ -145,11 +151,14 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     let inputTokenWidth = 100;
     let currentCellWidth = 44;
     let currentVisibleIndices = [];
+    let currentMaxRows = null;  // null = show all rows, otherwise limit to this many (always including last)
     let openPopupCell = null;
     let currentHoverPos = data.tokens.length - 1;
     let colorMode = "top";
 
-    const pinnedTrajectories = new Map();
+    // Pinned groups: each group has a color and array of tokens whose probs are summed
+    const pinnedGroups = [];  // [{color: "#...", tokens: ["token1", "token2"]}, ...]
+    let lastPinnedGroupIndex = -1;  // Track which group to add to with shift-click
     const colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
     let colorIndex = 0;
 
@@ -160,7 +169,60 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     }
 
     function getColorForToken(token) {
-        return pinnedTrajectories.has(token) ? pinnedTrajectories.get(token).color : null;
+        for (const group of pinnedGroups) {
+            if (group.tokens.includes(token)) return group.color;
+        }
+        return null;
+    }
+
+    function findGroupForToken(token) {
+        for (let i = 0; i < pinnedGroups.length; i++) {
+            if (pinnedGroups[i].tokens.includes(token)) return i;
+        }
+        return -1;
+    }
+
+    function getGroupLabel(group) {
+        return group.tokens.map(t => visualizeSpaces(t)).join("+");
+    }
+
+    function getGroupTrajectory(group, pos) {
+        // Sum probabilities across all tokens in the group
+        const result = data.layers.map(() => 0);
+        for (const token of group.tokens) {
+            const traj = getTrajectoryForToken(token, pos);
+            for (let i = 0; i < result.length; i++) {
+                result[i] += traj[i];
+            }
+        }
+        return result;
+    }
+
+    function getGroupProbAtLayer(group, pos, layerIdx) {
+        // Sum probabilities of all tokens in group at specific layer
+        let sum = 0;
+        for (const token of group.tokens) {
+            const traj = getTrajectoryForToken(token, pos);
+            sum += traj[layerIdx] || 0;
+        }
+        return sum;
+    }
+
+    function getWinningGroupAtCell(pos, layerIdx) {
+        // Find if any pinned group's summed probability beats the top-1 at this cell
+        const cellData = data.cells[pos][layerIdx];
+        const top1Prob = cellData.prob;
+        let winningGroup = null;
+        let winningProb = top1Prob;
+
+        for (const group of pinnedGroups) {
+            const groupProb = getGroupProbAtLayer(group, pos, layerIdx);
+            if (groupProb > winningProb) {
+                winningProb = groupProb;
+                winningGroup = group;
+            }
+        }
+        return winningGroup;
     }
 
     function escapeHtml(text) {
@@ -170,19 +232,19 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     }
 
     function visualizeSpaces(text) {
-        // Show leading/trailing spaces as open box (␣ U+2423)
+        // Show leading/trailing spaces as modifier letter shelf (˽ U+02FD)
         let result = text;
         // Replace leading spaces
         let leadingSpaces = 0;
         while (leadingSpaces < result.length && result[leadingSpaces] === ' ') leadingSpaces++;
         if (leadingSpaces > 0) {
-            result = '\u2423'.repeat(leadingSpaces) + result.slice(leadingSpaces);
+            result = '\u02FD'.repeat(leadingSpaces) + result.slice(leadingSpaces);
         }
         // Replace trailing spaces
         let trailingSpaces = 0;
         while (trailingSpaces < result.length && result[result.length - 1 - trailingSpaces] === ' ') trailingSpaces++;
         if (trailingSpaces > 0) {
-            result = result.slice(0, result.length - trailingSpaces) + '\u2423'.repeat(trailingSpaces);
+            result = result.slice(0, result.length - trailingSpaces) + '\u02FD'.repeat(trailingSpaces);
         }
         return result;
     }
@@ -266,10 +328,25 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         return tableWidth - inputTokenWidth;
     }
 
-    function buildTable(cellWidth, visibleLayerIndices) {
+    function buildTable(cellWidth, visibleLayerIndices, maxRows = null) {
         currentVisibleIndices = visibleLayerIndices;
+        currentMaxRows = maxRows;
         const table = document.getElementById(uid + "_table");
         let html = "";
+
+        // Determine which token positions to show
+        const totalTokens = data.tokens.length;
+        let visiblePositions;
+        if (maxRows === null || maxRows >= totalTokens) {
+            visiblePositions = data.tokens.map((_, i) => i);
+        } else {
+            // Show last maxRows tokens (skip from beginning, always include last)
+            const startPos = totalTokens - maxRows;
+            visiblePositions = [];
+            for (let i = startPos; i < totalTokens; i++) {
+                visiblePositions.push(i);
+            }
+        }
 
         // Add colgroup to enforce column widths with table-layout: fixed
         html += "<colgroup>";
@@ -282,12 +359,14 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         // Determine which columns get resize handles (up to halfway)
         const halfwayCol = Math.floor(visibleLayerIndices.length / 2);
 
-        data.tokens.forEach((tok, pos) => {
+        visiblePositions.forEach((pos, rowIdx) => {
+            const tok = data.tokens[pos];
+            const isFirstVisibleRow = rowIdx === 0;
             html += "<tr>";
             // Input token column with its own resize handle
             html += `<td class="input-token" data-pos="${pos}" title="${escapeHtml(tok)}" style="width:${inputTokenWidth}px; max-width:${inputTokenWidth}px;">`;
             html += `${escapeHtml(tok)}`;
-            if (pos === 0) {
+            if (isFirstVisibleRow) {
                 html += `<div class="resize-handle-input" data-col="-1"></div>`;
             }
             html += `</td>`;
@@ -302,11 +381,16 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
 
                 const color = probToColor(cellProb, colorModeBaseColor);
                 const textColor = cellProb < 0.5 ? "#333" : "#fff";
-                const pinnedColor = getColorForToken(cellData.token);
+                // Check if top-1 token is pinned, or if a group wins by summed probability
+                let pinnedColor = getColorForToken(cellData.token);
+                if (!pinnedColor) {
+                    const winningGroup = getWinningGroupAtCell(pos, li);
+                    if (winningGroup) pinnedColor = winningGroup.color;
+                }
                 const pinnedStyle = pinnedColor ? `box-shadow: inset 0 0 0 2px ${pinnedColor};` : "";
 
-                // Add resize handles to first row (pos === 0) for columns up to halfway
-                const hasHandle = pos === 0 && colIdx < halfwayCol;
+                // Add resize handles to first visible row for columns up to halfway
+                const hasHandle = isFirstVisibleRow && colIdx < halfwayCol;
 
                 html += `<td class="pred-cell${pinnedColor ? ' pinned' : ''}" ` +
                     `data-pos="${pos}" data-li="${li}" data-col="${colIdx}" ` +
@@ -363,14 +447,28 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         const hint = document.getElementById(uid + "_resize_hint");
         const stride = visibleLayerIndices.length < nLayers ? Math.ceil(nLayers / visibleLayerIndices.length) : 1;
         hint.textContent = stride > 1 ?
-            `showing every ~${stride} layers ending at ${nLayers-1} (drag column borders to adjust)` :
+            `showing every ${stride} layers ending at ${nLayers-1} (drag column borders to adjust)` :
             `showing all ${nLayers} layers`;
     }
 
     function updateTitle() {
         const titleEl = document.getElementById(uid + "_title");
-        const displayLabel = colorMode === "top" ? "Top prediction" : colorMode;
-        const pinnedColor = colorMode !== "top" ? getColorForToken(colorMode) : null;
+        let displayLabel = "Top prediction";
+        let pinnedColor = null;
+
+        if (colorMode !== "top") {
+            // Find the group containing this token and show full group label
+            const groupIdx = findGroupForToken(colorMode);
+            if (groupIdx >= 0) {
+                const group = pinnedGroups[groupIdx];
+                displayLabel = getGroupLabel(group);  // Shows all tokens with + and space viz
+                pinnedColor = group.color;
+            } else {
+                // Token not in a group, just show it with space visualization
+                displayLabel = visualizeSpaces(colorMode);
+            }
+        }
+
         // White background for "Top prediction", colored background for pinned tokens
         const btnStyle = pinnedColor ? `background: ${pinnedColor}22; border-color: ${pinnedColor};` : "";
 
@@ -395,13 +493,16 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         let html = `<div class="color-menu-item" data-mode="top">Top prediction</div>`;
 
         // Add final prediction token if not already pinned
-        if (!pinnedTrajectories.has(topToken)) {
+        if (findGroupForToken(topToken) < 0) {
             html += `<div class="color-menu-item" data-mode="${escapeHtml(topToken)}">${escapeHtml(topToken)}</div>`;
         }
 
-        // Add pinned tokens
-        pinnedTrajectories.forEach((v, token) => {
-            html += `<div class="color-menu-item" data-mode="${escapeHtml(token)}" style="border-left: 3px solid ${v.color};">${escapeHtml(token)}</div>`;
+        // Add pinned tokens/groups
+        pinnedGroups.forEach((group) => {
+            const label = getGroupLabel(group);
+            // Use first token as the mode identifier
+            const modeToken = group.tokens[0];
+            html += `<div class="color-menu-item" data-mode="${escapeHtml(modeToken)}" style="border-left: 3px solid ${group.color};">${escapeHtml(label)}</div>`;
         });
 
         menu.innerHTML = html;
@@ -412,7 +513,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
                 ev.stopPropagation();
                 colorMode = item.dataset.mode;
                 menu.classList.remove("visible");
-                buildTable(currentCellWidth, currentVisibleIndices);
+                buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
             });
         });
     }
@@ -443,7 +544,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
                 inputTokenWidth = Math.max(40, Math.min(200, startWidth + delta));
                 // Recalculate visible layers since available width changed
                 const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                buildTable(currentCellWidth, indices);
+                buildTable(currentCellWidth, indices, currentMaxRows);
             });
 
             document.addEventListener("mouseup", () => {
@@ -481,7 +582,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
                 if (Math.abs(newWidth - currentCellWidth) > 1) {
                     currentCellWidth = newWidth;
                     const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                    buildTable(currentCellWidth, indices);
+                    buildTable(currentCellWidth, indices, currentMaxRows);
                 }
             });
 
@@ -504,9 +605,10 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
                 const li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
                 const cellData = data.cells[pos][li] || data.cells[pos][0];
                 const chartInnerWidth = updateChartDimensions();
-                const hoverTraj = pinnedTrajectories.has(cellData.token) ? null : cellData.trajectory;
-                const hoverColor = pinnedTrajectories.has(cellData.token) ? null : "#999";
-                const hoverLabel = pinnedTrajectories.has(cellData.token) ? null : cellData.token;
+                const isPinned = findGroupForToken(cellData.token) >= 0;
+                const hoverTraj = isPinned ? null : cellData.trajectory;
+                const hoverColor = isPinned ? null : "#999";
+                const hoverLabel = isPinned ? null : cellData.token;
                 drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
             });
         });
@@ -518,9 +620,10 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
 
             cell.addEventListener("click", (e) => {
                 e.stopPropagation();
+                const addToGroup = e.shiftKey || e.ctrlKey || e.metaKey;
                 if (e.shiftKey) {
-                    togglePinnedTrajectory(cellData.token);
-                    buildTable(currentCellWidth, currentVisibleIndices);
+                    togglePinnedTrajectory(cellData.token, addToGroup);
+                    buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
                     return;
                 }
                 if (openPopupCell === cell) { closePopup(); return; }
@@ -573,7 +676,8 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
                 document.querySelectorAll(`#${uid}_popup_content .topk-item`).forEach(it => it.classList.remove("active"));
                 item.classList.add("active");
                 const chartInnerWidth = updateChartDimensions();
-                const hoverTraj = pinnedTrajectories.has(tokData.token) ? null : tokData.trajectory;
+                const isPinned = findGroupForToken(tokData.token) >= 0;
+                const hoverTraj = isPinned ? null : tokData.trajectory;
                 drawAllTrajectories(hoverTraj, "#999", tokData.token, chartInnerWidth, pos);
             });
 
@@ -584,8 +688,9 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
 
             item.addEventListener("click", (e) => {
                 e.stopPropagation();
-                togglePinnedTrajectory(tokData.token);
-                buildTable(currentCellWidth, currentVisibleIndices);
+                const addToGroup = e.shiftKey || e.ctrlKey || e.metaKey;
+                togglePinnedTrajectory(tokData.token, addToGroup);
+                buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
                 // Re-query cell after table rebuild (original cell reference is stale)
                 const newCell = document.querySelector(`#${uid} .pred-cell[data-pos="${pos}"][data-li="${li}"]`);
                 if (newCell) {
@@ -597,17 +702,61 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
 
         popup.classList.add("visible");
         const chartInnerWidth = updateChartDimensions();
-        const hoverTraj = pinnedTrajectories.has(cellData.token) ? null : cellData.trajectory;
+        const isPinned = findGroupForToken(cellData.token) >= 0;
+        const hoverTraj = isPinned ? null : cellData.trajectory;
         drawAllTrajectories(hoverTraj, "#999", cellData.token, chartInnerWidth, pos);
     }
 
-    function togglePinnedTrajectory(token) {
-        if (pinnedTrajectories.has(token)) {
-            pinnedTrajectories.delete(token);
-            return false;
+    function togglePinnedTrajectory(token, addToGroup = false) {
+        const existingGroupIdx = findGroupForToken(token);
+
+        if (addToGroup && lastPinnedGroupIndex >= 0 && lastPinnedGroupIndex < pinnedGroups.length) {
+            // Shift/ctrl/cmd click: add to or remove from the last pinned group
+            const lastGroup = pinnedGroups[lastPinnedGroupIndex];
+
+            if (existingGroupIdx === lastPinnedGroupIndex) {
+                // Token is already in this group - remove it
+                lastGroup.tokens = lastGroup.tokens.filter(t => t !== token);
+                if (lastGroup.tokens.length === 0) {
+                    // Group is now empty, remove it
+                    pinnedGroups.splice(lastPinnedGroupIndex, 1);
+                    lastPinnedGroupIndex = pinnedGroups.length - 1;
+                }
+                return false;
+            } else if (existingGroupIdx >= 0) {
+                // Token is in a different group - move it to last group
+                pinnedGroups[existingGroupIdx].tokens = pinnedGroups[existingGroupIdx].tokens.filter(t => t !== token);
+                if (pinnedGroups[existingGroupIdx].tokens.length === 0) {
+                    pinnedGroups.splice(existingGroupIdx, 1);
+                    if (lastPinnedGroupIndex > existingGroupIdx) lastPinnedGroupIndex--;
+                }
+                lastGroup.tokens.push(token);
+                return true;
+            } else {
+                // Token not pinned - add to last group
+                lastGroup.tokens.push(token);
+                return true;
+            }
         } else {
-            pinnedTrajectories.set(token, { color: getNextColor() });
-            return true;
+            // Normal click: toggle as individual pin
+            if (existingGroupIdx >= 0) {
+                // Remove from its group
+                const group = pinnedGroups[existingGroupIdx];
+                group.tokens = group.tokens.filter(t => t !== token);
+                if (group.tokens.length === 0) {
+                    pinnedGroups.splice(existingGroupIdx, 1);
+                    if (lastPinnedGroupIndex >= pinnedGroups.length) {
+                        lastPinnedGroupIndex = pinnedGroups.length - 1;
+                    }
+                }
+                return false;
+            } else {
+                // Create new group with just this token
+                const newGroup = { color: getNextColor(), tokens: [token] };
+                pinnedGroups.push(newGroup);
+                lastPinnedGroupIndex = pinnedGroups.length - 1;
+                return true;
+            }
         }
     }
 
@@ -647,6 +796,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         }
 
         // Calculate label stride based on available space (min ~25px per label)
+        // Stride from the right so last label is always shown, and always show first label
         const minLabelSpacing = 25;
         const totalLabelsWidth = currentVisibleIndices.length * minLabelSpacing;
         let labelStride = 1;
@@ -654,10 +804,28 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
             labelStride = Math.ceil(totalLabelsWidth / usableWidth);
         }
 
+        // Build set of indices to show: stride from right, always include first
+        const lastIdx = currentVisibleIndices.length - 1;
+        const showAtIndex = new Set();
+        // Stride from the right (last is always shown)
+        for (let i = lastIdx; i >= 0; i -= labelStride) {
+            showAtIndex.add(i);
+        }
+        // Always show first (index 0)
+        showAtIndex.add(0);
+        // If first and next-shown would be scrunched, remove the next-shown
+        if (labelStride > 1) {
+            // Find the smallest strided index > 0; if it's < labelStride, it's too close to 0
+            for (let i = lastIdx; i > 0; i -= labelStride) {
+                if (i < labelStride) {
+                    showAtIndex.delete(i);
+                    break;
+                }
+            }
+        }
+
         currentVisibleIndices.forEach((layerIdx, i) => {
-            const isLast = i === currentVisibleIndices.length - 1;
-            // Show label if it's on stride or if it's the last one
-            if (i % labelStride === 0 || isLast) {
+            if (showAtIndex.has(i)) {
                 const x = layerToXForLabels(layerIdx);
                 const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                 label.setAttribute("x", x);
@@ -670,12 +838,47 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
             }
         });
 
-        // Y axis line
+        // Y axis line (draggable to resize input column)
+        const yAxisGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        yAxisGroup.style.cursor = "col-resize";
+
+        // Invisible wider hit target for easier dragging
+        const yAxisHitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        yAxisHitTarget.setAttribute("x", -4); yAxisHitTarget.setAttribute("y", 0);
+        yAxisHitTarget.setAttribute("width", 8); yAxisHitTarget.setAttribute("height", chartInnerHeight);
+        yAxisHitTarget.setAttribute("fill", "transparent");
+        yAxisGroup.appendChild(yAxisHitTarget);
+
         const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
         yAxis.setAttribute("x1", 0); yAxis.setAttribute("y1", 0);
         yAxis.setAttribute("x2", 0); yAxis.setAttribute("y2", chartInnerHeight);
         yAxis.setAttribute("stroke", "#ccc");
-        g.appendChild(yAxis);
+        yAxisGroup.appendChild(yAxis);
+        g.appendChild(yAxisGroup);
+
+        // Make Y-axis draggable to resize input column
+        let yAxisDragging = false, yAxisStartX = 0, yAxisStartWidth = inputTokenWidth;
+        yAxisGroup.addEventListener("mousedown", (e) => {
+            closePopup();
+            yAxisDragging = true;
+            yAxisStartX = e.clientX;
+            yAxisStartWidth = inputTokenWidth;
+            yAxis.setAttribute("stroke", "rgba(76, 175, 80, 0.6)");
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        document.addEventListener("mousemove", (e) => {
+            if (!yAxisDragging) return;
+            const delta = e.clientX - yAxisStartX;
+            inputTokenWidth = Math.max(40, Math.min(200, yAxisStartWidth + delta));
+            const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
+            buildTable(currentCellWidth, indices, currentMaxRows);
+        });
+        document.addEventListener("mouseup", () => {
+            if (yAxisDragging) {
+                yAxisDragging = false;
+            }
+        });
 
         // Y axis label (vertical)
         const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -689,55 +892,71 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         svg.appendChild(yLabel);
 
         let allProbs = [];
-        pinnedTrajectories.forEach((v, token) => {
-            const traj = getTrajectoryForToken(token, pos);
+        pinnedGroups.forEach((group) => {
+            const traj = getGroupTrajectory(group, pos);
             allProbs.push(...traj);
         });
         if (hoverTrajectory) allProbs.push(...hoverTrajectory);
         const maxProb = Math.max(...allProbs, 0.1);
 
         let legendY = chartMargin.top + 10;
-        pinnedTrajectories.forEach((v, token) => {
-            const traj = getTrajectoryForToken(token, pos);
-            drawSingleTrajectory(g, traj, v.color, maxProb, token, false, chartInnerWidth);
+        pinnedGroups.forEach((group, groupIdx) => {
+            const traj = getGroupTrajectory(group, pos);
+            const groupLabel = getGroupLabel(group);
+            drawSingleTrajectory(g, traj, group.color, maxProb, groupLabel, false, chartInnerWidth);
 
             const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            legendItem.setAttribute("transform", `translate(5, ${legendY})`);
+            legendItem.setAttribute("transform", `translate(18, ${legendY})`);
             legendItem.style.cursor = "pointer";
 
             // Invisible hit target rectangle covering the full legend width
             const hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            hitTarget.setAttribute("x", "-5"); hitTarget.setAttribute("y", "-8");
-            hitTarget.setAttribute("width", inputTokenWidth); hitTarget.setAttribute("height", "14");
+            hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
+            hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
             hitTarget.setAttribute("fill", "transparent");
             legendItem.appendChild(hitTarget);
+
+            // Close button to the left of the line
+            const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            closeBtn.setAttribute("class", "legend-close");
+            closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
+            closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
+            closeBtn.style.display = "none";
+            closeBtn.textContent = "×";
+            legendItem.appendChild(closeBtn);
 
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
             line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
-            line.setAttribute("stroke", v.color); line.setAttribute("stroke-width", "2");
+            line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
             legendItem.appendChild(line);
+
+            // Use clipPath for pixel-based text clipping
+            const clipId = `${uid}_legend_clip_${groupIdx}`;
+            const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+            clipPath.setAttribute("id", clipId);
+            const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
+            clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
+            clipPath.appendChild(clipRect);
+            legendItem.appendChild(clipPath);
 
             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
             text.setAttribute("x", "20"); text.setAttribute("y", "4");
             text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
-            text.textContent = token.slice(0, 8);
+            text.setAttribute("clip-path", `url(#${clipId})`);
+            text.textContent = groupLabel;  // Full label, clipped by pixel width
             legendItem.appendChild(text);
-
-            const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            closeBtn.setAttribute("class", "legend-close");
-            closeBtn.setAttribute("x", inputTokenWidth - 15); closeBtn.setAttribute("y", "4");
-            closeBtn.setAttribute("font-size", "11"); closeBtn.setAttribute("fill", "#999");
-            closeBtn.style.display = "none";
-            closeBtn.textContent = "×";
-            legendItem.appendChild(closeBtn);
 
             legendItem.addEventListener("mouseenter", () => { closeBtn.style.display = "block"; });
             legendItem.addEventListener("mouseleave", () => { closeBtn.style.display = "none"; });
             closeBtn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                pinnedTrajectories.delete(token);
-                buildTable(currentCellWidth, currentVisibleIndices);
+                pinnedGroups.splice(groupIdx, 1);
+                if (lastPinnedGroupIndex >= pinnedGroups.length) {
+                    lastPinnedGroupIndex = pinnedGroups.length - 1;
+                }
+                buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
             });
 
             legendG.appendChild(legendItem);
@@ -750,7 +969,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
             // Add legend entry for hover trajectory
             const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
             legendItem.setAttribute("class", "legend-item hover-legend");
-            legendItem.setAttribute("transform", `translate(5, ${legendY})`);
+            legendItem.setAttribute("transform", `translate(18, ${legendY})`);
 
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
@@ -761,10 +980,21 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
             line.style.opacity = "0.7";
             legendItem.appendChild(line);
 
+            // Use clipPath for pixel-based text clipping
+            const clipId = `${uid}_hover_clip`;
+            const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+            clipPath.setAttribute("id", clipId);
+            const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
+            clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
+            clipPath.appendChild(clipRect);
+            legendItem.appendChild(clipPath);
+
             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
             text.setAttribute("x", "20"); text.setAttribute("y", "4");
             text.setAttribute("font-size", "9"); text.setAttribute("fill", "#666");
-            text.textContent = hoverLabel.slice(0, 8);
+            text.setAttribute("clip-path", `url(#${clipId})`);
+            text.textContent = visualizeSpaces(hoverLabel);  // Full label with space viz, clipped
             legendItem.appendChild(text);
 
             legendG.appendChild(legendItem);
@@ -841,10 +1071,54 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
     });
 
+    // Bottom resize handle for truncating rows
+    (function() {
+        const handle = document.getElementById(uid + "_resize_bottom");
+        const table = document.getElementById(uid + "_table");
+        let isDragging = false, startY = 0, startMaxRows = null;
+
+        handle.addEventListener("mousedown", (e) => {
+            closePopup();
+            isDragging = true;
+            startY = e.clientY;
+            startMaxRows = currentMaxRows;
+            handle.classList.add("dragging");
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            const delta = e.clientY - startY;
+            const rowHeight = 18;  // Approximate row height
+            const rowDelta = Math.round(delta / rowHeight);
+
+            const totalTokens = data.tokens.length;
+            const startRows = startMaxRows === null ? totalTokens : startMaxRows;
+            // Dragging up (negative delta) reduces rows; dragging down increases rows
+            let newMaxRows = startRows + rowDelta;
+            // Clamp to valid range (at least 1 row, at most all rows)
+            newMaxRows = Math.max(1, Math.min(totalTokens, newMaxRows));
+            // If showing all rows, use null
+            if (newMaxRows >= totalTokens) newMaxRows = null;
+
+            if (newMaxRows !== currentMaxRows) {
+                buildTable(currentCellWidth, currentVisibleIndices, newMaxRows);
+            }
+        });
+
+        document.addEventListener("mouseup", () => {
+            if (isDragging) {
+                isDragging = false;
+                handle.classList.remove("dragging");
+            }
+        });
+    })();
+
     // Initial build with container width
     const containerWidth = getContainerWidth();
     const { indices } = computeVisibleLayers(currentCellWidth, containerWidth);
-    buildTable(currentCellWidth, indices);
+    buildTable(currentCellWidth, indices, currentMaxRows);
 })();
 </script>
 </body>
