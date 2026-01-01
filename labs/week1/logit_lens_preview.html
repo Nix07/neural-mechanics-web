@@ -60,7 +60,7 @@
                 padding: 4px 2px; text-align: center; font-weight: 500; color: #666;
                 background: #f5f5f5; font-size: 9px; position: relative;
             }
-            #ll_preview .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: #f5f5f5; position: relative; }
+            #ll_preview .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: white; position: relative; }
             #ll_preview .chart-container { margin-top: 8px; background: #fafafa; border-radius: 4px; padding: 8px 0; }
             #ll_preview .chart-container svg { display: block; margin: 0; padding: 0; }
             #ll_preview .popup {
@@ -70,7 +70,7 @@
             }
             #ll_preview .popup.visible { display: block; }
             #ll_preview .popup-header { font-weight: 600; font-size: 13px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
-            #ll_preview .popup-header code { font-weight: 400; font-size: 12px; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; }
+            #ll_preview .popup-header code { font-weight: 400; font-size: 12px; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
             #ll_preview .popup-close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #999; font-size: 16px; }
             #ll_preview .popup-close:hover { color: #333; }
             #ll_preview .topk-item {
@@ -137,7 +137,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     const uid = "ll_preview";
     const nLayers = data.layers.length;
     const chartHeight = 140;
-    const chartMargin = { top: 10, right: 10, bottom: 25, left: 10 };
+    const chartMargin = { top: 10, right: 8, bottom: 25, left: 10 };
     const chartInnerHeight = chartHeight - chartMargin.top - chartMargin.bottom;
     const minCellWidth = 10;  // Much smaller min
     const maxCellWidth = 200;
@@ -549,7 +549,7 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         popup.style.top = (rect.top - containerRect.top) + "px";
 
         document.getElementById(uid + "_popup_layer").textContent = data.layers[li];
-        document.getElementById(uid + "_popup_pos").innerHTML = pos + ", Input <code>" + escapeHtml(visualizeSpaces(data.tokens[pos])) + "</code>";
+        document.getElementById(uid + "_popup_pos").innerHTML = pos + "<br>Input <code>" + escapeHtml(visualizeSpaces(data.tokens[pos])) + "</code>";
 
         let contentHtml = "";
         cellData.topk.forEach((item, ki) => {
@@ -630,25 +630,63 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         g.setAttribute("transform", `translate(${actualInputRight},${chartMargin.top})`);
         svg.appendChild(g);
 
-        // X axis
+        // X axis line
         const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
         xAxis.setAttribute("x1", 0); xAxis.setAttribute("y1", chartInnerHeight);
         xAxis.setAttribute("x2", chartInnerWidth); xAxis.setAttribute("y2", chartInnerHeight);
         xAxis.setAttribute("stroke", "#ccc");
         g.appendChild(xAxis);
 
-        const xLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        xLabel.setAttribute("x", chartInnerWidth / 2); xLabel.setAttribute("y", chartInnerHeight + 18);
-        xLabel.setAttribute("text-anchor", "middle"); xLabel.setAttribute("font-size", "10"); xLabel.setAttribute("fill", "#666");
-        xLabel.textContent = "Layer";
-        g.appendChild(xLabel);
+        // X axis layer labels under dots (with striding if too close)
+        const dotRadius = 3;
+        const labelMargin = chartMargin.right;  // Space for rightmost label
+        const usableWidth = chartInnerWidth - labelMargin;
+        function layerToXForLabels(layerIdx) {
+            if (nLayers <= 1) return usableWidth / 2;
+            return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
+        }
 
-        // Y axis
+        // Calculate label stride based on available space (min ~25px per label)
+        const minLabelSpacing = 25;
+        const totalLabelsWidth = currentVisibleIndices.length * minLabelSpacing;
+        let labelStride = 1;
+        if (totalLabelsWidth > usableWidth) {
+            labelStride = Math.ceil(totalLabelsWidth / usableWidth);
+        }
+
+        currentVisibleIndices.forEach((layerIdx, i) => {
+            const isLast = i === currentVisibleIndices.length - 1;
+            // Show label if it's on stride or if it's the last one
+            if (i % labelStride === 0 || isLast) {
+                const x = layerToXForLabels(layerIdx);
+                const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                label.setAttribute("x", x);
+                label.setAttribute("y", chartInnerHeight + 12);
+                label.setAttribute("text-anchor", "middle");
+                label.setAttribute("font-size", "9");
+                label.setAttribute("fill", "#666");
+                label.textContent = data.layers[layerIdx];
+                g.appendChild(label);
+            }
+        });
+
+        // Y axis line
         const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
         yAxis.setAttribute("x1", 0); yAxis.setAttribute("y1", 0);
         yAxis.setAttribute("x2", 0); yAxis.setAttribute("y2", chartInnerHeight);
         yAxis.setAttribute("stroke", "#ccc");
         g.appendChild(yAxis);
+
+        // Y axis label (vertical)
+        const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        yLabel.setAttribute("x", -chartInnerHeight / 2);
+        yLabel.setAttribute("y", -actualInputRight + 15);
+        yLabel.setAttribute("text-anchor", "middle");
+        yLabel.setAttribute("font-size", "10");
+        yLabel.setAttribute("fill", "#666");
+        yLabel.setAttribute("transform", "rotate(-90)");
+        yLabel.textContent = "Probability";
+        svg.appendChild(yLabel);
 
         let allProbs = [];
         pinnedTrajectories.forEach((v, token) => {
@@ -737,12 +775,12 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
         if (!trajectory || trajectory.length === 0) return;
 
         const dotRadius = isHover ? 2 : 3;
-        // All layers evenly spaced, with margin for dot radius at edges
-        // Layer 0 at x=dotRadius, layer N-1 at x=chartInnerWidth-dotRadius
+        // All layers evenly spaced, with margin for dot radius at edges and label margin at right
+        const labelMargin = chartMargin.right;
+        const usableWidth = chartInnerWidth - labelMargin;
         function layerToX(layerIdx) {
-            if (nLayers <= 1) return chartInnerWidth / 2;
-            const usableWidth = chartInnerWidth - 2 * dotRadius;
-            return dotRadius + (layerIdx / (nLayers - 1)) * usableWidth;
+            if (nLayers <= 1) return usableWidth / 2;
+            return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
         }
 
         const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
