@@ -28,1029 +28,1030 @@
     <div class="preview-container" id="viz"></div>
 
 <script>
-// LogitLensWidget: Self-contained widget that can be instantiated multiple times
-// Usage: LogitLensWidget(containerElement, data)
-const LogitLensWidget = (function() {
-    let instanceCounter = 0;
-
-    // CSS template - {UID} will be replaced with the unique instance ID
-    const cssTemplate = `
-        #{UID} {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 20px 0;
-            position: relative;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        #{UID} .ll-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-        #{UID} .color-mode-btn {
-            display: inline-block; padding: 2px 4px; background: white;
-            border-radius: 4px; font-size: 16px; cursor: pointer; color: #333;
-            border: 1px solid #ccc;
-        }
-        #{UID} .color-mode-btn:hover { background: #f5f5f5; }
-        #{UID} .ll-table { border-collapse: collapse; font-size: 10px; table-layout: fixed; }
-        #{UID} .ll-table td, #{UID} .ll-table th { border: 1px solid #ddd; box-sizing: border-box; }
-        #{UID} .pred-cell {
-            height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            padding: 2px 4px; font-family: monospace; font-size: 9px; cursor: pointer; position: relative;
-        }
-        #{UID} .pred-cell:hover { outline: 2px solid #e91e63; outline-offset: -1px; }
-        #{UID} .pred-cell.selected { background: #fff59d !important; color: #333 !important; }
-        #{UID} .input-token {
-            padding: 2px 8px; text-align: right; font-weight: 500; color: #333;
-            background: #f5f5f5; white-space: nowrap; overflow: hidden;
-            text-overflow: ellipsis; font-family: monospace; font-size: 10px; cursor: pointer;
-            position: relative;
-        }
-        #{UID} .input-token:hover { background: #e8e8e8; }
-        #{UID} .layer-hdr {
-            padding: 4px 2px; text-align: center; font-weight: 500; color: #666;
-            background: #f5f5f5; font-size: 9px; position: relative;
-        }
-        #{UID} .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: white; position: relative; }
-        #{UID} .chart-container { margin-top: 8px; background: #fafafa; border-radius: 4px; padding: 8px 0; }
-        #{UID} .chart-container svg { display: block; margin: 0; padding: 0; }
-        #{UID} .popup {
-            display: none; position: absolute; background: white; border: 1px solid #ddd;
-            border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px;
-            z-index: 100; min-width: 180px; max-width: 280px;
-        }
-        #{UID} .popup.visible { display: block; }
-        #{UID} .popup-header { font-weight: 600; font-size: 13px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
-        #{UID} .popup-header code { font-weight: 400; font-size: 12px; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
-        #{UID} .popup-close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #999; font-size: 16px; }
-        #{UID} .popup-close:hover { color: #333; }
-        #{UID} .topk-item {
-            padding: 4px 6px; margin: 2px 0; border-radius: 3px; cursor: pointer;
-            display: flex; justify-content: space-between; font-size: 11px;
-        }
-        #{UID} .topk-item:hover { background: #e3f2fd; }
-        #{UID} .topk-item.active { background: #bbdefb; }
-        #{UID} .topk-token { font-family: monospace; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #{UID} .topk-prob { color: #666; margin-left: 8px; }
-        #{UID} .topk-item.pinned { border-left: 3px solid currentColor; }
-        #{UID} .resize-handle {
-            position: absolute; width: 6px; height: 100%; background: transparent;
-            cursor: col-resize; right: -3px; top: 0; z-index: 10;
-        }
-        #{UID} .resize-handle:hover, #{UID} .resize-handle.dragging { background: rgba(33, 150, 243, 0.4); }
-        #{UID} .resize-handle-input {
-            position: absolute; width: 6px; height: 100%; background: transparent;
-            cursor: col-resize; right: -3px; top: 0; z-index: 10;
-        }
-        #{UID} .resize-handle-input:hover, #{UID} .resize-handle-input.dragging { background: rgba(76, 175, 80, 0.4); }
-        #{UID} .table-wrapper { position: relative; display: inline-block; }
-        #{UID} .resize-handle-bottom {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
-            cursor: row-resize; background: transparent;
-        }
-        #{UID} .resize-handle-bottom:hover, #{UID} .resize-handle-bottom.dragging { background: rgba(33, 150, 243, 0.4); }
-        #{UID} .resize-hint { font-size: 9px; color: #999; margin-top: 4px; }
-        #{UID} .color-menu {
-            display: none; position: absolute; background: white; border: 1px solid #ddd;
-            border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 200; min-width: 150px;
-        }
-        #{UID} .color-menu.visible { display: block; }
-        #{UID} .color-menu-item { padding: 8px 12px; cursor: pointer; font-size: 12px; }
-        #{UID} .color-menu-item:hover { background: #f0f0f0; }
-        #{UID} .legend-close { cursor: pointer; }
-        #{UID} .legend-close:hover { fill: #e91e63 !important; }
-    `;
-
-    // HTML template - {UID} will be replaced with the unique instance ID
-    const htmlTemplate = `
-        <div id="{UID}">
-            <div class="ll-title" id="{UID}_title">Logit Lens: Top Predictions by Layer</div>
-            <div class="table-wrapper">
-                <table class="ll-table" id="{UID}_table"></table>
-                <div class="resize-handle-bottom" id="{UID}_resize_bottom"></div>
-            </div>
-            <div class="resize-hint" id="{UID}_resize_hint">drag column borders to resize</div>
-            <div class="chart-container" id="{UID}_chart_container">
-                <svg id="{UID}_chart" height="140"></svg>
-            </div>
-            <div class="popup" id="{UID}_popup">
-                <span class="popup-close" id="{UID}_popup_close">&times;</span>
-                <div class="popup-header">
-                    Layer <span id="{UID}_popup_layer"></span>, Position <span id="{UID}_popup_pos"></span>
-                </div>
-                <div id="{UID}_popup_content"></div>
-            </div>
-            <div class="color-menu" id="{UID}_color_menu"></div>
-        </div>
-    `;
-
-    function create(container, data) {
-        // Generate unique ID for this instance
-        const uid = "ll_interact_" + (instanceCounter++);
-
-        // Inject scoped CSS
-        const styleEl = document.createElement("style");
-        styleEl.textContent = cssTemplate.replace(/\{UID\}/g, uid);
-        document.head.appendChild(styleEl);
-
-        // Inject HTML
-        container.innerHTML = htmlTemplate.replace(/\{UID\}/g, uid);
-
-        // Initialize the widget
-        initWidget(uid, data);
-
-        return { uid, container };
-    }
-
-    function initWidget(uid, data) {
-        const nLayers = data.layers.length;
-        const chartHeight = 140;
-        const chartMargin = { top: 15, right: 8, bottom: 20, left: 0 };
-        const chartInnerHeight = chartHeight - chartMargin.top - chartMargin.bottom;
-        const minCellWidth = 10;
-        const maxCellWidth = 200;
-
-        let inputTokenWidth = 100;
-        let currentCellWidth = 44;
-        let currentVisibleIndices = [];
-        let currentMaxRows = null;
-        let openPopupCell = null;
-        let currentHoverPos = data.tokens.length - 1;
-        let colorMode = "top";
-
-        // Pinned groups: each group has a color and array of tokens whose probs are summed
-        const pinnedGroups = [];
-        let lastPinnedGroupIndex = -1;
-        const colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
-        let colorIndex = 0;
-
-        function getNextColor() {
-            const c = colors[colorIndex % colors.length];
-            colorIndex++;
-            return c;
-        }
-
-        function getColorForToken(token) {
-            for (const group of pinnedGroups) {
-                if (group.tokens.includes(token)) return group.color;
-            }
-            return null;
-        }
-
-        function findGroupForToken(token) {
-            for (let i = 0; i < pinnedGroups.length; i++) {
-                if (pinnedGroups[i].tokens.includes(token)) return i;
-            }
-            return -1;
-        }
-
-        function getGroupLabel(group) {
-            return group.tokens.map(t => visualizeSpaces(t)).join("+");
-        }
-
-        function getGroupTrajectory(group, pos) {
-            const result = data.layers.map(() => 0);
-            for (const token of group.tokens) {
-                const traj = getTrajectoryForToken(token, pos);
-                for (let i = 0; i < result.length; i++) {
-                    result[i] += traj[i];
-                }
-            }
-            return result;
-        }
-
-        function getGroupProbAtLayer(group, pos, layerIdx) {
-            let sum = 0;
-            for (const token of group.tokens) {
-                const traj = getTrajectoryForToken(token, pos);
-                sum += traj[layerIdx] || 0;
-            }
-            return sum;
-        }
-
-        function getWinningGroupAtCell(pos, layerIdx) {
-            const cellData = data.cells[pos][layerIdx];
-            const top1Prob = cellData.prob;
-            let winningGroup = null;
-            let winningProb = top1Prob;
-
-            for (const group of pinnedGroups) {
-                const groupProb = getGroupProbAtLayer(group, pos, layerIdx);
-                if (groupProb > winningProb) {
-                    winningProb = groupProb;
-                    winningGroup = group;
-                }
-            }
-            return winningGroup;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement("div");
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function visualizeSpaces(text) {
-            // Show leading/trailing spaces as modifier letter shelf (˽ U+02FD)
-            let result = text;
-            let leadingSpaces = 0;
-            while (leadingSpaces < result.length && result[leadingSpaces] === ' ') leadingSpaces++;
-            if (leadingSpaces > 0) {
-                result = '\u02FD'.repeat(leadingSpaces) + result.slice(leadingSpaces);
-            }
-            let trailingSpaces = 0;
-            while (trailingSpaces < result.length && result[result.length - 1 - trailingSpaces] === ' ') trailingSpaces++;
-            if (trailingSpaces > 0) {
-                result = result.slice(0, result.length - trailingSpaces) + '\u02FD'.repeat(trailingSpaces);
-            }
-            return result;
-        }
-
-        function probToColor(prob, baseColor = null) {
-            if (baseColor) {
-                const r = parseInt(baseColor.slice(1, 3), 16);
-                const g = parseInt(baseColor.slice(3, 5), 16);
-                const b = parseInt(baseColor.slice(5, 7), 16);
-                const intensity = 0.15 + prob * 0.85;
-                const br = Math.round(255 - (255 - r) * intensity);
-                const bg = Math.round(255 - (255 - g) * intensity);
-                const bb = Math.round(255 - (255 - b) * intensity);
-                return `rgb(${br},${bg},${bb})`;
-            }
-            const intensity = Math.pow(prob, 0.7);
-            const r = Math.round(255 - intensity * 200);
-            const g = Math.round(255 - intensity * 100);
-            const b = Math.round(255 - intensity * 50);
-            return `rgb(${r},${g},${b})`;
-        }
-
-        function computeVisibleLayers(cellWidth, containerWidth) {
-            if (nLayers <= 1) {
-                return { stride: 1, indices: data.layers.map((_, i) => i) };
-            }
-            const availableWidth = containerWidth - inputTokenWidth - 1;
-            const maxCols = Math.max(1, Math.floor(availableWidth / cellWidth));
-            const stride = maxCols > 1
-                ? Math.max(1, Math.ceil((nLayers - 1) / (maxCols - 1)))
-                : nLayers;
-            const lastLayer = nLayers - 1;
-            const indices = [];
-            for (let i = lastLayer; i >= 0; i -= stride) {
-                indices.unshift(i);
-            }
-            if (indices[0] !== 0) {
-                indices.unshift(0);
-            }
-            return { stride, indices };
-        }
-
-        function getTrajectoryForToken(token, pos) {
-            for (let li = 0; li < data.cells[pos].length; li++) {
-                const cellData = data.cells[pos][li];
-                if (cellData.token === token) return cellData.trajectory;
-                for (const tk of cellData.topk) {
-                    if (tk.token === token) return tk.trajectory;
-                }
-            }
-            return data.layers.map(() => 0);
-        }
-
-        function getContainerWidth() {
-            const container = document.getElementById(uid);
-            return container.offsetWidth || 900;
-        }
-
-        // Shared drag state for column resizing
-        let colResizeDrag = { active: false, type: null, startX: 0, startWidth: 0, colIdx: 0 };
-        // Shared drag state for y-axis resizing
-        let yAxisDrag = { active: false, startX: 0, startWidth: 0 };
-
-        function attachResizeListeners() {
-            document.querySelectorAll(`#${uid} .resize-handle-input`).forEach(handle => {
-                handle.addEventListener("mousedown", (e) => {
-                    closeAllMenus();
-                    colResizeDrag = { active: true, type: 'input', startX: e.clientX, startWidth: inputTokenWidth, colIdx: 0 };
-                    handle.classList.add("dragging");
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-            });
-
-            document.querySelectorAll(`#${uid} .resize-handle`).forEach(handle => {
-                const colIdx = parseInt(handle.dataset.col);
-                handle.addEventListener("mousedown", (e) => {
-                    closeAllMenus();
-                    colResizeDrag = { active: true, type: 'column', startX: e.clientX, startWidth: currentCellWidth, colIdx };
-                    handle.classList.add("dragging");
-                    e.preventDefault();
-                    e.stopPropagation();
-                });
-            });
-        }
-
-        // Document-level listeners for this instance (use event delegation with uid check)
-        document.addEventListener("mousemove", (e) => {
-            if (colResizeDrag.active) {
-                const delta = e.clientX - colResizeDrag.startX;
-                if (colResizeDrag.type === 'input') {
-                    inputTokenWidth = Math.max(40, Math.min(200, colResizeDrag.startWidth + delta));
-                    const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                    buildTable(currentCellWidth, indices, currentMaxRows);
-                } else if (colResizeDrag.type === 'column') {
-                    const numCols = colResizeDrag.colIdx + 1;
-                    const widthDelta = delta / numCols;
-                    const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, colResizeDrag.startWidth + widthDelta));
-                    if (Math.abs(newWidth - currentCellWidth) > 1) {
-                        currentCellWidth = newWidth;
-                        const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                        buildTable(currentCellWidth, indices, currentMaxRows);
-                    }
-                }
-            }
-            if (yAxisDrag.active) {
-                const delta = e.clientX - yAxisDrag.startX;
-                inputTokenWidth = Math.max(40, Math.min(200, yAxisDrag.startWidth + delta));
-                const { indices } = computeVisibleLayers(currentCellWidth, getContainerWidth());
-                buildTable(currentCellWidth, indices, currentMaxRows);
-            }
-        });
-
-        document.addEventListener("mouseup", () => {
-            if (colResizeDrag.active) {
-                colResizeDrag.active = false;
-                document.querySelectorAll(`#${uid} .resize-handle-input, #${uid} .resize-handle`).forEach(h => h.classList.remove("dragging"));
-            }
-            if (yAxisDrag.active) {
-                yAxisDrag.active = false;
-            }
-        });
-
-        function buildTable(cellWidth, visibleLayerIndices, maxRows = null) {
-            currentVisibleIndices = visibleLayerIndices;
-            currentMaxRows = maxRows;
-            const table = document.getElementById(uid + "_table");
-            let html = "";
-
-            const totalTokens = data.tokens.length;
-            let visiblePositions;
-            if (maxRows === null || maxRows >= totalTokens) {
-                visiblePositions = data.tokens.map((_, i) => i);
-            } else {
-                const startPos = totalTokens - maxRows;
-                visiblePositions = [];
-                for (let i = startPos; i < totalTokens; i++) {
-                    visiblePositions.push(i);
-                }
-            }
-
-            html += "<colgroup>";
-            html += `<col style="width:${inputTokenWidth}px;">`;
-            visibleLayerIndices.forEach(() => {
-                html += `<col style="width:${cellWidth}px;">`;
-            });
-            html += "</colgroup>";
-
-            const halfwayCol = Math.floor(visibleLayerIndices.length / 2);
-
-            visiblePositions.forEach((pos, rowIdx) => {
-                const tok = data.tokens[pos];
-                const isFirstVisibleRow = rowIdx === 0;
-                html += "<tr>";
-                html += `<td class="input-token" data-pos="${pos}" title="${escapeHtml(tok)}" style="width:${inputTokenWidth}px; max-width:${inputTokenWidth}px;">`;
-                html += `${escapeHtml(tok)}`;
-                if (isFirstVisibleRow) {
-                    html += `<div class="resize-handle-input" data-col="-1"></div>`;
-                }
-                html += `</td>`;
-
-                const colorModeBaseColor = colorMode !== "top" ? getColorForToken(colorMode) : null;
-
-                visibleLayerIndices.forEach((li, colIdx) => {
-                    const cellData = data.cells[pos][li];
-                    let cellProb = colorMode === "top" ? cellData.prob :
-                        (cellData.topk.find(t => t.token === colorMode)?.prob || 0);
-
-                    const color = probToColor(cellProb, colorModeBaseColor);
-                    const textColor = cellProb < 0.5 ? "#333" : "#fff";
-                    let pinnedColor = getColorForToken(cellData.token);
-                    if (!pinnedColor) {
-                        const winningGroup = getWinningGroupAtCell(pos, li);
-                        if (winningGroup) pinnedColor = winningGroup.color;
-                    }
-                    const pinnedStyle = pinnedColor ? `box-shadow: inset 0 0 0 2px ${pinnedColor};` : "";
-
-                    const hasHandle = isFirstVisibleRow && colIdx < halfwayCol;
-
-                    html += `<td class="pred-cell${pinnedColor ? ' pinned' : ''}" ` +
-                        `data-pos="${pos}" data-li="${li}" data-col="${colIdx}" ` +
-                        `style="background:${color}; color:${textColor}; width:${cellWidth}px; max-width:${cellWidth}px; ${pinnedStyle}">` +
-                        `${escapeHtml(cellData.token)}`;
-                    if (hasHandle) {
-                        html += `<div class="resize-handle" data-col="${colIdx}"></div>`;
-                    }
-                    html += `</td>`;
-                });
-                html += "</tr>";
-            });
-
-            html += "<tr>";
-            html += `<th class="corner-hdr" style="width:${inputTokenWidth}px; max-width:${inputTokenWidth}px;">Layer<div class="resize-handle-input" data-col="-1"></div></th>`;
-            visibleLayerIndices.forEach((li, colIdx) => {
-                const hasHandle = colIdx < halfwayCol;
-                html += `<th class="layer-hdr" style="width:${cellWidth}px; max-width:${cellWidth}px;">${data.layers[li]}`;
-                if (hasHandle) {
-                    html += `<div class="resize-handle" data-col="${colIdx}"></div>`;
-                }
-                html += `</th>`;
-            });
-            html += "</tr>";
-
-            table.innerHTML = html;
-            attachCellListeners();
-            attachResizeListeners();
-
-            const containerWidth = getContainerWidth();
-            const actualTableWidth = table.offsetWidth;
-            if (actualTableWidth > containerWidth) {
-                console.log("Table width overflow detected:", {
-                    containerWidth,
-                    actualTableWidth,
-                    overflow: actualTableWidth - containerWidth,
-                    inputTokenWidth,
-                    cellWidth,
-                    numCols: visibleLayerIndices.length
-                });
-            }
-
-            updateHint(visibleLayerIndices);
-            updateTitle();
-
-            const chartInnerWidth = updateChartDimensions();
-            drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
-        }
-
-        function updateHint(visibleLayerIndices) {
-            const hint = document.getElementById(uid + "_resize_hint");
-            const stride = visibleLayerIndices.length < nLayers ? Math.ceil(nLayers / visibleLayerIndices.length) : 1;
-            hint.textContent = stride > 1 ?
-                `showing every ${stride} layers ending at ${nLayers-1} (drag column borders to adjust)` :
-                `showing all ${nLayers} layers`;
-        }
-
-        function updateTitle() {
-            const titleEl = document.getElementById(uid + "_title");
-            let displayLabel = "top";
-            if (colorMode !== "top") {
-                const groupIdx = findGroupForToken(colorMode);
-                if (groupIdx >= 0) {
-                    displayLabel = getGroupLabel(pinnedGroups[groupIdx]);
-                } else {
-                    displayLabel = visualizeSpaces(colorMode);
-                }
-            }
-            titleEl.innerHTML = `Logit Lens: ${colorMode === "top" ? "Top Predictions" : `<code>${escapeHtml(displayLabel)}</code> probability`} by Layer ` +
-                `<span class="color-mode-btn" id="${uid}_color_btn">&#9881;</span>`;
-            document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
-        }
-
-        function showColorModeMenu(e) {
-            e.stopPropagation();
-            const menu = document.getElementById(uid + "_color_menu");
-            const btn = document.getElementById(uid + "_color_btn");
-            const rect = btn.getBoundingClientRect();
-            const containerRect = document.getElementById(uid).getBoundingClientRect();
-            menu.style.left = (rect.left - containerRect.left) + "px";
-            menu.style.top = (rect.bottom - containerRect.top + 4) + "px";
-
-            let menuHtml = `<div class="color-menu-item" data-mode="top">Top prediction</div>`;
-            pinnedGroups.forEach((group) => {
-                const label = getGroupLabel(group);
-                group.tokens.forEach(token => {
-                    const displayToken = visualizeSpaces(token);
-                    menuHtml += `<div class="color-menu-item" data-mode="${escapeHtml(token)}" style="border-left: 3px solid ${group.color}; padding-left: 9px;">${escapeHtml(displayToken)} (${escapeHtml(label)})</div>`;
-                });
-            });
-            menu.innerHTML = menuHtml;
-
-            menu.querySelectorAll(".color-menu-item").forEach(item => {
-                item.addEventListener("click", (ev) => {
-                    colorMode = item.dataset.mode;
-                    menu.classList.remove("visible");
-                    buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
-                });
-            });
-
-            menu.classList.add("visible");
-        }
-
-        function attachCellListeners() {
-            document.querySelectorAll(`#${uid} .pred-cell, #${uid} .input-token`).forEach(cell => {
-                const pos = parseInt(cell.dataset.pos);
-                if (isNaN(pos)) return;
-
-                cell.addEventListener("mouseenter", () => {
-                    currentHoverPos = pos;
-                    const li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
-                    const cellData = data.cells[pos][li] || data.cells[pos][0];
-                    const chartInnerWidth = updateChartDimensions();
-                    const isPinned = findGroupForToken(cellData.token) >= 0;
-                    const hoverTraj = isPinned ? null : cellData.trajectory;
-                    const hoverColor = isPinned ? null : "#999";
-                    const hoverLabel = isPinned ? null : cellData.token;
-                    drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
-                });
-            });
-
-            document.querySelectorAll(`#${uid} .pred-cell`).forEach(cell => {
-                const pos = parseInt(cell.dataset.pos);
-                const li = parseInt(cell.dataset.li);
-                const cellData = data.cells[pos][li];
-
-                cell.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const addToGroup = e.shiftKey || e.ctrlKey || e.metaKey;
-                    if (openPopupCell === cell) {
-                        return;
-                    }
-                    showPopup(pos, li, cellData, cell, addToGroup);
-                });
-            });
-
-            document.getElementById(uid + "_popup_close").addEventListener("click", closePopup);
-        }
-
-        function showPopup(pos, li, cellData, cell, addToGroup = false) {
-            const popup = document.getElementById(uid + "_popup");
-            const content = document.getElementById(uid + "_popup_content");
-
-            document.querySelectorAll(`#${uid} .pred-cell.selected`).forEach(c => c.classList.remove("selected"));
-            cell.classList.add("selected");
-
-            document.getElementById(uid + "_popup_layer").textContent = data.layers[li];
-            document.getElementById(uid + "_popup_pos").innerHTML = pos + "<br>Input <code>" + escapeHtml(visualizeSpaces(data.tokens[pos])) + "</code>";
-
-            let html = "";
-            cellData.topk.forEach((item, idx) => {
-                const pinnedColor = getColorForToken(item.token);
-                const isActive = idx === 0;
-                const visualizedToken = visualizeSpaces(item.token);
-                html += `<div class="topk-item${isActive ? ' active' : ''}${pinnedColor ? ' pinned' : ''}" ` +
-                    `data-token="${escapeHtml(item.token)}" ` +
-                    `style="${pinnedColor ? 'color:' + pinnedColor + ';' : ''}">` +
-                    `<span class="topk-token">${escapeHtml(visualizedToken)}</span>` +
-                    `<span class="topk-prob">${(item.prob * 100).toFixed(1)}%</span></div>`;
-            });
-            content.innerHTML = html;
-
-            content.querySelectorAll(".topk-item").forEach(item => {
-                const token = item.dataset.token;
-
-                item.addEventListener("mouseenter", () => {
-                    const isPinned = findGroupForToken(token) >= 0;
-                    if (isPinned) return;
-                    const traj = getTrajectoryForToken(token, pos);
-                    const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(traj, "#999", token, chartInnerWidth, pos);
-                });
-
-                item.addEventListener("mouseleave", () => {
-                    const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(null, null, null, chartInnerWidth, pos);
-                });
-
-                item.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    const shiftOrCtrl = e.shiftKey || e.ctrlKey || e.metaKey;
-                    togglePinnedTrajectory(token, shiftOrCtrl);
-                    const pinnedColor = getColorForToken(token);
-                    if (pinnedColor) {
-                        item.classList.add("pinned");
-                        item.style.color = pinnedColor;
-                    } else {
-                        item.classList.remove("pinned");
-                        item.style.color = "";
-                    }
-                    buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
-                });
-            });
-
-            const containerRect = document.getElementById(uid).getBoundingClientRect();
-            const cellRect = cell.getBoundingClientRect();
-            let left = cellRect.right - containerRect.left + 8;
-            let top = cellRect.top - containerRect.top;
-
-            if (left + 200 > containerRect.width) {
-                left = cellRect.left - containerRect.left - 200;
-            }
-
-            popup.style.left = left + "px";
-            popup.style.top = top + "px";
-            popup.classList.add("visible");
-            openPopupCell = cell;
-        }
-
-        function closePopup() {
-            const popup = document.getElementById(uid + "_popup");
-            popup.classList.remove("visible");
-            document.querySelectorAll(`#${uid} .pred-cell.selected`).forEach(c => c.classList.remove("selected"));
-            openPopupCell = null;
-        }
-
-        function closeColorMenu() {
-            document.getElementById(uid + "_color_menu").classList.remove("visible");
-        }
-
-        function closeAllMenus() {
-            closePopup();
-            closeColorMenu();
-        }
-
-        function togglePinnedTrajectory(token, addToGroup = false) {
-            const existingGroupIdx = findGroupForToken(token);
-
-            if (addToGroup && lastPinnedGroupIndex >= 0 && lastPinnedGroupIndex < pinnedGroups.length) {
-                const lastGroup = pinnedGroups[lastPinnedGroupIndex];
-                if (existingGroupIdx === lastPinnedGroupIndex) {
-                    lastGroup.tokens = lastGroup.tokens.filter(t => t !== token);
-                    if (lastGroup.tokens.length === 0) {
-                        pinnedGroups.splice(lastPinnedGroupIndex, 1);
-                        lastPinnedGroupIndex = pinnedGroups.length - 1;
-                    }
-                } else if (existingGroupIdx >= 0) {
-                    pinnedGroups[existingGroupIdx].tokens = pinnedGroups[existingGroupIdx].tokens.filter(t => t !== token);
-                    if (pinnedGroups[existingGroupIdx].tokens.length === 0) {
-                        pinnedGroups.splice(existingGroupIdx, 1);
-                        if (lastPinnedGroupIndex > existingGroupIdx) lastPinnedGroupIndex--;
-                        else if (lastPinnedGroupIndex === existingGroupIdx) lastPinnedGroupIndex = pinnedGroups.length - 1;
-                    }
-                    lastGroup.tokens.push(token);
-                } else {
-                    lastGroup.tokens.push(token);
-                }
-            } else {
-                if (existingGroupIdx >= 0) {
-                    const group = pinnedGroups[existingGroupIdx];
-                    group.tokens = group.tokens.filter(t => t !== token);
-                    if (group.tokens.length === 0) {
-                        pinnedGroups.splice(existingGroupIdx, 1);
-                        if (lastPinnedGroupIndex >= pinnedGroups.length) {
-                            lastPinnedGroupIndex = pinnedGroups.length - 1;
-                        }
-                    }
-                    if (colorMode === token) colorMode = "top";
-                } else {
-                    const newGroup = { color: getNextColor(), tokens: [token] };
-                    pinnedGroups.push(newGroup);
-                    lastPinnedGroupIndex = pinnedGroups.length - 1;
-                }
-            }
-
-            const chartInnerWidth = updateChartDimensions();
-            drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
-        }
-
-        function updateChartDimensions() {
-            const svg = document.getElementById(uid + "_chart");
-            const inputCol = document.querySelector(`#${uid} .input-token`);
-            const actualInputRight = inputCol ? inputCol.getBoundingClientRect().width : inputTokenWidth;
-            const containerWidth = getContainerWidth();
-            const chartWidth = containerWidth;
-            svg.setAttribute("width", chartWidth);
-            const chartInnerWidth = chartWidth - actualInputRight - chartMargin.right;
-            return chartInnerWidth;
-        }
-
-        function drawAllTrajectories(hoverTrajectory, hoverColor, hoverLabel, chartInnerWidth, pos) {
-            const svg = document.getElementById(uid + "_chart");
-            svg.innerHTML = "";
-
-            const inputCol = document.querySelector(`#${uid} .input-token`);
-            const actualInputRight = inputCol ? inputCol.getBoundingClientRect().width : inputTokenWidth;
-
-            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            g.setAttribute("transform", `translate(${actualInputRight}, ${chartMargin.top})`);
-            svg.appendChild(g);
-
-            const legendG = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            legendG.setAttribute("transform", `translate(0, ${chartMargin.top})`);
-            svg.appendChild(legendG);
-
-            const dotRadius = 3;
-            const labelMargin = chartMargin.right;
-            const usableWidth = chartInnerWidth - labelMargin;
-            function layerToXForLabels(layerIdx) {
-                if (nLayers <= 1) return usableWidth / 2;
-                return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
-            }
-
-            const minLabelSpacing = 25;
-            const totalLabelsWidth = currentVisibleIndices.length * minLabelSpacing;
-            let labelStride = 1;
-            if (totalLabelsWidth > usableWidth) {
-                labelStride = Math.ceil(totalLabelsWidth / usableWidth);
-            }
-
-            const lastIdx = currentVisibleIndices.length - 1;
-            const showAtIndex = new Set();
-            for (let i = lastIdx; i >= 0; i -= labelStride) {
-                showAtIndex.add(i);
-            }
-            showAtIndex.add(0);
-            if (labelStride > 1) {
-                for (let i = lastIdx; i > 0; i -= labelStride) {
-                    if (i < labelStride) {
-                        showAtIndex.delete(i);
-                        break;
-                    }
-                }
-            }
-
-            currentVisibleIndices.forEach((layerIdx, i) => {
-                if (showAtIndex.has(i)) {
-                    const x = layerToXForLabels(layerIdx);
-                    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    label.setAttribute("x", x);
-                    label.setAttribute("y", chartInnerHeight + 12);
-                    label.setAttribute("text-anchor", "middle");
-                    label.setAttribute("font-size", "9");
-                    label.setAttribute("fill", "#666");
-                    label.textContent = data.layers[layerIdx];
-                    g.appendChild(label);
-                }
-            });
-
-            // Y axis line (draggable)
-            const yAxisGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            yAxisGroup.style.cursor = "col-resize";
-
-            const yAxisHitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            yAxisHitTarget.setAttribute("x", -4); yAxisHitTarget.setAttribute("y", 0);
-            yAxisHitTarget.setAttribute("width", 8); yAxisHitTarget.setAttribute("height", chartInnerHeight);
-            yAxisHitTarget.setAttribute("fill", "transparent");
-            yAxisGroup.appendChild(yAxisHitTarget);
-
-            const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            yAxis.setAttribute("x1", 0); yAxis.setAttribute("y1", 0);
-            yAxis.setAttribute("x2", 0); yAxis.setAttribute("y2", chartInnerHeight);
-            yAxis.setAttribute("stroke", "#ccc");
-            yAxisGroup.appendChild(yAxis);
-            g.appendChild(yAxisGroup);
-
-            yAxisGroup.addEventListener("mousedown", (e) => {
-                closeAllMenus();
-                yAxisDrag = { active: true, startX: e.clientX, startWidth: inputTokenWidth };
-                yAxis.setAttribute("stroke", "rgba(76, 175, 80, 0.6)");
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
-            // Y axis label
-            const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            yLabel.setAttribute("x", -chartInnerHeight / 2);
-            yLabel.setAttribute("y", -actualInputRight + 15);
-            yLabel.setAttribute("text-anchor", "middle");
-            yLabel.setAttribute("font-size", "10");
-            yLabel.setAttribute("fill", "#666");
-            yLabel.setAttribute("transform", "rotate(-90)");
-            yLabel.textContent = "Probability";
-            svg.appendChild(yLabel);
-
-            let allProbs = [];
-            pinnedGroups.forEach((group) => {
-                const traj = getGroupTrajectory(group, pos);
-                allProbs.push(...traj);
-            });
-            if (hoverTrajectory) allProbs.push(...hoverTrajectory);
-            const maxProb = Math.max(...allProbs, 0.1);
-
-            let legendY = chartMargin.top + 10;
-            pinnedGroups.forEach((group, groupIdx) => {
-                const traj = getGroupTrajectory(group, pos);
-                const groupLabel = getGroupLabel(group);
-                drawSingleTrajectory(g, traj, group.color, maxProb, groupLabel, false, chartInnerWidth);
-
-                const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                legendItem.setAttribute("transform", `translate(18, ${legendY})`);
-                legendItem.style.cursor = "pointer";
-
-                const hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
-                hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
-                hitTarget.setAttribute("fill", "transparent");
-                legendItem.appendChild(hitTarget);
-
-                const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                closeBtn.setAttribute("class", "legend-close");
-                closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
-                closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
-                closeBtn.style.display = "none";
-                closeBtn.textContent = "×";
-                legendItem.appendChild(closeBtn);
-
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
-                line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
-                line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
-                legendItem.appendChild(line);
-
-                const clipId = `${uid}_legend_clip_${groupIdx}`;
-                const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-                clipPath.setAttribute("id", clipId);
-                const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
-                clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
-                clipPath.appendChild(clipRect);
-                legendItem.appendChild(clipPath);
-
-                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", "20"); text.setAttribute("y", "4");
-                text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
-                text.setAttribute("clip-path", `url(#${clipId})`);
-                text.textContent = groupLabel;
-                legendItem.appendChild(text);
-
-                legendItem.addEventListener("mouseenter", () => { closeBtn.style.display = "block"; });
-                legendItem.addEventListener("mouseleave", () => { closeBtn.style.display = "none"; });
-                closeBtn.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    pinnedGroups.splice(groupIdx, 1);
-                    if (lastPinnedGroupIndex >= pinnedGroups.length) {
-                        lastPinnedGroupIndex = pinnedGroups.length - 1;
-                    }
-                    buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
-                });
-
-                legendG.appendChild(legendItem);
-                legendY += 14;
-            });
-
-            if (hoverTrajectory && hoverLabel) {
-                drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth);
-
-                const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                legendItem.setAttribute("class", "legend-item hover-legend");
-                legendItem.setAttribute("transform", `translate(18, ${legendY})`);
-
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
-                line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
-                line.setAttribute("stroke", hoverColor || "#999");
-                line.setAttribute("stroke-width", "1.5");
-                line.setAttribute("stroke-dasharray", "4,2");
-                line.style.opacity = "0.7";
-                legendItem.appendChild(line);
-
-                const clipId = `${uid}_hover_clip`;
-                const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
-                clipPath.setAttribute("id", clipId);
-                const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
-                clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
-                clipPath.appendChild(clipRect);
-                legendItem.appendChild(clipPath);
-
-                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", "20"); text.setAttribute("y", "4");
-                text.setAttribute("font-size", "9"); text.setAttribute("fill", "#666");
-                text.setAttribute("clip-path", `url(#${clipId})`);
-                text.textContent = visualizeSpaces(hoverLabel);
-                legendItem.appendChild(text);
-
-                legendG.appendChild(legendItem);
-            }
-        }
-
-        function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {
-            if (!trajectory || trajectory.length === 0) return;
-
-            const dotRadius = isHover ? 2 : 3;
-            const labelMargin = chartMargin.right;
-            const usableWidth = chartInnerWidth - labelMargin;
-            function layerToX(layerIdx) {
-                if (nLayers <= 1) return usableWidth / 2;
-                return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
-            }
-
-            const points = trajectory.map((prob, layerIdx) => {
-                const x = layerToX(layerIdx);
-                const y = chartInnerHeight - (prob / maxProb) * chartInnerHeight;
-                return { x, y, prob, layerIdx };
-            });
-
-            const pathD = points.map((p, i) => (i === 0 ? "M" : "L") + `${p.x},${p.y}`).join(" ");
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", pathD);
-            path.setAttribute("fill", "none");
-            path.setAttribute("stroke", color);
-            path.setAttribute("stroke-width", isHover ? "1.5" : "2");
-            if (isHover) {
-                path.setAttribute("stroke-dasharray", "4,2");
-                path.style.opacity = "0.7";
-            }
-            g.appendChild(path);
-
-            currentVisibleIndices.forEach(layerIdx => {
-                const p = points[layerIdx];
-                if (!p) return;
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", p.x);
-                circle.setAttribute("cy", p.y);
-                circle.setAttribute("r", dotRadius);
-                circle.setAttribute("fill", color);
-                if (isHover) circle.style.opacity = "0.7";
-                g.appendChild(circle);
-            });
-        }
-
-        // Global click handler - close menus when clicking outside
-        document.addEventListener("click", (e) => {
-            const inPopup = e.target.closest(`#${uid} .popup`);
-            const inPredCell = e.target.closest(`#${uid} .pred-cell`);
-            const inColorBtn = e.target.closest(`#${uid} .color-mode-btn`);
-            const inColorMenu = e.target.closest(`#${uid}_color_menu`);
-
-            // Close popup if clicking outside popup and not on a pred-cell (unless clicking color btn)
-            if (!inPopup && !inPredCell) {
-                closePopup();
-            }
-            // Close color menu if clicking outside it and the button (unless clicking on popup)
-            if (!inColorBtn && !inColorMenu) {
-                closeColorMenu();
-            }
-            // If clicking color button, also close the popup
-            if (inColorBtn) {
-                closePopup();
-            }
-            // If clicking pred-cell, also close color menu
-            if (inPredCell) {
-                closeColorMenu();
-            }
-        });
-
-        document.getElementById(uid).addEventListener("mousedown", (e) => {
-            if (e.shiftKey) e.preventDefault();
-        });
-
-        document.getElementById(uid).addEventListener("mouseleave", () => {
-            currentHoverPos = data.tokens.length - 1;
-            const chartInnerWidth = updateChartDimensions();
-            drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
-        });
-
-        // Bottom resize handle
-        (function() {
-            const handle = document.getElementById(uid + "_resize_bottom");
-            let isDragging = false, startY = 0, startMaxRows = null;
-
-            handle.addEventListener("mousedown", (e) => {
-                closeAllMenus();
-                isDragging = true;
-                startY = e.clientY;
-                startMaxRows = currentMaxRows;
-                handle.classList.add("dragging");
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (!isDragging) return;
-                const delta = e.clientY - startY;
-                const rowHeight = 18;
-                const rowDelta = Math.round(delta / rowHeight);
-
-                const totalTokens = data.tokens.length;
-                const startRows = startMaxRows === null ? totalTokens : startMaxRows;
-                let newMaxRows = startRows + rowDelta;
-                newMaxRows = Math.max(1, Math.min(totalTokens, newMaxRows));
-                if (newMaxRows >= totalTokens) newMaxRows = null;
-
-                if (newMaxRows !== currentMaxRows) {
-                    buildTable(currentCellWidth, currentVisibleIndices, newMaxRows);
-                }
-            });
-
-            document.addEventListener("mouseup", () => {
-                if (isDragging) {
-                    isDragging = false;
-                    handle.classList.remove("dragging");
-                }
-            });
-        })();
-
-        // Initial build
-        const containerWidth = getContainerWidth();
-        const { indices } = computeVisibleLayers(currentCellWidth, containerWidth);
-        buildTable(currentCellWidth, indices, currentMaxRows);
-    }
-
-    return { create };
-})();
-
-// Create widget with data
-const widgetData = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
+// Use real data from NDIF via JSONP (preview_data.js)
+const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     layers: [0, 1, 2, 3],
     tokens: ["Fallback", " data"],
     cells: [[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5],topk:[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5]}]}]]
 };
 
-LogitLensWidget.create(document.getElementById("viz"), widgetData);
+// Widget factory - each call creates an independent instance
+var LogitLensWidget = (function() {
+    var instanceCount = 0;
+
+    return function(containerId, widgetData) {
+        var uid = "ll_interact_" + instanceCount++;
+        var container = document.getElementById(containerId);
+        if (!container) {
+            console.error("Container not found:", containerId);
+            return;
+        }
+
+        // Inject scoped CSS
+        var style = document.createElement("style");
+        style.textContent = `
+            #${uid} {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                margin: 20px 0;
+                position: relative;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+            #${uid} .ll-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+            #${uid} .color-mode-btn {
+                display: inline-block; padding: 2px 4px; background: white;
+                border-radius: 4px; font-size: 16px; cursor: pointer; color: #333;
+                border: 1px solid #ccc;
+            }
+            #${uid} .color-mode-btn:hover { background: #f5f5f5; }
+            #${uid} .ll-table { border-collapse: collapse; font-size: 10px; table-layout: fixed; }
+            #${uid} .ll-table td, #${uid} .ll-table th { border: 1px solid #ddd; box-sizing: border-box; }
+            #${uid} .pred-cell {
+                height: 22px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                padding: 2px 4px; font-family: monospace; font-size: 9px; cursor: pointer; position: relative;
+            }
+            #${uid} .pred-cell:hover { outline: 2px solid #e91e63; outline-offset: -1px; }
+            #${uid} .pred-cell.selected { background: #fff59d !important; color: #333 !important; }
+            #${uid} .input-token {
+                padding: 2px 8px; text-align: right; font-weight: 500; color: #333;
+                background: #f5f5f5; white-space: nowrap; overflow: hidden;
+                text-overflow: ellipsis; font-family: monospace; font-size: 10px; cursor: pointer;
+                position: relative;
+            }
+            #${uid} .input-token:hover { background: #e8e8e8; }
+            #${uid} .layer-hdr {
+                padding: 4px 2px; text-align: center; font-weight: 500; color: #666;
+                background: #f5f5f5; font-size: 9px; position: relative;
+            }
+            #${uid} .corner-hdr { padding: 4px 8px; text-align: right; font-weight: 500; color: #666; background: white; position: relative; }
+            #${uid} .chart-container { margin-top: 8px; background: #fafafa; border-radius: 4px; padding: 8px 0; }
+            #${uid} .chart-container svg { display: block; margin: 0; padding: 0; }
+            #${uid} .popup {
+                display: none; position: absolute; background: white; border: 1px solid #ddd;
+                border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 12px;
+                z-index: 100; min-width: 180px; max-width: 280px;
+            }
+            #${uid} .popup.visible { display: block; }
+            #${uid} .popup-header { font-weight: 600; font-size: 13px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+            #${uid} .popup-header code { font-weight: 400; font-size: 12px; background: #f5f5f5; padding: 2px 6px; border-radius: 3px; margin-left: 4px; }
+            #${uid} .popup-close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #999; font-size: 16px; }
+            #${uid} .popup-close:hover { color: #333; }
+            #${uid} .topk-item {
+                padding: 4px 6px; margin: 2px 0; border-radius: 3px; cursor: pointer;
+                display: flex; justify-content: space-between; font-size: 11px;
+            }
+            #${uid} .topk-item:hover { background: #e3f2fd; }
+            #${uid} .topk-item.active { background: #bbdefb; }
+            #${uid} .topk-token { font-family: monospace; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            #${uid} .topk-prob { color: #666; margin-left: 8px; }
+            #${uid} .topk-item.pinned { border-left: 3px solid currentColor; }
+            #${uid} .resize-handle {
+                position: absolute; width: 6px; height: 100%; background: transparent;
+                cursor: col-resize; right: -3px; top: 0; z-index: 10;
+            }
+            #${uid} .resize-handle:hover, #${uid} .resize-handle.dragging { background: rgba(33, 150, 243, 0.4); }
+            #${uid} .resize-handle-input {
+                position: absolute; width: 6px; height: 100%; background: transparent;
+                cursor: col-resize; right: -3px; top: 0; z-index: 10;
+            }
+            #${uid} .resize-handle-input:hover, #${uid} .resize-handle-input.dragging { background: rgba(76, 175, 80, 0.4); }
+            #${uid} .table-wrapper { position: relative; display: inline-block; }
+            #${uid} .resize-handle-bottom {
+                position: absolute; bottom: 0; left: 0; right: 0; height: 6px;
+                cursor: row-resize; background: transparent;
+            }
+            #${uid} .resize-handle-bottom:hover, #${uid} .resize-handle-bottom.dragging { background: rgba(33, 150, 243, 0.4); }
+            #${uid} .resize-hint { font-size: 9px; color: #999; margin-top: 4px; }
+            #${uid} .color-menu {
+                display: none; position: absolute; background: white; border: 1px solid #ddd;
+                border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 200; min-width: 150px;
+            }
+            #${uid} .color-menu.visible { display: block; }
+            #${uid} .color-menu-item { padding: 8px 12px; cursor: pointer; font-size: 12px; }
+            #${uid} .color-menu-item:hover { background: #f0f0f0; }
+            #${uid} .legend-close { cursor: pointer; }
+            #${uid} .legend-close:hover { fill: #e91e63 !important; }
+        `;
+        document.head.appendChild(style);
+
+        // Inject HTML structure
+        container.innerHTML = `
+            <div id="${uid}">
+                <div class="ll-title" id="${uid}_title">Logit Lens: Top Predictions by Layer</div>
+                <div class="table-wrapper">
+                    <table class="ll-table" id="${uid}_table"></table>
+                    <div class="resize-handle-bottom" id="${uid}_resize_bottom"></div>
+                </div>
+                <div class="resize-hint" id="${uid}_resize_hint">drag column borders to resize</div>
+                <div class="chart-container" id="${uid}_chart_container">
+                    <svg id="${uid}_chart" height="140"></svg>
+                </div>
+                <div class="popup" id="${uid}_popup">
+                    <span class="popup-close" id="${uid}_popup_close">&times;</span>
+                    <div class="popup-header">
+                        Layer <span id="${uid}_popup_layer"></span>, Position <span id="${uid}_popup_pos"></span>
+                    </div>
+                    <div id="${uid}_popup_content"></div>
+                </div>
+                <div class="color-menu" id="${uid}_color_menu"></div>
+            </div>
+        `;
+
+        // Widget logic (same as original, just using uid and widgetData)
+        (function() {
+            var nLayers = widgetData.layers.length;
+            var chartHeight = 140;
+            var chartMargin = { top: 10, right: 8, bottom: 25, left: 10 };
+            var chartInnerHeight = chartHeight - chartMargin.top - chartMargin.bottom;
+            var minCellWidth = 10;
+            var maxCellWidth = 200;
+
+            var inputTokenWidth = 100;
+            var currentCellWidth = 44;
+            var currentVisibleIndices = [];
+            var currentMaxRows = null;
+            var openPopupCell = null;
+            var currentHoverPos = widgetData.tokens.length - 1;
+            var colorMode = "top";
+
+            var pinnedGroups = [];
+            var lastPinnedGroupIndex = -1;
+            var colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
+            var colorIndex = 0;
+
+            function getNextColor() {
+                var c = colors[colorIndex % colors.length];
+                colorIndex++;
+                return c;
+            }
+
+            function getColorForToken(token) {
+                for (var i = 0; i < pinnedGroups.length; i++) {
+                    if (pinnedGroups[i].tokens.indexOf(token) >= 0) return pinnedGroups[i].color;
+                }
+                return null;
+            }
+
+            function findGroupForToken(token) {
+                for (var i = 0; i < pinnedGroups.length; i++) {
+                    if (pinnedGroups[i].tokens.indexOf(token) >= 0) return i;
+                }
+                return -1;
+            }
+
+            function getGroupLabel(group) {
+                return group.tokens.map(function(t) { return visualizeSpaces(t); }).join("+");
+            }
+
+            function getGroupTrajectory(group, pos) {
+                var result = widgetData.layers.map(function() { return 0; });
+                for (var i = 0; i < group.tokens.length; i++) {
+                    var traj = getTrajectoryForToken(group.tokens[i], pos);
+                    for (var j = 0; j < result.length; j++) {
+                        result[j] += traj[j];
+                    }
+                }
+                return result;
+            }
+
+            function getGroupProbAtLayer(group, pos, layerIdx) {
+                var sum = 0;
+                for (var i = 0; i < group.tokens.length; i++) {
+                    var traj = getTrajectoryForToken(group.tokens[i], pos);
+                    sum += traj[layerIdx] || 0;
+                }
+                return sum;
+            }
+
+            function getWinningGroupAtCell(pos, layerIdx) {
+                var cellData = widgetData.cells[pos][layerIdx];
+                var top1Prob = cellData.prob;
+                var winningGroup = null;
+                var winningProb = top1Prob;
+
+                for (var i = 0; i < pinnedGroups.length; i++) {
+                    var groupProb = getGroupProbAtLayer(pinnedGroups[i], pos, layerIdx);
+                    if (groupProb > winningProb) {
+                        winningProb = groupProb;
+                        winningGroup = pinnedGroups[i];
+                    }
+                }
+                return winningGroup;
+            }
+
+            function escapeHtml(text) {
+                var div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            function visualizeSpaces(text) {
+                var result = text;
+                var leadingSpaces = 0;
+                while (leadingSpaces < result.length && result[leadingSpaces] === ' ') leadingSpaces++;
+                if (leadingSpaces > 0) {
+                    result = '\u02FD'.repeat(leadingSpaces) + result.slice(leadingSpaces);
+                }
+                var trailingSpaces = 0;
+                while (trailingSpaces < result.length && result[result.length - 1 - trailingSpaces] === ' ') trailingSpaces++;
+                if (trailingSpaces > 0) {
+                    result = result.slice(0, result.length - trailingSpaces) + '\u02FD'.repeat(trailingSpaces);
+                }
+                return result;
+            }
+
+            function probToColor(prob, baseColor) {
+                if (baseColor) {
+                    var hex = baseColor.replace('#', '');
+                    var r = parseInt(hex.substr(0, 2), 16);
+                    var g = parseInt(hex.substr(2, 2), 16);
+                    var b = parseInt(hex.substr(4, 2), 16);
+                    var blend = prob;
+                    var rr = Math.round(255 - (255 - r) * blend);
+                    var gg = Math.round(255 - (255 - g) * blend);
+                    var bb = Math.round(255 - (255 - b) * blend);
+                    return "rgb(" + rr + "," + gg + "," + bb + ")";
+                }
+                var rVal = Math.round(255 * (1 - prob * 0.8));
+                var gVal = Math.round(255 * (1 - prob * 0.6));
+                return "rgb(" + rVal + "," + gVal + ",255)";
+            }
+
+            function getTrajectoryForToken(token, pos) {
+                for (var li = 0; li < widgetData.cells[pos].length; li++) {
+                    var cellData = widgetData.cells[pos][li];
+                    if (cellData.token === token) return cellData.trajectory;
+                    for (var ki = 0; ki < cellData.topk.length; ki++) {
+                        if (cellData.topk[ki].token === token) return cellData.topk[ki].trajectory;
+                    }
+                }
+                return widgetData.layers.map(function() { return 0; });
+            }
+
+            function computeVisibleLayers(cellWidth, containerWidth) {
+                var availableWidth = containerWidth - inputTokenWidth - 1;
+                var maxCols = Math.max(1, Math.floor(availableWidth / cellWidth));
+
+                if (maxCols >= nLayers) {
+                    return { stride: 1, indices: widgetData.layers.map(function(_, i) { return i; }) };
+                }
+
+                var stride = maxCols > 1
+                    ? Math.max(1, Math.floor((nLayers - 1) / (maxCols - 1)))
+                    : nLayers;
+
+                var indices = [];
+                var lastLayer = nLayers - 1;
+                for (var i = lastLayer; i >= 0; i -= stride) {
+                    indices.unshift(i);
+                }
+
+                while (indices.length > maxCols) {
+                    indices.shift();
+                }
+
+                return { stride: stride, indices: indices };
+            }
+
+            function updateChartDimensions() {
+                var table = document.getElementById(uid + "_table");
+                var tableWidth = table.offsetWidth;
+                var svg = document.getElementById(uid + "_chart");
+                svg.setAttribute("width", tableWidth);
+
+                var firstInputCell = table.querySelector(".input-token");
+                if (firstInputCell) {
+                    var tableRect = table.getBoundingClientRect();
+                    var inputCellRect = firstInputCell.getBoundingClientRect();
+                    var actualInputRight = inputCellRect.right - tableRect.left;
+                    return tableWidth - actualInputRight;
+                }
+                return tableWidth - inputTokenWidth;
+            }
+
+            function buildTable(cellWidth, visibleLayerIndices, maxRows) {
+                currentVisibleIndices = visibleLayerIndices;
+                currentMaxRows = maxRows;
+                var table = document.getElementById(uid + "_table");
+                var html = "";
+
+                var totalTokens = widgetData.tokens.length;
+                var visiblePositions;
+                if (maxRows === null || maxRows >= totalTokens) {
+                    visiblePositions = widgetData.tokens.map(function(_, i) { return i; });
+                } else {
+                    var startPos = totalTokens - maxRows;
+                    visiblePositions = [];
+                    for (var i = startPos; i < totalTokens; i++) {
+                        visiblePositions.push(i);
+                    }
+                }
+
+                html += "<colgroup>";
+                html += '<col style="width:' + inputTokenWidth + 'px;">';
+                visibleLayerIndices.forEach(function() {
+                    html += '<col style="width:' + cellWidth + 'px;">';
+                });
+                html += "</colgroup>";
+
+                var halfwayCol = Math.floor(visibleLayerIndices.length / 2);
+
+                // Get base color for heatmap (if colorMode is a pinned token)
+                var colorModeBaseColor = colorMode !== "top" ? getColorForToken(colorMode) : null;
+
+                visiblePositions.forEach(function(pos, rowIdx) {
+                    var tok = widgetData.tokens[pos];
+                    var isFirstVisibleRow = rowIdx === 0;
+                    html += "<tr>";
+                    html += '<td class="input-token" data-pos="' + pos + '" title="' + escapeHtml(tok) + '" style="width:' + inputTokenWidth + 'px; max-width:' + inputTokenWidth + 'px;">';
+                    html += escapeHtml(tok);
+                    if (isFirstVisibleRow) {
+                        html += '<div class="resize-handle-input" data-col="-1"></div>';
+                    }
+                    html += '</td>';
+
+                    visibleLayerIndices.forEach(function(li, colIdx) {
+                        var cellData = widgetData.cells[pos][li];
+                        var cellProb = colorMode === "top" ? cellData.prob :
+                            (cellData.topk.find(function(t) { return t.token === colorMode; }) || {prob: 0}).prob;
+
+                        var color = probToColor(cellProb, colorModeBaseColor);
+                        var textColor = cellProb < 0.5 ? "#333" : "#fff";
+                        var pinnedColor = getColorForToken(cellData.token);
+                        if (!pinnedColor) {
+                            var winningGroup = getWinningGroupAtCell(pos, li);
+                            if (winningGroup) pinnedColor = winningGroup.color;
+                        }
+                        var pinnedStyle = pinnedColor ? "box-shadow: inset 0 0 0 2px " + pinnedColor + ";" : "";
+
+                        var hasHandle = isFirstVisibleRow && colIdx < halfwayCol;
+
+                        html += '<td class="pred-cell' + (pinnedColor ? ' pinned' : '') + '" ' +
+                            'data-pos="' + pos + '" data-li="' + li + '" data-col="' + colIdx + '" ' +
+                            'style="background:' + color + '; color:' + textColor + '; width:' + cellWidth + 'px; max-width:' + cellWidth + 'px; ' + pinnedStyle + '">' +
+                            escapeHtml(cellData.token);
+                        if (hasHandle) {
+                            html += '<div class="resize-handle" data-col="' + colIdx + '"></div>';
+                        }
+                        html += '</td>';
+                    });
+                    html += "</tr>";
+                });
+
+                html += "<tr>";
+                html += '<th class="corner-hdr" style="width:' + inputTokenWidth + 'px; max-width:' + inputTokenWidth + 'px;">Layer<div class="resize-handle-input" data-col="-1"></div></th>';
+                visibleLayerIndices.forEach(function(li, colIdx) {
+                    var hasHandle = colIdx < halfwayCol;
+                    html += '<th class="layer-hdr" style="width:' + cellWidth + 'px; max-width:' + cellWidth + 'px;">' + widgetData.layers[li];
+                    if (hasHandle) {
+                        html += '<div class="resize-handle" data-col="' + colIdx + '"></div>';
+                    }
+                    html += '</th>';
+                });
+                html += "</tr>";
+
+                table.innerHTML = html;
+                attachCellListeners();
+                attachResizeListeners();
+
+                var containerWidth = getContainerWidth();
+                var actualTableWidth = table.offsetWidth;
+                if (actualTableWidth > containerWidth) {
+                    console.log("Table width overflow detected:", {
+                        containerWidth: containerWidth,
+                        actualTableWidth: actualTableWidth,
+                        overflow: actualTableWidth - containerWidth
+                    });
+                }
+
+                var chartInnerWidth = updateChartDimensions();
+                drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
+                updateTitle();
+
+                var hint = document.getElementById(uid + "_resize_hint");
+                var stride = visibleLayerIndices.length < nLayers ? Math.ceil(nLayers / visibleLayerIndices.length) : 1;
+                hint.textContent = stride > 1 ?
+                    "showing every " + stride + " layers ending at " + (nLayers-1) + " (drag column borders to adjust)" :
+                    "showing all " + nLayers + " layers";
+            }
+
+            function updateTitle() {
+                var titleEl = document.getElementById(uid + "_title");
+                var displayLabel = "Top prediction";
+                var pinnedColor = null;
+
+                if (colorMode !== "top") {
+                    var groupIdx = findGroupForToken(colorMode);
+                    if (groupIdx >= 0) {
+                        var group = pinnedGroups[groupIdx];
+                        displayLabel = getGroupLabel(group);
+                        pinnedColor = group.color;
+                    } else {
+                        displayLabel = visualizeSpaces(colorMode);
+                    }
+                }
+
+                var btnStyle = pinnedColor ? "background: " + pinnedColor + "22; border-color: " + pinnedColor + ";" : "";
+
+                titleEl.innerHTML = 'Logit Lens: Top Predictions by Layer <span class="color-mode-btn" id="' + uid + '_color_btn" style="' + btnStyle + '">(' + escapeHtml(displayLabel) + ')</span>';
+                document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
+            }
+
+            function showColorModeMenu(e) {
+                e.stopPropagation();
+                var menu = document.getElementById(uid + "_color_menu");
+                var btn = e.target;
+                var rect = btn.getBoundingClientRect();
+                var containerRect = document.getElementById(uid).getBoundingClientRect();
+
+                menu.style.left = (rect.left - containerRect.left) + "px";
+                menu.style.top = (rect.bottom - containerRect.top + 5) + "px";
+
+                var lastPos = widgetData.tokens.length - 1;
+                var lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
+                var topToken = widgetData.cells[lastPos][lastLayerIdx].token;
+
+                var html = '<div class="color-menu-item" data-mode="top">Top prediction</div>';
+
+                if (findGroupForToken(topToken) < 0) {
+                    html += '<div class="color-menu-item" data-mode="' + escapeHtml(topToken) + '">' + escapeHtml(topToken) + '</div>';
+                }
+
+                pinnedGroups.forEach(function(group) {
+                    var label = getGroupLabel(group);
+                    var modeToken = group.tokens[0];
+                    html += '<div class="color-menu-item" data-mode="' + escapeHtml(modeToken) + '" style="border-left: 3px solid ' + group.color + ';">' + escapeHtml(label) + '</div>';
+                });
+
+                menu.innerHTML = html;
+                menu.classList.add("visible");
+
+                menu.querySelectorAll(".color-menu-item").forEach(function(item) {
+                    item.addEventListener("click", function(ev) {
+                        ev.stopPropagation();
+                        colorMode = item.dataset.mode;
+                        menu.classList.remove("visible");
+                        buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                    });
+                });
+            }
+
+            function getContainerWidth() {
+                var el = document.getElementById(uid);
+                return el.offsetWidth || 900;
+            }
+
+            // Shared drag state for column resizing (prevents listener accumulation)
+            var colResizeDrag = { active: false, type: null, startX: 0, startWidth: 0, colIdx: 0 };
+            var yAxisDrag = { active: false, startX: 0, startWidth: 0 };
+
+            function attachResizeListeners() {
+                document.querySelectorAll("#" + uid + " .resize-handle-input").forEach(function(handle) {
+                    handle.addEventListener("mousedown", function(e) {
+                        closePopup();
+                        colResizeDrag = { active: true, type: 'input', startX: e.clientX, startWidth: inputTokenWidth, colIdx: 0 };
+                        handle.classList.add("dragging");
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+
+                document.querySelectorAll("#" + uid + " .resize-handle").forEach(function(handle) {
+                    var colIdx = parseInt(handle.dataset.col);
+                    handle.addEventListener("mousedown", function(e) {
+                        closePopup();
+                        colResizeDrag = { active: true, type: 'column', startX: e.clientX, startWidth: currentCellWidth, colIdx: colIdx };
+                        handle.classList.add("dragging");
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                });
+            }
+
+            // Single document-level listeners for column resize (added once per widget)
+            document.addEventListener("mousemove", function(e) {
+                if (!colResizeDrag.active) return;
+                var delta = e.clientX - colResizeDrag.startX;
+
+                if (colResizeDrag.type === 'input') {
+                    inputTokenWidth = Math.max(40, Math.min(200, colResizeDrag.startWidth + delta));
+                    var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                    buildTable(currentCellWidth, result.indices, currentMaxRows);
+                } else if (colResizeDrag.type === 'column') {
+                    var numCols = colResizeDrag.colIdx + 1;
+                    var widthDelta = delta / numCols;
+                    var newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, colResizeDrag.startWidth + widthDelta));
+                    if (Math.abs(newWidth - currentCellWidth) > 1) {
+                        currentCellWidth = newWidth;
+                        var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                        buildTable(currentCellWidth, result.indices, currentMaxRows);
+                    }
+                }
+            });
+
+            document.addEventListener("mouseup", function() {
+                if (colResizeDrag.active) {
+                    colResizeDrag.active = false;
+                    document.querySelectorAll("#" + uid + " .resize-handle-input, #" + uid + " .resize-handle").forEach(function(h) {
+                        h.classList.remove("dragging");
+                    });
+                }
+                if (yAxisDrag.active) {
+                    yAxisDrag.active = false;
+                }
+            });
+
+            document.addEventListener("mousemove", function(e) {
+                if (!yAxisDrag.active) return;
+                var delta = e.clientX - yAxisDrag.startX;
+                inputTokenWidth = Math.max(40, Math.min(200, yAxisDrag.startWidth + delta));
+                var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                buildTable(currentCellWidth, result.indices, currentMaxRows);
+            });
+
+            function attachCellListeners() {
+                document.querySelectorAll("#" + uid + " .pred-cell, #" + uid + " .input-token").forEach(function(cell) {
+                    var pos = parseInt(cell.dataset.pos);
+                    if (isNaN(pos)) return;
+
+                    cell.addEventListener("mouseenter", function() {
+                        currentHoverPos = pos;
+                        var li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
+                        var cellData = widgetData.cells[pos][li] || widgetData.cells[pos][0];
+                        var chartInnerWidth = updateChartDimensions();
+                        var isPinned = findGroupForToken(cellData.token) >= 0;
+                        var hoverTraj = isPinned ? null : cellData.trajectory;
+                        var hoverColor = isPinned ? null : "#999";
+                        var hoverLabel = isPinned ? null : cellData.token;
+                        drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
+                    });
+                });
+
+                document.querySelectorAll("#" + uid + " .pred-cell").forEach(function(cell) {
+                    var pos = parseInt(cell.dataset.pos);
+                    var li = parseInt(cell.dataset.li);
+                    var cellData = widgetData.cells[pos][li];
+
+                    cell.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        var addToGroup = e.shiftKey || e.ctrlKey || e.metaKey;
+                        if (e.shiftKey) {
+                            togglePinnedTrajectory(cellData.token, addToGroup);
+                            buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                            return;
+                        }
+                        if (openPopupCell === cell) { closePopup(); return; }
+                        document.querySelectorAll("#" + uid + " .pred-cell.selected").forEach(function(c) { c.classList.remove("selected"); });
+                        cell.classList.add("selected");
+                        showPopup(cell, pos, li, cellData);
+                    });
+                });
+
+                document.getElementById(uid + "_popup_close").addEventListener("click", closePopup);
+            }
+
+            function closePopup() {
+                document.getElementById(uid + "_popup").classList.remove("visible");
+                document.querySelectorAll("#" + uid + " .pred-cell.selected").forEach(function(c) { c.classList.remove("selected"); });
+                openPopupCell = null;
+            }
+
+            function showPopup(cell, pos, li, cellData) {
+                openPopupCell = cell;
+                var popup = document.getElementById(uid + "_popup");
+                var rect = cell.getBoundingClientRect();
+                var containerRect = document.getElementById(uid).getBoundingClientRect();
+
+                popup.style.left = (rect.left - containerRect.left + rect.width + 5) + "px";
+                popup.style.top = (rect.top - containerRect.top) + "px";
+
+                document.getElementById(uid + "_popup_layer").textContent = widgetData.layers[li];
+                document.getElementById(uid + "_popup_pos").innerHTML = pos + "<br>Input <code>" + escapeHtml(visualizeSpaces(widgetData.tokens[pos])) + "</code>";
+
+                var contentHtml = "";
+                cellData.topk.forEach(function(item, ki) {
+                    var probPct = (item.prob * 100).toFixed(1);
+                    var pinnedColor = getColorForToken(item.token);
+                    var pinnedStyle = pinnedColor ? "background: " + pinnedColor + "22; border-left-color: " + pinnedColor + ";" : "";
+                    var visualizedToken = visualizeSpaces(item.token);
+                    contentHtml += '<div class="topk-item' + (pinnedColor ? ' pinned' : '') + '" data-ki="' + ki + '" style="' + pinnedStyle + '">';
+                    contentHtml += '<span class="topk-token" title="' + escapeHtml(visualizedToken) + '">' + escapeHtml(visualizedToken) + '</span>';
+                    contentHtml += '<span class="topk-prob">' + probPct + '%</span>';
+                    contentHtml += '</div>';
+                });
+
+                document.getElementById(uid + "_popup_content").innerHTML = contentHtml;
+
+                document.querySelectorAll("#" + uid + "_popup_content .topk-item").forEach(function(item) {
+                    var ki = parseInt(item.dataset.ki);
+                    var tokData = cellData.topk[ki];
+
+                    item.addEventListener("mouseenter", function() {
+                        document.querySelectorAll("#" + uid + "_popup_content .topk-item").forEach(function(it) { it.classList.remove("active"); });
+                        item.classList.add("active");
+                        var chartInnerWidth = updateChartDimensions();
+                        var isPinned = findGroupForToken(tokData.token) >= 0;
+                        var hoverTraj = isPinned ? null : tokData.trajectory;
+                        drawAllTrajectories(hoverTraj, "#999", tokData.token, chartInnerWidth, pos);
+                    });
+
+                    item.addEventListener("mouseleave", function() {
+                        var chartInnerWidth = updateChartDimensions();
+                        drawAllTrajectories(null, null, null, chartInnerWidth, pos);
+                    });
+
+                    item.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        var addToGroup = e.shiftKey || e.ctrlKey || e.metaKey;
+                        togglePinnedTrajectory(tokData.token, addToGroup);
+                        buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                        var newCell = document.querySelector("#" + uid + " .pred-cell[data-pos='" + pos + "'][data-li='" + li + "']");
+                        if (newCell) {
+                            newCell.classList.add("selected");
+                            showPopup(newCell, pos, li, cellData);
+                        }
+                    });
+                });
+
+                popup.classList.add("visible");
+                var chartInnerWidth = updateChartDimensions();
+                var isPinned = findGroupForToken(cellData.token) >= 0;
+                var hoverTraj = isPinned ? null : cellData.trajectory;
+                drawAllTrajectories(hoverTraj, "#999", cellData.token, chartInnerWidth, pos);
+            }
+
+            function togglePinnedTrajectory(token, addToGroup) {
+                var existingGroupIdx = findGroupForToken(token);
+
+                if (addToGroup && lastPinnedGroupIndex >= 0 && lastPinnedGroupIndex < pinnedGroups.length) {
+                    var lastGroup = pinnedGroups[lastPinnedGroupIndex];
+
+                    if (existingGroupIdx === lastPinnedGroupIndex) {
+                        lastGroup.tokens = lastGroup.tokens.filter(function(t) { return t !== token; });
+                        if (lastGroup.tokens.length === 0) {
+                            pinnedGroups.splice(lastPinnedGroupIndex, 1);
+                            lastPinnedGroupIndex = pinnedGroups.length - 1;
+                        }
+                        return false;
+                    } else if (existingGroupIdx >= 0) {
+                        pinnedGroups[existingGroupIdx].tokens = pinnedGroups[existingGroupIdx].tokens.filter(function(t) { return t !== token; });
+                        if (pinnedGroups[existingGroupIdx].tokens.length === 0) {
+                            pinnedGroups.splice(existingGroupIdx, 1);
+                            if (lastPinnedGroupIndex > existingGroupIdx) lastPinnedGroupIndex--;
+                        }
+                        lastGroup.tokens.push(token);
+                        return true;
+                    } else {
+                        lastGroup.tokens.push(token);
+                        return true;
+                    }
+                } else {
+                    if (existingGroupIdx >= 0) {
+                        var group = pinnedGroups[existingGroupIdx];
+                        group.tokens = group.tokens.filter(function(t) { return t !== token; });
+                        if (group.tokens.length === 0) {
+                            pinnedGroups.splice(existingGroupIdx, 1);
+                            if (lastPinnedGroupIndex >= pinnedGroups.length) {
+                                lastPinnedGroupIndex = pinnedGroups.length - 1;
+                            }
+                        }
+                        return false;
+                    } else {
+                        var newGroup = { color: getNextColor(), tokens: [token] };
+                        pinnedGroups.push(newGroup);
+                        lastPinnedGroupIndex = pinnedGroups.length - 1;
+                        return true;
+                    }
+                }
+            }
+
+            function drawAllTrajectories(hoverTrajectory, hoverColor, hoverLabel, chartInnerWidth, pos) {
+                var svg = document.getElementById(uid + "_chart");
+                svg.innerHTML = "";
+
+                var table = document.getElementById(uid + "_table");
+                var firstInputCell = table.querySelector(".input-token");
+                var tableRect = table.getBoundingClientRect();
+                var inputCellRect = firstInputCell.getBoundingClientRect();
+                var actualInputRight = inputCellRect.right - tableRect.left;
+
+                var legendG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                legendG.setAttribute("class", "legend-area");
+                svg.appendChild(legendG);
+
+                var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                g.setAttribute("transform", "translate(" + actualInputRight + "," + chartMargin.top + ")");
+                svg.appendChild(g);
+
+                var xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                xAxis.setAttribute("x1", 0); xAxis.setAttribute("y1", chartInnerHeight);
+                xAxis.setAttribute("x2", chartInnerWidth); xAxis.setAttribute("y2", chartInnerHeight);
+                xAxis.setAttribute("stroke", "#ccc");
+                g.appendChild(xAxis);
+
+                var dotRadius = 3;
+                var labelMargin = chartMargin.right;
+                var usableWidth = chartInnerWidth - labelMargin;
+                function layerToXForLabels(layerIdx) {
+                    if (nLayers <= 1) return usableWidth / 2;
+                    return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
+                }
+
+                var minLabelSpacing = 25;
+                var totalLabelsWidth = currentVisibleIndices.length * minLabelSpacing;
+                var labelStride = 1;
+                if (totalLabelsWidth > usableWidth) {
+                    labelStride = Math.ceil(totalLabelsWidth / usableWidth);
+                }
+
+                var lastIdx = currentVisibleIndices.length - 1;
+                var showAtIndex = new Set();
+                for (var i = lastIdx; i >= 0; i -= labelStride) {
+                    showAtIndex.add(i);
+                }
+                showAtIndex.add(0);
+                if (labelStride > 1) {
+                    for (var i = lastIdx; i > 0; i -= labelStride) {
+                        if (i < labelStride) {
+                            showAtIndex.delete(i);
+                            break;
+                        }
+                    }
+                }
+
+                currentVisibleIndices.forEach(function(layerIdx, i) {
+                    if (showAtIndex.has(i)) {
+                        var x = layerToXForLabels(layerIdx);
+                        var label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        label.setAttribute("x", x);
+                        label.setAttribute("y", chartInnerHeight + 12);
+                        label.setAttribute("text-anchor", "middle");
+                        label.setAttribute("font-size", "9");
+                        label.setAttribute("fill", "#666");
+                        label.textContent = widgetData.layers[layerIdx];
+                        g.appendChild(label);
+                    }
+                });
+
+                var yAxisGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                yAxisGroup.style.cursor = "col-resize";
+
+                var yAxisHitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                yAxisHitTarget.setAttribute("x", -4); yAxisHitTarget.setAttribute("y", 0);
+                yAxisHitTarget.setAttribute("width", 8); yAxisHitTarget.setAttribute("height", chartInnerHeight);
+                yAxisHitTarget.setAttribute("fill", "transparent");
+                yAxisGroup.appendChild(yAxisHitTarget);
+
+                var yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                yAxis.setAttribute("x1", 0); yAxis.setAttribute("y1", 0);
+                yAxis.setAttribute("x2", 0); yAxis.setAttribute("y2", chartInnerHeight);
+                yAxis.setAttribute("stroke", "#ccc");
+                yAxisGroup.appendChild(yAxis);
+                g.appendChild(yAxisGroup);
+
+                yAxisGroup.addEventListener("mousedown", function(e) {
+                    closePopup();
+                    yAxisDrag = { active: true, startX: e.clientX, startWidth: inputTokenWidth };
+                    yAxis.setAttribute("stroke", "rgba(76, 175, 80, 0.6)");
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                var yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                yLabel.setAttribute("x", -chartInnerHeight / 2);
+                yLabel.setAttribute("y", -actualInputRight + 15);
+                yLabel.setAttribute("text-anchor", "middle");
+                yLabel.setAttribute("font-size", "10");
+                yLabel.setAttribute("fill", "#666");
+                yLabel.setAttribute("transform", "rotate(-90)");
+                yLabel.textContent = "Probability";
+                svg.appendChild(yLabel);
+
+                var allProbs = [];
+                pinnedGroups.forEach(function(group) {
+                    var traj = getGroupTrajectory(group, pos);
+                    allProbs = allProbs.concat(traj);
+                });
+                if (hoverTrajectory) allProbs = allProbs.concat(hoverTrajectory);
+                var maxProb = Math.max.apply(null, allProbs.concat([0.1]));
+
+                var legendY = chartMargin.top + 10;
+                pinnedGroups.forEach(function(group, groupIdx) {
+                    var traj = getGroupTrajectory(group, pos);
+                    var groupLabel = getGroupLabel(group);
+                    drawSingleTrajectory(g, traj, group.color, maxProb, groupLabel, false, chartInnerWidth);
+
+                    var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    legendItem.setAttribute("transform", "translate(18, " + legendY + ")");
+                    legendItem.style.cursor = "pointer";
+
+                    var hitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    hitTarget.setAttribute("x", "-15"); hitTarget.setAttribute("y", "-8");
+                    hitTarget.setAttribute("width", inputTokenWidth - 5); hitTarget.setAttribute("height", "14");
+                    hitTarget.setAttribute("fill", "transparent");
+                    legendItem.appendChild(hitTarget);
+
+                    var closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    closeBtn.setAttribute("class", "legend-close");
+                    closeBtn.setAttribute("x", "-12"); closeBtn.setAttribute("y", "4");
+                    closeBtn.setAttribute("font-size", "16"); closeBtn.setAttribute("fill", "#999");
+                    closeBtn.style.display = "none";
+                    closeBtn.textContent = "\u00d7";
+                    legendItem.appendChild(closeBtn);
+
+                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
+                    line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
+                    line.setAttribute("stroke", group.color); line.setAttribute("stroke-width", "2");
+                    legendItem.appendChild(line);
+
+                    var clipId = uid + "_legend_clip_" + groupIdx;
+                    var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                    clipPath.setAttribute("id", clipId);
+                    var clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
+                    clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
+                    clipPath.appendChild(clipRect);
+                    legendItem.appendChild(clipPath);
+
+                    var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", "20"); text.setAttribute("y", "4");
+                    text.setAttribute("font-size", "9"); text.setAttribute("fill", "#333");
+                    text.setAttribute("clip-path", "url(#" + clipId + ")");
+                    text.textContent = groupLabel;
+                    legendItem.appendChild(text);
+
+                    legendItem.addEventListener("mouseenter", function() { closeBtn.style.display = "block"; });
+                    legendItem.addEventListener("mouseleave", function() { closeBtn.style.display = "none"; });
+                    closeBtn.addEventListener("click", function(e) {
+                        e.stopPropagation();
+                        pinnedGroups.splice(groupIdx, 1);
+                        if (lastPinnedGroupIndex >= pinnedGroups.length) {
+                            lastPinnedGroupIndex = pinnedGroups.length - 1;
+                        }
+                        buildTable(currentCellWidth, currentVisibleIndices, currentMaxRows);
+                    });
+
+                    legendG.appendChild(legendItem);
+                    legendY += 14;
+                });
+
+                if (hoverTrajectory && hoverLabel) {
+                    drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth);
+
+                    var legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    legendItem.setAttribute("class", "legend-item hover-legend");
+                    legendItem.setAttribute("transform", "translate(18, " + legendY + ")");
+
+                    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", "0"); line.setAttribute("y1", "0");
+                    line.setAttribute("x2", "15"); line.setAttribute("y2", "0");
+                    line.setAttribute("stroke", hoverColor || "#999");
+                    line.setAttribute("stroke-width", "1.5");
+                    line.setAttribute("stroke-dasharray", "4,2");
+                    line.style.opacity = "0.7";
+                    legendItem.appendChild(line);
+
+                    var clipId = uid + "_hover_clip";
+                    var clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+                    clipPath.setAttribute("id", clipId);
+                    var clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    clipRect.setAttribute("x", "20"); clipRect.setAttribute("y", "-10");
+                    clipRect.setAttribute("width", inputTokenWidth - 45); clipRect.setAttribute("height", "20");
+                    clipPath.appendChild(clipRect);
+                    legendItem.appendChild(clipPath);
+
+                    var text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", "20"); text.setAttribute("y", "4");
+                    text.setAttribute("font-size", "9"); text.setAttribute("fill", "#666");
+                    text.setAttribute("clip-path", "url(#" + clipId + ")");
+                    text.textContent = visualizeSpaces(hoverLabel);
+                    legendItem.appendChild(text);
+
+                    legendG.appendChild(legendItem);
+                }
+            }
+
+            function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {
+                if (!trajectory || trajectory.length === 0) return;
+
+                var dotRadius = isHover ? 2 : 3;
+                var labelMargin = chartMargin.right;
+                var usableWidth = chartInnerWidth - labelMargin;
+                function layerToX(layerIdx) {
+                    if (nLayers <= 1) return usableWidth / 2;
+                    return dotRadius + (layerIdx / (nLayers - 1)) * (usableWidth - 2 * dotRadius);
+                }
+
+                var pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                if (isHover) pathEl.style.opacity = "0.7";
+
+                var d = "";
+                trajectory.forEach(function(p, layerIdx) {
+                    var x = layerToX(layerIdx);
+                    var y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
+                    d += (layerIdx === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
+                });
+
+                pathEl.setAttribute("d", d);
+                pathEl.setAttribute("fill", "none");
+                pathEl.setAttribute("stroke", color);
+                pathEl.setAttribute("stroke-width", isHover ? "1.5" : "2");
+                if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
+                g.appendChild(pathEl);
+
+                currentVisibleIndices.forEach(function(layerIdx) {
+                    var p = trajectory[layerIdx];
+                    var x = layerToX(layerIdx);
+                    var y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
+
+                    var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", x.toFixed(1));
+                    circle.setAttribute("cy", y.toFixed(1));
+                    circle.setAttribute("r", isHover ? 2 : 3);
+                    circle.setAttribute("fill", color);
+                    if (isHover) circle.style.opacity = "0.7";
+
+                    var title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+                    title.textContent = (label || "") + " L" + widgetData.layers[layerIdx] + ": " + (p * 100).toFixed(2) + "%";
+                    circle.appendChild(title);
+                    g.appendChild(circle);
+                });
+            }
+
+            // Global event listeners
+            document.addEventListener("click", function(e) {
+                if (!e.target.closest("#" + uid + " .popup") && !e.target.closest("#" + uid + " .pred-cell")) {
+                    closePopup();
+                }
+                if (!e.target.closest("#" + uid + " .color-mode-btn") && !e.target.closest("#" + uid + "_color_menu")) {
+                    document.getElementById(uid + "_color_menu").classList.remove("visible");
+                }
+            });
+
+            document.getElementById(uid).addEventListener("mousedown", function(e) {
+                if (e.shiftKey) e.preventDefault();
+            });
+
+            document.getElementById(uid).addEventListener("mouseleave", function() {
+                currentHoverPos = widgetData.tokens.length - 1;
+                var chartInnerWidth = updateChartDimensions();
+                drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
+            });
+
+            // Bottom resize handle for truncating rows
+            (function() {
+                var handle = document.getElementById(uid + "_resize_bottom");
+                var table = document.getElementById(uid + "_table");
+                var isDragging = false, startY = 0, startMaxRows = null;
+
+                handle.addEventListener("mousedown", function(e) {
+                    closePopup();
+                    isDragging = true;
+                    startY = e.clientY;
+                    startMaxRows = currentMaxRows;
+                    handle.classList.add("dragging");
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                document.addEventListener("mousemove", function(e) {
+                    if (!isDragging) return;
+                    var delta = e.clientY - startY;
+                    var rowHeight = 18;
+                    var rowDelta = Math.round(delta / rowHeight);
+
+                    var totalTokens = widgetData.tokens.length;
+                    var startRows = startMaxRows === null ? totalTokens : startMaxRows;
+                    var newMaxRows = startRows + rowDelta;
+                    newMaxRows = Math.max(1, Math.min(totalTokens, newMaxRows));
+                    if (newMaxRows >= totalTokens) newMaxRows = null;
+
+                    if (newMaxRows !== currentMaxRows) {
+                        buildTable(currentCellWidth, currentVisibleIndices, newMaxRows);
+                    }
+                });
+
+                document.addEventListener("mouseup", function() {
+                    if (isDragging) {
+                        isDragging = false;
+                        handle.classList.remove("dragging");
+                    }
+                });
+            })();
+
+            // Initial build with container width
+            var containerWidth = getContainerWidth();
+            var result = computeVisibleLayers(currentCellWidth, containerWidth);
+            buildTable(currentCellWidth, result.indices, currentMaxRows);
+        })();
+
+        return { uid: uid };
+    };
+})();
+
+// Create widget instance
+LogitLensWidget("viz", data);
 </script>
 </body>
 </html>
