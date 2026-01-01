@@ -61,7 +61,7 @@ var LogitLensWidget = (function() {
             #${uid} .color-mode-btn {
                 display: inline-block; padding: 2px 4px; background: white;
                 border-radius: 4px; font-size: 16px; cursor: pointer; color: #333;
-                border: 1px solid #ccc;
+                border: none;
             }
             #${uid} .color-mode-btn:hover { background: #f5f5f5; }
             #${uid} .ll-table { border-collapse: collapse; font-size: 10px; table-layout: fixed; }
@@ -123,10 +123,16 @@ var LogitLensWidget = (function() {
                 cursor: row-resize; background: transparent;
             }
             #${uid} .resize-handle-bottom:hover, #${uid} .resize-handle-bottom.dragging { background: rgba(33, 150, 243, 0.4); }
+            #${uid} .resize-handle-right {
+                position: absolute; top: 0; bottom: 0; right: -3px; width: 6px;
+                cursor: ew-resize; background: transparent;
+            }
+            #${uid} .resize-handle-right:hover, #${uid} .resize-handle-right.dragging { background: rgba(33, 150, 243, 0.4); }
             #${uid} .resize-hint { font-size: 9px; color: #999; margin-top: 4px; cursor: default; }
             #${uid} .resize-hint-extra { display: none; }
             #${uid}.show-all-handles .resize-handle,
-            #${uid}.show-all-handles .resize-handle-input { background: rgba(33, 150, 243, 0.3); }
+            #${uid}.show-all-handles .resize-handle-input,
+            #${uid}.show-all-handles .resize-handle-right { background: rgba(33, 150, 243, 0.3); }
             #${uid} .color-menu {
                 display: none; position: absolute; background: white; border: 1px solid #ddd;
                 border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 200; min-width: 150px;
@@ -146,6 +152,7 @@ var LogitLensWidget = (function() {
                 <div class="table-wrapper">
                     <table class="ll-table" id="${uid}_table"></table>
                     <div class="resize-handle-bottom" id="${uid}_resize_bottom"></div>
+                    <div class="resize-handle-right" id="${uid}_resize_right"></div>
                 </div>
                 <div class="resize-hint" id="${uid}_resize_hint">drag column borders to resize</div>
                 <div class="chart-container" id="${uid}_chart_container">
@@ -177,6 +184,7 @@ var LogitLensWidget = (function() {
             var currentCellWidth = 44;
             var currentVisibleIndices = [];
             var currentMaxRows = null;
+            var maxTableWidth = null;  // null means use container width
             var openPopupCell = null;
             var currentHoverPos = widgetData.tokens.length - 1;
             var colorMode = "top";
@@ -337,6 +345,25 @@ var LogitLensWidget = (function() {
                 return div.innerHTML;
             }
 
+            function normalizeForComparison(token) {
+                // Remove spaces and punctuation, lowercase
+                return token.replace(/[\s.,!?;:'"()\[\]{}\-_]/g, '').toLowerCase();
+            }
+
+            function hasSimilarTokensInList(topkList, targetToken) {
+                var targetNorm = normalizeForComparison(targetToken);
+                if (!targetNorm) return false;  // nothing left after normalization
+
+                for (var i = 0; i < topkList.length; i++) {
+                    if (topkList[i].token === targetToken) continue;  // skip the target itself
+                    var otherNorm = normalizeForComparison(topkList[i].token);
+                    if (otherNorm && otherNorm === targetNorm) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             function visualizeSpaces(text) {
                 var result = text;
                 var leadingSpaces = 0;
@@ -488,8 +515,8 @@ var LogitLensWidget = (function() {
                         var cellProb = colorMode === "top" ? cellData.prob :
                             (cellData.topk.find(function(t) { return t.token === colorMode; }) || {prob: 0}).prob;
 
-                        var color = probToColor(cellProb, colorModeBaseColor);
-                        var textColor = cellProb < 0.5 ? "#333" : "#fff";
+                        var color = colorMode === "none" ? "#fff" : probToColor(cellProb, colorModeBaseColor);
+                        var textColor = colorMode === "none" ? "#333" : (cellProb < 0.5 ? "#333" : "#fff");
                         var pinnedColor = getColorForToken(cellData.token);
                         if (!pinnedColor) {
                             var winningGroup = getWinningGroupAtCell(pos, li);
@@ -559,12 +586,22 @@ var LogitLensWidget = (function() {
                 });
             }
 
+            function getDefaultTitle() {
+                // Concatenated input tokens, omitting special tokens like <s>
+                var tokens = widgetData.tokens.slice();
+                if (tokens.length > 0 && /^<[^>]+>$/.test(tokens[0].trim())) {
+                    tokens = tokens.slice(1);
+                }
+                return tokens.join("");
+            }
+
             function updateTitle() {
                 var titleEl = document.getElementById(uid + "_title");
-                var displayLabel = "Top prediction";
+                var displayLabel = "top prediction";
                 var pinnedColor = null;
+                var useColoredBy = true;
 
-                if (colorMode !== "top") {
+                if (colorMode !== "top" && colorMode !== "none") {
                     var groupIdx = findGroupForToken(colorMode);
                     if (groupIdx >= 0) {
                         var group = pinnedGroups[groupIdx];
@@ -573,11 +610,36 @@ var LogitLensWidget = (function() {
                     } else {
                         displayLabel = visualizeSpaces(colorMode);
                     }
+
+                    // Check if selected color matches top prediction at last position
+                    // and title looks like a prompt - if so, remove "colored by"
+                    var lastPos = widgetData.tokens.length - 1;
+                    var lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
+                    var topToken = widgetData.cells[lastPos][lastLayerIdx].token;
+
+                    if (colorMode === topToken) {
+                        var tokens = widgetData.tokens.slice();
+                        if (tokens.length > 0 && /^<[^>]+>$/.test(tokens[0].trim())) {
+                            tokens = tokens.slice(1);
+                        }
+                        if (tokens.length >= 3) {
+                            var suffix = tokens.slice(-3).join("");
+                            if (suffix.length > 0 && customTitle.endsWith(suffix)) {
+                                useColoredBy = false;
+                            }
+                        }
+                    }
                 }
 
-                var btnStyle = pinnedColor ? "background: " + pinnedColor + "22; border-color: " + pinnedColor + ";" : "";
+                var btnStyle = pinnedColor ? "background: " + pinnedColor + "22;" : "";
 
-                titleEl.innerHTML = '<span class="ll-title-text" id="' + uid + '_title_text" style="cursor: text;">' + escapeHtml(customTitle) + '</span> <span class="color-mode-btn" id="' + uid + '_color_btn" style="' + btnStyle + '">(' + escapeHtml(displayLabel) + ')</span>';
+                // "None" mode: invisible button but still clickable
+                if (colorMode === "none") {
+                    btnStyle = "background: transparent; border: none; color: transparent;";
+                }
+
+                var labelPrefix = useColoredBy ? "colored by " : "";
+                titleEl.innerHTML = '<span class="ll-title-text" id="' + uid + '_title_text" style="cursor: text;">' + escapeHtml(customTitle) + '</span> <span class="color-mode-btn" id="' + uid + '_color_btn" style="' + btnStyle + '">(' + labelPrefix + escapeHtml(displayLabel) + ')</span>';
                 document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
                 document.getElementById(uid + "_title_text").addEventListener("click", startTitleEdit);
             }
@@ -600,6 +662,13 @@ var LogitLensWidget = (function() {
                     var newTitle = input.value.trim();
                     if (newTitle) {
                         customTitle = newTitle;
+                    } else {
+                        // Default to concatenated input tokens, omitting special tokens like <s>
+                        var tokens = widgetData.tokens.slice();
+                        if (tokens.length > 0 && /^<[^>]+>$/.test(tokens[0].trim())) {
+                            tokens = tokens.slice(1);
+                        }
+                        customTitle = tokens.join("");
                     }
                     updateTitle();
                 }
@@ -631,7 +700,7 @@ var LogitLensWidget = (function() {
                 var lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
                 var topToken = widgetData.cells[lastPos][lastLayerIdx].token;
 
-                var html = '<div class="color-menu-item" data-mode="top">Top prediction</div>';
+                var html = '<div class="color-menu-item" data-mode="top">top prediction</div>';
 
                 if (findGroupForToken(topToken) < 0) {
                     html += '<div class="color-menu-item" data-mode="' + escapeHtml(topToken) + '">' + escapeHtml(topToken) + '</div>';
@@ -642,6 +711,8 @@ var LogitLensWidget = (function() {
                     var modeToken = group.tokens[0];
                     html += '<div class="color-menu-item" data-mode="' + escapeHtml(modeToken) + '" style="border-left: 3px solid ' + group.color + ';">' + escapeHtml(label) + '</div>';
                 });
+
+                html += '<div class="color-menu-item" data-mode="none" style="border-top: 1px solid #eee; margin-top: 4px; padding-top: 8px;">None</div>';
 
                 menu.innerHTML = html;
                 menu.classList.add("visible");
@@ -658,6 +729,15 @@ var LogitLensWidget = (function() {
 
             function getContainerWidth() {
                 var el = document.getElementById(uid);
+                var actualWidth = el.offsetWidth || 900;
+                if (maxTableWidth !== null) {
+                    return Math.min(maxTableWidth, actualWidth);
+                }
+                return actualWidth;
+            }
+
+            function getActualContainerWidth() {
+                var el = document.getElementById(uid);
                 return el.offsetWidth || 900;
             }
 
@@ -665,6 +745,7 @@ var LogitLensWidget = (function() {
             var colResizeDrag = { active: false, type: null, startX: 0, startWidth: 0, colIdx: 0 };
             var yAxisDrag = { active: false, startX: 0, startWidth: 0 };
             var xAxisDrag = { active: false, startY: 0, startHeight: 0 };
+            var rightEdgeDrag = { active: false, startX: 0, startTableWidth: 0, hadMaxTableWidth: false, startMaxTableWidth: null };
 
             function attachResizeListeners() {
                 document.querySelectorAll("#" + uid + " .resize-handle-input").forEach(function(handle) {
@@ -722,6 +803,10 @@ var LogitLensWidget = (function() {
                 }
                 if (xAxisDrag.active) {
                     xAxisDrag.active = false;
+                }
+                if (rightEdgeDrag.active) {
+                    rightEdgeDrag.active = false;
+                    document.getElementById(uid + "_resize_right").classList.remove("dragging");
                 }
             });
 
@@ -851,6 +936,13 @@ var LogitLensWidget = (function() {
                     contentHtml += '<span class="topk-prob">' + probPct + '%</span>';
                     contentHtml += '</div>';
                 });
+
+                // Add hint if first token is pinned and there are similar tokens
+                var firstToken = cellData.topk[0].token;
+                var firstIsPinned = findGroupForToken(firstToken) >= 0;
+                if (firstIsPinned && hasSimilarTokensInList(cellData.topk, firstToken)) {
+                    contentHtml += '<div style="font-size: 10px; font-style: italic; color: #666; margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee;">Shift-click to group tokens</div>';
+                }
 
                 document.getElementById(uid + "_popup_content").innerHTML = contentHtml;
 
@@ -1443,6 +1535,84 @@ var LogitLensWidget = (function() {
                     }
                 });
             })();
+
+            // Right edge resize handle for table width
+            (function() {
+                var handle = document.getElementById(uid + "_resize_right");
+
+                handle.addEventListener("mousedown", function(e) {
+                    closePopup();
+                    var table = document.getElementById(uid + "_table");
+                    rightEdgeDrag = {
+                        active: true,
+                        startX: e.clientX,
+                        startTableWidth: table.offsetWidth,
+                        startCellWidth: currentCellWidth,
+                        hadMaxTableWidth: maxTableWidth !== null,
+                        startMaxTableWidth: maxTableWidth
+                    };
+                    handle.classList.add("dragging");
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            })();
+
+            // Right edge drag handler
+            document.addEventListener("mousemove", function(e) {
+                if (!rightEdgeDrag.active) return;
+                var delta = e.clientX - rightEdgeDrag.startX;
+                var actualContainerWidth = getActualContainerWidth();
+                var targetTableWidth = rightEdgeDrag.startTableWidth + delta;
+
+                if (delta >= 0) {
+                    // Dragging right - expand maxTableWidth and smoothly expand column width
+                    // Don't exceed container width
+                    targetTableWidth = Math.min(targetTableWidth, actualContainerWidth);
+
+                    // Snap maxTableWidth to null when close to container, otherwise set it
+                    if (targetTableWidth >= actualContainerWidth - currentCellWidth) {
+                        maxTableWidth = null;
+                    } else {
+                        maxTableWidth = targetTableWidth;
+                    }
+
+                    // Calculate new cell width to achieve target table width
+                    var availableForCells = targetTableWidth - inputTokenWidth - 1;
+                    var numVisibleCols = currentVisibleIndices.length;
+                    if (numVisibleCols > 0) {
+                        var newCellWidth = availableForCells / numVisibleCols;
+
+                        // If cell width exceeds max, add one more column and shrink to fit
+                        if (newCellWidth > maxCellWidth && numVisibleCols < nLayers) {
+                            numVisibleCols = numVisibleCols + 1;
+                            newCellWidth = availableForCells / numVisibleCols;
+                        }
+
+                        newCellWidth = Math.max(minCellWidth, Math.min(maxCellWidth, newCellWidth));
+                        // Use a small threshold relative to cell count for smooth dragging
+                        var threshold = 0.5 / Math.max(1, numVisibleCols);
+                        if (Math.abs(newCellWidth - currentCellWidth) > threshold) {
+                            currentCellWidth = newCellWidth;
+                            var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                            buildTable(currentCellWidth, result.indices, currentMaxRows);
+                        }
+                    }
+                } else {
+                    // Dragging left - introduce maxTableWidth constraint without changing column width
+                    targetTableWidth = Math.max(inputTokenWidth + minCellWidth + 1, targetTableWidth);
+
+                    // If user drags back to or past start and didn't have maxTableWidth, abort constraint
+                    if (!rightEdgeDrag.hadMaxTableWidth && targetTableWidth >= rightEdgeDrag.startTableWidth) {
+                        maxTableWidth = null;
+                    } else {
+                        maxTableWidth = targetTableWidth;
+                    }
+
+                    // Rebuild table with constraint (may introduce strides), keep column width unchanged
+                    var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                    buildTable(currentCellWidth, result.indices, currentMaxRows);
+                }
+            });
 
             // Initial build with container width
             var containerWidth = getContainerWidth();
