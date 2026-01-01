@@ -565,7 +565,7 @@ def render_trajectory_heatmap(data, tokenizer, position=-1, cell_width=28, cell_
 
 
 def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22, layer_step=1,
-                                  chart_height=120, show_trajectory=True):
+                                  chart_height=140, show_trajectory=True):
     """
     Render an interactive heatmap showing top predictions at all positions and layers.
 
@@ -577,6 +577,8 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
     - Click: opens popup with full token and top-k list; click items to pin trajectories
     - Shift+click on cells: pin trajectory for comparison
     - Drag resize handle (on 2nd column border): adjusts column width, induces layer striding
+    - Title shows color mode selector to change what probabilities color the cells
+    - Legend in left margin shows pinned tokens with hover-to-show X button
 
     Args:
         data: Output from collect_logit_lens_topk with track_across_layers=True
@@ -612,12 +614,11 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
     k = top_indices.shape[2]
 
     # Build data structure for JavaScript
-    # For each position, store top-k token info and their probabilities across layers
     js_data = {
         "layers": layers,
         "layerIndices": layer_indices,
         "tokens": tokens,
-        "cells": []  # [pos][layer_i] = {token, probs_across_layers, topk: [{token, prob, probs_across_layers}]}
+        "cells": []
     }
 
     for pos in range(seq_len):
@@ -626,16 +627,13 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             top_p = top_probs[li, pos]
             top_i = top_indices[li, pos]
 
-            # Get top-1 token
             top1_idx = top_i[0].item()
             top1_tok = tokenizer.decode([top1_idx])
             top1_prob = top_p[0].item()
 
-            # Get trajectory for top-1 token (prob at each layer)
             if has_tracked:
-                # Find this token in tracked indices for this position
                 tracked_idx_list = data["tracked_indices"][pos].tolist()
-                tracked_probs_matrix = data["tracked_probs"][pos]  # [n_layers, n_tracked]
+                tracked_probs_matrix = data["tracked_probs"][pos]
                 if top1_idx in tracked_idx_list:
                     ti = tracked_idx_list.index(top1_idx)
                     top1_trajectory = tracked_probs_matrix[:, ti].tolist()
@@ -644,14 +642,12 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             else:
                 top1_trajectory = [0.0] * n_layers_total
 
-            # Build top-k list
             topk_list = []
             for ki in range(k):
                 tok_idx = top_i[ki].item()
                 tok_str = tokenizer.decode([tok_idx])
                 tok_prob = top_p[ki].item()
 
-                # Get trajectory for this token
                 if has_tracked:
                     if tok_idx in tracked_idx_list:
                         ti = tracked_idx_list.index(tok_idx)
@@ -676,8 +672,7 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
 
         js_data["cells"].append(pos_data)
 
-    # Chart dimensions (will be updated dynamically)
-    margin = {"top": 10, "right": 80, "bottom": 25, "left": 45}
+    margin = {"top": 10, "right": 10, "bottom": 25, "left": 10}
     inner_height = chart_height - margin["top"] - margin["bottom"]
 
     full_html = f'''
@@ -687,14 +682,24 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             margin: 20px 0;
             position: relative;
             -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             user-select: none;
         }}
         #{uid} .ll-title {{
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 8px;
+        }}
+        #{uid} .color-mode-btn {{
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: monospace;
+        }}
+        #{uid} .color-mode-btn:hover {{
+            border-color: #333;
         }}
         #{uid} .ll-table {{
             border-collapse: collapse;
@@ -735,6 +740,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             text-overflow: ellipsis;
             font-family: monospace;
             font-size: 10px;
+            cursor: pointer;
+        }}
+        #{uid} .input-token:hover {{
+            background: #e8e8e8;
         }}
         #{uid} .layer-hdr {{
             padding: 4px 2px;
@@ -753,15 +762,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             background: #f5f5f5;
         }}
         #{uid} .chart-container {{
-            margin-top: 12px;
+            margin-top: 8px;
             background: #fafafa;
             border-radius: 4px;
-            padding: 8px;
-        }}
-        #{uid} .chart-label {{
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 4px;
+            padding: 8px 0;
         }}
         #{uid} .popup {{
             display: none;
@@ -784,12 +788,6 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             margin-bottom: 8px;
             padding-bottom: 6px;
             border-bottom: 1px solid #eee;
-        }}
-        #{uid} .popup-token {{
-            font-family: monospace;
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 3px;
         }}
         #{uid} .popup-close {{
             position: absolute;
@@ -830,15 +828,6 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         #{uid} .topk-item.pinned {{
             border-left: 3px solid currentColor;
         }}
-        #{uid} .topk-item.pinned:hover {{
-            filter: brightness(0.95);
-        }}
-        #{uid} .hint {{
-            font-size: 10px;
-            color: #999;
-            margin-top: 6px;
-            font-style: italic;
-        }}
         #{uid} .resize-handle {{
             position: absolute;
             width: 6px;
@@ -862,22 +851,44 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             color: #999;
             margin-top: 4px;
         }}
+        #{uid} .color-menu {{
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 200;
+            min-width: 150px;
+        }}
+        #{uid} .color-menu.visible {{
+            display: block;
+        }}
+        #{uid} .color-menu-item {{
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }}
+        #{uid} .color-menu-item:hover {{
+            background: #f0f0f0;
+        }}
+        #{uid} .legend-close {{
+            cursor: pointer;
+        }}
+        #{uid} .legend-close:hover {{
+            fill: #e91e63 !important;
+        }}
     </style>
 
     <div id="{uid}">
-        <div class="ll-title">Logit Lens: Top Predictions by Layer</div>
+        <div class="ll-title" id="{uid}_title">Logit Lens: Top Predictions by Layer</div>
         <div class="table-wrapper">
-            <table class="ll-table" id="{uid}_table">
-                <!-- Table will be built dynamically -->
-            </table>
+            <table class="ll-table" id="{uid}_table"></table>
         </div>
         <div class="resize-hint" id="{uid}_resize_hint">drag first layer column border to resize</div>
 
         <div class="chart-container" id="{uid}_chart_container">
-            <div class="chart-label">Token probability across layers (hover to preview, click menu items to pin)</div>
-            <svg id="{uid}_chart" height="{chart_height}">
-                <!-- Will be sized dynamically to match table -->
-            </svg>
+            <svg id="{uid}_chart" height="{chart_height}"></svg>
         </div>
 
         <div class="popup" id="{uid}_popup">
@@ -887,6 +898,8 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             </div>
             <div id="{uid}_popup_content"></div>
         </div>
+
+        <div class="color-menu" id="{uid}_color_menu"></div>
     </div>
 
     <script>
@@ -897,15 +910,16 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         const chartHeight = {chart_height};
         const chartMargin = {{ top: {margin['top']}, right: {margin['right']}, bottom: {margin['bottom']}, left: {margin['left']} }};
         const chartInnerHeight = {inner_height};
-        const inputTokenWidth = 100;  // Width of input token column
+        const inputTokenWidth = 100;
         const minCellWidth = 30;
         const maxCellWidth = 200;
 
         let currentCellWidth = {cell_width};
         let currentVisibleIndices = [];
-        let openPopupCell = null;  // Track which cell has popup open
+        let openPopupCell = null;
+        let currentHoverPos = data.tokens.length - 1;
+        let colorMode = "top";
 
-        // Persistent trajectories for comparison
         const pinnedTrajectories = new Map();
         const colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
         let colorIndex = 0;
@@ -935,21 +949,27 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             return `rgb(${{r}},${{g}},255)`;
         }}
 
-        // Calculate which layers to show given cell width and container width
+        function getTrajectoryForToken(token, pos) {{
+            for (let li = 0; li < data.cells[pos].length; li++) {{
+                const cellData = data.cells[pos][li];
+                if (cellData.token === token) return cellData.trajectory;
+                for (const tk of cellData.topk) {{
+                    if (tk.token === token) return tk.trajectory;
+                }}
+            }}
+            return data.layers.map(() => 0);
+        }}
+
         function computeVisibleLayers(cellWidth, containerWidth) {{
             const availableWidth = containerWidth - inputTokenWidth;
             const maxCols = Math.floor(availableWidth / cellWidth);
 
             if (maxCols >= nLayers) {{
-                // All layers fit
                 return {{ stride: 1, indices: data.layers.map((_, i) => i) }};
             }}
 
-            // Need to stride - always END at last layer
             const stride = Math.ceil(nLayers / maxCols);
             const indices = [];
-
-            // Work backwards from last layer to ensure it's always included
             const lastLayer = nLayers - 1;
             for (let i = lastLayer; i >= 0; i -= stride) {{
                 indices.unshift(i);
@@ -958,11 +978,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             return {{ stride, indices }};
         }}
 
-        // Update chart dimensions to match table
         function updateChartDimensions() {{
             const table = document.getElementById(uid + "_table");
             const tableWidth = table.offsetWidth;
-            const chartInnerWidth = tableWidth - inputTokenWidth - chartMargin.left - chartMargin.right + inputTokenWidth;
+            const chartInnerWidth = tableWidth - inputTokenWidth;
 
             const svg = document.getElementById(uid + "_chart");
             svg.setAttribute("width", tableWidth);
@@ -970,21 +989,28 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             return chartInnerWidth;
         }}
 
-        // Build the table HTML
         function buildTable(cellWidth, visibleLayerIndices) {{
             currentVisibleIndices = visibleLayerIndices;
             const table = document.getElementById(uid + "_table");
             let html = "";
 
-            // Data rows
             data.tokens.forEach((tok, pos) => {{
                 html += "<tr>";
-                html += `<td class="input-token" title="${{escapeHtml(tok)}}">${{escapeHtml(tok)}}</td>`;
+                html += `<td class="input-token" data-pos="${{pos}}" title="${{escapeHtml(tok)}}">${{escapeHtml(tok)}}</td>`;
 
                 visibleLayerIndices.forEach((li, colIdx) => {{
                     const cellData = data.cells[pos][li];
-                    const color = probToColor(cellData.prob);
-                    const textColor = cellData.prob < 0.5 ? "#333" : "#fff";
+
+                    let cellProb;
+                    if (colorMode === "top") {{
+                        cellProb = cellData.prob;
+                    }} else {{
+                        const found = cellData.topk.find(t => t.token === colorMode);
+                        cellProb = found ? found.prob : 0;
+                    }}
+
+                    const color = probToColor(cellProb);
+                    const textColor = cellProb < 0.5 ? "#333" : "#fff";
                     const pinnedColor = getColorForToken(cellData.token);
                     const pinnedStyle = pinnedColor ? `box-shadow: inset 0 0 0 2px ${{pinnedColor}};` : "";
 
@@ -997,11 +1023,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 html += "</tr>";
             }});
 
-            // Footer row with layer numbers (first column has resize handle)
             html += "<tr>";
             html += `<th class="corner-hdr">Layer</th>`;
             visibleLayerIndices.forEach((li, colIdx) => {{
-                const hasHandle = colIdx === 0;  // Resize handle on first layer column
+                const hasHandle = colIdx === 0;
                 html += `<th class="layer-hdr" style="width:${{cellWidth}}px; max-width:${{cellWidth}}px;">${{data.layers[li]}}`;
                 if (hasHandle) {{
                     html += `<div class="resize-handle" id="${{uid}}_resize"></div>`;
@@ -1012,21 +1037,69 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
 
             table.innerHTML = html;
 
-            // Re-attach event listeners
             attachCellListeners();
             attachResizeListener();
 
-            // Update chart to match new table width
             const chartInnerWidth = updateChartDimensions();
-            drawAllTrajectories(null, null, null, chartInnerWidth);
+            drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
 
-            // Update hint
+            updateTitle();
+
             const hint = document.getElementById(uid + "_resize_hint");
             const stride = visibleLayerIndices.length < nLayers ?
                 Math.ceil(nLayers / visibleLayerIndices.length) : 1;
             hint.textContent = stride > 1 ?
                 `showing every ~${{stride}} layers ending at ${{nLayers-1}} (drag column border to adjust)` :
                 `showing all ${{nLayers}} layers`;
+        }}
+
+        function updateTitle() {{
+            const titleEl = document.getElementById(uid + "_title");
+            const lastPos = data.tokens.length - 1;
+            const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
+            const topToken = data.cells[lastPos][lastLayerIdx].token;
+            const topProb = data.cells[lastPos][lastLayerIdx].prob;
+
+            const displayToken = colorMode === "top" ? topToken : colorMode;
+            const probColor = probToColor(topProb);
+
+            titleEl.innerHTML = `Logit Lens: Top Predictions by Layer <span class="color-mode-btn" id="${{uid}}_color_btn" style="background: ${{probColor}};">[${{escapeHtml(displayToken.slice(0,8))}}*]</span>`;
+
+            document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
+        }}
+
+        function showColorModeMenu(e) {{
+            e.stopPropagation();
+            const menu = document.getElementById(uid + "_color_menu");
+            const btn = e.target;
+            const rect = btn.getBoundingClientRect();
+            const containerRect = document.getElementById(uid).getBoundingClientRect();
+
+            menu.style.left = (rect.left - containerRect.left) + "px";
+            menu.style.top = (rect.bottom - containerRect.top + 5) + "px";
+
+            const lastPos = data.tokens.length - 1;
+            const lastLayerIdx = currentVisibleIndices[currentVisibleIndices.length - 1];
+            const topToken = data.cells[lastPos][lastLayerIdx].token;
+
+            let html = `<div class="color-menu-item" data-mode="top">Top prediction (per cell)</div>`;
+            html += `<div class="color-menu-item" data-mode="${{escapeHtml(topToken)}}">Current: ${{escapeHtml(topToken)}}</div>`;
+
+            pinnedTrajectories.forEach((v, token) => {{
+                html += `<div class="color-menu-item" data-mode="${{escapeHtml(token)}}" style="border-left: 3px solid ${{v.color}};">${{escapeHtml(token)}}</div>`;
+            }});
+
+            menu.innerHTML = html;
+            menu.classList.add("visible");
+
+            menu.querySelectorAll(".color-menu-item").forEach(item => {{
+                item.addEventListener("click", (ev) => {{
+                    ev.stopPropagation();
+                    colorMode = item.dataset.mode;
+                    menu.classList.remove("visible");
+                    buildTable(currentCellWidth, currentVisibleIndices);
+                }});
+            }});
         }}
 
         function attachResizeListener() {{
@@ -1049,13 +1122,12 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             const onMouseMove = (e) => {{
                 if (!isDragging) return;
 
-                // Dragging right = positive delta = increase width (fewer columns with larger cells)
                 const delta = e.clientX - startX;
                 const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + delta * 0.3));
 
                 if (Math.abs(newWidth - currentCellWidth) > 2) {{
                     currentCellWidth = newWidth;
-                    const containerWidth = 900;  // Max reasonable width
+                    const containerWidth = 900;
                     const {{ indices }} = computeVisibleLayers(currentCellWidth, containerWidth);
                     buildTable(currentCellWidth, indices);
                 }}
@@ -1074,33 +1146,38 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         }}
 
         function attachCellListeners() {{
+            document.querySelectorAll(`#${{uid}} .pred-cell, #${{uid}} .input-token`).forEach(cell => {{
+                const pos = parseInt(cell.dataset.pos);
+
+                cell.addEventListener("mouseenter", () => {{
+                    currentHoverPos = pos;
+
+                    const li = cell.dataset.li ? parseInt(cell.dataset.li) : 0;
+                    const cellData = data.cells[pos][li] || data.cells[pos][0];
+
+                    const chartInnerWidth = updateChartDimensions();
+                    const hoverTraj = pinnedTrajectories.has(cellData.token) ? null : cellData.trajectory;
+                    const hoverColor = pinnedTrajectories.has(cellData.token) ? null : "#999";
+                    const hoverLabel = pinnedTrajectories.has(cellData.token) ? null : cellData.token;
+
+                    drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
+                }});
+            }});
+
             document.querySelectorAll(`#${{uid}} .pred-cell`).forEach(cell => {{
                 const pos = parseInt(cell.dataset.pos);
                 const li = parseInt(cell.dataset.li);
                 const cellData = data.cells[pos][li];
 
-                cell.addEventListener("mouseenter", () => {{
-                    const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(cellData.trajectory, "#999", cellData.token, chartInnerWidth);
-                }});
-
-                cell.addEventListener("mouseleave", () => {{
-                    const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(null, null, null, chartInnerWidth);
-                }});
-
                 cell.addEventListener("click", (e) => {{
                     e.stopPropagation();
 
                     if (e.shiftKey) {{
-                        // Shift+click: toggle pin
-                        togglePinnedTrajectory(cellData.token, cellData.trajectory);
-                        // Rebuild table to update pin styling
+                        togglePinnedTrajectory(cellData.token);
                         buildTable(currentCellWidth, currentVisibleIndices);
                         return;
                     }}
 
-                    // Check if clicking same cell that has popup open - close it
                     if (openPopupCell === cell) {{
                         closePopup();
                         return;
@@ -1113,7 +1190,6 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 }});
             }});
 
-            // Popup close button
             document.getElementById(uid + "_popup_close").addEventListener("click", closePopup);
         }}
 
@@ -1157,51 +1233,51 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                     contentEl.querySelectorAll(".topk-item").forEach(it => it.classList.remove("active"));
                     item.classList.add("active");
                     const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(tokData.trajectory, "#999", tokData.token, chartInnerWidth);
+                    const hoverTraj = pinnedTrajectories.has(tokData.token) ? null : tokData.trajectory;
+                    drawAllTrajectories(hoverTraj, "#999", tokData.token, chartInnerWidth, pos);
                 }});
 
                 item.addEventListener("mouseleave", () => {{
                     const chartInnerWidth = updateChartDimensions();
-                    drawAllTrajectories(null, null, null, chartInnerWidth);
+                    drawAllTrajectories(null, null, null, chartInnerWidth, pos);
                 }});
 
-                // Simple click toggles pin (no shift needed)
                 item.addEventListener("click", (e) => {{
                     e.stopPropagation();
-                    togglePinnedTrajectory(tokData.token, tokData.trajectory);
-                    // Rebuild table and popup to update styling
+                    togglePinnedTrajectory(tokData.token);
                     buildTable(currentCellWidth, currentVisibleIndices);
-                    // Re-show popup
                     showPopup(cell, pos, li, cellData);
                 }});
             }});
 
             popup.classList.add("visible");
             const chartInnerWidth = updateChartDimensions();
-            drawAllTrajectories(cellData.trajectory, "#999", cellData.token, chartInnerWidth);
+            const hoverTraj = pinnedTrajectories.has(cellData.token) ? null : cellData.trajectory;
+            drawAllTrajectories(hoverTraj, "#999", cellData.token, chartInnerWidth, pos);
         }}
 
-        function togglePinnedTrajectory(token, trajectory) {{
+        function togglePinnedTrajectory(token) {{
             if (pinnedTrajectories.has(token)) {{
                 pinnedTrajectories.delete(token);
                 return false;
             }} else {{
-                pinnedTrajectories.set(token, {{ trajectory, color: getNextColor() }});
+                pinnedTrajectories.set(token, {{ color: getNextColor() }});
                 return true;
             }}
         }}
 
-        function drawAllTrajectories(hoverTrajectory, hoverColor, hoverLabel, chartInnerWidth) {{
+        function drawAllTrajectories(hoverTrajectory, hoverColor, hoverLabel, chartInnerWidth, pos) {{
             const svg = document.getElementById(uid + "_chart");
-
-            // Clear and rebuild SVG content
             svg.innerHTML = "";
 
+            const legendG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            legendG.setAttribute("class", "legend-area");
+            svg.appendChild(legendG);
+
             const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            g.setAttribute("transform", `translate(${{chartMargin.left}},${{chartMargin.top}})`);
+            g.setAttribute("transform", `translate(${{inputTokenWidth}},${{chartMargin.top}})`);
             svg.appendChild(g);
 
-            // X axis
             const xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
             xAxis.setAttribute("x1", 0);
             xAxis.setAttribute("y1", chartInnerHeight);
@@ -1219,7 +1295,6 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             xLabel.textContent = "Layer";
             g.appendChild(xLabel);
 
-            // Y axis
             const yAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
             yAxis.setAttribute("x1", 0);
             yAxis.setAttribute("y1", 0);
@@ -1228,34 +1303,67 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             yAxis.setAttribute("stroke", "#ccc");
             g.appendChild(yAxis);
 
-            const yLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            yLabel.setAttribute("x", -chartInnerHeight / 2);
-            yLabel.setAttribute("y", -30);
-            yLabel.setAttribute("text-anchor", "middle");
-            yLabel.setAttribute("font-size", "10");
-            yLabel.setAttribute("fill", "#666");
-            yLabel.setAttribute("transform", "rotate(-90)");
-            yLabel.textContent = "Prob";
-            g.appendChild(yLabel);
-
             let allProbs = [];
-            pinnedTrajectories.forEach((v) => allProbs.push(...v.trajectory));
+            pinnedTrajectories.forEach((v, token) => {{
+                const traj = getTrajectoryForToken(token, pos);
+                allProbs.push(...traj);
+            }});
             if (hoverTrajectory) allProbs.push(...hoverTrajectory);
             const maxProb = Math.max(...allProbs, 0.1);
 
-            let legendY = 5;
-            pinnedTrajectories.forEach((v, label) => {{
-                drawSingleTrajectory(g, v.trajectory, v.color, maxProb, label, false, chartInnerWidth);
-                const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                legend.innerHTML = `
-                    <line x1="${{chartInnerWidth + 5}}" y1="${{legendY}}" x2="${{chartInnerWidth + 20}}" y2="${{legendY}}" stroke="${{v.color}}" stroke-width="2"/>
-                    <text x="${{chartInnerWidth + 25}}" y="${{legendY + 4}}" font-size="9" fill="#333">${{escapeHtml(label.slice(0, 10))}}</text>
-                `;
-                g.appendChild(legend);
+            let legendY = chartMargin.top + 10;
+            pinnedTrajectories.forEach((v, token) => {{
+                const traj = getTrajectoryForToken(token, pos);
+                drawSingleTrajectory(g, traj, v.color, maxProb, token, false, chartInnerWidth);
+
+                const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                legendItem.setAttribute("class", "legend-item");
+                legendItem.setAttribute("transform", `translate(5, ${{legendY}})`);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "0");
+                line.setAttribute("y1", "0");
+                line.setAttribute("x2", "15");
+                line.setAttribute("y2", "0");
+                line.setAttribute("stroke", v.color);
+                line.setAttribute("stroke-width", "2");
+                legendItem.appendChild(line);
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", "20");
+                text.setAttribute("y", "4");
+                text.setAttribute("font-size", "9");
+                text.setAttribute("fill", "#333");
+                text.textContent = token.slice(0, 8);
+                legendItem.appendChild(text);
+
+                const closeBtn = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                closeBtn.setAttribute("class", "legend-close");
+                closeBtn.setAttribute("x", inputTokenWidth - 15);
+                closeBtn.setAttribute("y", "4");
+                closeBtn.setAttribute("font-size", "11");
+                closeBtn.setAttribute("fill", "#999");
+                closeBtn.setAttribute("style", "display:none;");
+                closeBtn.textContent = "x";
+                legendItem.appendChild(closeBtn);
+
+                legendItem.addEventListener("mouseenter", () => {{
+                    closeBtn.style.display = "block";
+                }});
+                legendItem.addEventListener("mouseleave", () => {{
+                    closeBtn.style.display = "none";
+                }});
+                closeBtn.addEventListener("click", (e) => {{
+                    e.stopPropagation();
+                    pinnedTrajectories.delete(token);
+                    buildTable(currentCellWidth, currentVisibleIndices);
+                }});
+
+                legendG.appendChild(legendItem);
                 legendY += 14;
             }});
 
-            if (hoverTrajectory) {{
+            if (hoverTrajectory && hoverLabel) {{
                 drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth);
             }}
         }}
@@ -1266,24 +1374,15 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
             if (isHover) pathEl.style.opacity = "0.7";
 
-            // Draw dots aligned with column right edges
-            // Each visible column corresponds to a layer; dots should align with right edge of each column
             const nVisibleCols = currentVisibleIndices.length;
             const colWidth = chartInnerWidth / nVisibleCols;
 
             let d = "";
-
-            // For the trajectory, we still want to show all layers, not just visible ones
-            // But the x-positions should map layers to their approximate visual position
             trajectory.forEach((p, layerIdx) => {{
-                // Map this layer to x position based on where it would fall among visible columns
-                // Find the column that this layer falls into or after
                 let x;
                 if (nVisibleCols === nLayers) {{
-                    // All layers shown - dot at right edge of each column
-                    x = (layerIdx + 1) * colWidth - colWidth / 2;
+                    x = (layerIdx + 0.5) * colWidth;
                 }} else {{
-                    // Strided display - interpolate position
                     x = ((layerIdx + 0.5) / (nLayers - 1)) * chartInnerWidth;
                 }}
                 const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
@@ -1297,7 +1396,6 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
             g.appendChild(pathEl);
 
-            // Draw dots only at visible layer positions (aligned with column centers)
             currentVisibleIndices.forEach((layerIdx, colIdx) => {{
                 const p = trajectory[layerIdx];
                 const x = (colIdx + 0.5) * colWidth;
@@ -1317,21 +1415,27 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             }});
         }}
 
-        // Close popup when clicking outside
         document.addEventListener("click", (e) => {{
             if (!e.target.closest(`#${{uid}} .popup`) && !e.target.closest(`#${{uid}} .pred-cell`)) {{
                 closePopup();
             }}
+            if (!e.target.closest(`#${{uid}} .color-mode-btn`) && !e.target.closest(`#${{uid}}_color_menu`)) {{
+                document.getElementById(uid + "_color_menu").classList.remove("visible");
+            }}
         }});
 
-        // Prevent text selection on shift+click
         document.getElementById(uid).addEventListener("mousedown", (e) => {{
             if (e.shiftKey) {{
                 e.preventDefault();
             }}
         }});
 
-        // Initial build
+        document.getElementById(uid).addEventListener("mouseleave", () => {{
+            currentHoverPos = data.tokens.length - 1;
+            const chartInnerWidth = updateChartDimensions();
+            drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
+        }});
+
         const containerWidth = 900;
         const {{ indices }} = computeVisibleLayers(currentCellWidth, containerWidth);
         buildTable(currentCellWidth, indices);
