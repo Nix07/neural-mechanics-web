@@ -26,12 +26,16 @@ def get_value(saved):
 
 
 def collect_logit_lens_data(prompt, model, remote=True):
-    """Collect logit lens data for all layers and positions."""
+    """Collect logit lens data for all layers and positions.
+
+    Uses list.save() to save the list of logits directly, which works
+    with both local and NDIF remote execution.
+    """
     n_layers = model.config.num_hidden_layers
     tokens = model.tokenizer.encode(prompt)
     token_strs = [model.tokenizer.decode([t]) for t in tokens]
 
-    stacked_logits = None
+    saved_logits = None
     with model.trace(prompt, remote=remote):
         logits_list = []
         for layer_idx in range(n_layers):
@@ -39,9 +43,11 @@ def collect_logit_lens_data(prompt, model, remote=True):
             logits = model.lm_head(model.model.norm(hidden))
             seq_logits = logits[0] if len(logits.shape) == 3 else logits
             logits_list.append(seq_logits)
-        stacked_logits = torch.stack(logits_list).save()
+        # Save the list directly - returns list of tensors after trace
+        saved_logits = logits_list.save()
 
-    stacked_logits = get_value(stacked_logits)
+    # Stack after trace for consistent shape [n_layers, seq_len, vocab]
+    stacked_logits = torch.stack([get_value(t).float() for t in saved_logits])
     return stacked_logits, token_strs
 
 
