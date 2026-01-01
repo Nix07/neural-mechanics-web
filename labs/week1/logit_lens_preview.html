@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Logit Lens Visualization Preview</title>
+    <script src="preview_data.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -23,7 +24,7 @@
 </head>
 <body>
     <h1>Logit Lens Visualization Preview</h1>
-    <p class="note">This preview uses mock data. Open in browser - no notebook needed.</p>
+    <p class="note">Using real Llama 3.1 70B data via NDIF. Open in browser - no notebook needed.</p>
     <div class="preview-container" id="viz">
         <style>
             #ll_preview {
@@ -122,38 +123,14 @@
     </div>
 
 <script>
-// Mock data
-const mockData = {
-    layers: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
-    tokens: ["Why", " do", " electric", "ians", " make", " good", " swim", "mers", "?", " Because", " they", " know", " the"],
-    cells: []
+// Use real data from NDIF via JSONP (preview_data.js)
+const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
+    layers: [0, 1, 2, 3],
+    tokens: ["Fallback", " data"],
+    cells: [[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5],topk:[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5]}]}]]
 };
 
-const tokenOptions = [" current", " water", " rules", " best", " way", " answer", " truth", " secret"];
-mockData.tokens.forEach((tok, pos) => {
-    const posData = [];
-    mockData.layers.forEach((layer, li) => {
-        const baseProbCurrent = Math.min(0.9, 0.05 + (layer / 20) * 0.6 + (pos / 13) * 0.3);
-        const trajectory = mockData.layers.map((l, i) => {
-            return Math.min(0.95, 0.02 + (i / 20) * 0.5 + (pos / 13) * 0.3 + Math.random() * 0.1);
-        });
-        const topk = tokenOptions.slice(0, 5).map((t, ki) => ({
-            token: t,
-            prob: Math.max(0.01, baseProbCurrent - ki * 0.15 + Math.random() * 0.05),
-            trajectory: mockData.layers.map((l, i) => Math.max(0, 0.02 + (i / 20) * (0.5 - ki * 0.1) + Math.random() * 0.08))
-        }));
-        posData.push({
-            token: topk[0].token,
-            prob: topk[0].prob,
-            trajectory: topk[0].trajectory,
-            topk: topk
-        });
-    });
-    mockData.cells.push(posData);
-});
-
 (function() {
-    const data = mockData;
     const uid = "ll_preview";
     const nLayers = data.layers.length;
     const chartHeight = 140;

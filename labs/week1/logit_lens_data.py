@@ -169,13 +169,71 @@ def collect_logit_lens_topk_efficient(
             "top_probs": torch.stack(top_probs_list),
         }
 
-    # Track across layers mode - need two passes or smarter approach
-    # First pass: get top-k indices at each layer
-    # Second pass: would need to extract specific probs (complex for remote)
-    # For now, fall back to full logits approach for this mode
-    return collect_logit_lens_topk(
-        prompt, model, top_k, track_across_layers=True, remote=remote, layers=layers
-    )
+    # Track across layers mode - single-pass approach
+    # All computation happens on the server: top-k, unique, and prob extraction
+
+    seq_len = len(token_ids)
+    n_layers = len(layers)
+
+    saved_results = None
+    with model.trace(prompt, remote=remote):
+        # First collect all probs and top-k for each layer
+        all_probs = []  # [n_layers, seq_len, vocab]
+        all_top_indices = []  # [n_layers, seq_len, k]
+        all_top_probs = []  # [n_layers, seq_len, k]
+
+        for layer_idx in layers:
+            hidden = model.model.layers[layer_idx].output[0]
+            logits = model.lm_head(model.model.norm(hidden))
+            seq_logits = logits[0] if len(logits.shape) == 3 else logits
+            probs = torch.softmax(seq_logits, dim=-1)
+            top_p, top_i = probs.topk(top_k, dim=-1)
+            all_probs.append(probs)
+            all_top_indices.append(top_i)
+            all_top_probs.append(top_p)
+
+        # Stack top-k results: [n_layers, seq_len, k]
+        stacked_top_indices = torch.stack(all_top_indices)
+        stacked_top_probs = torch.stack(all_top_probs)
+
+        # For each position, find unique tokens and extract their probs
+        tracked_results = []
+        for pos in range(seq_len):
+            # Get all top-k indices at this position across layers: [n_layers * k]
+            pos_indices = stacked_top_indices[:, pos, :].reshape(-1)
+            unique_tokens = torch.unique(pos_indices)
+
+            # Extract probs for these tokens at all layers
+            pos_tracked_probs = []
+            for li in range(n_layers):
+                probs_at_layer = all_probs[li][pos, unique_tokens]  # [n_unique]
+                pos_tracked_probs.append(probs_at_layer)
+
+            # Stack: [n_layers, n_unique]
+            tracked_results.append((unique_tokens, torch.stack(pos_tracked_probs)))
+
+        # Save everything
+        saved_results = (stacked_top_indices, stacked_top_probs, tracked_results).save()
+
+    # Unpack results
+    top_indices, top_probs, tracked_list = saved_results
+    top_indices = get_value(top_indices)
+    top_probs = get_value(top_probs).float()
+
+    tracked_indices_per_pos = []
+    tracked_probs_per_pos = []
+    for unique_tokens, probs_matrix in tracked_list:
+        tracked_indices_per_pos.append(get_value(unique_tokens))
+        tracked_probs_per_pos.append(get_value(probs_matrix).float())
+
+    return {
+        "tokens": token_strs,
+        "layers": layers,
+        "tracked_indices": tracked_indices_per_pos,
+        "tracked_probs": tracked_probs_per_pos,
+        "top_indices": top_indices,
+        "top_probs": top_probs,
+    }
 
 
 def decode_tracked_tokens(data: Dict, tokenizer) -> Dict[int, List[str]]:

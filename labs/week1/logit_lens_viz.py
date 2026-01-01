@@ -1424,43 +1424,49 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
 
             if (hoverTrajectory && hoverLabel) {{
                 drawSingleTrajectory(g, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true, chartInnerWidth);
+
+                // Add legend entry for hover trajectory
+                const legendItem = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                legendItem.setAttribute("class", "legend-item hover-legend");
+                legendItem.setAttribute("transform", `translate(5, ${{legendY}})`);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", "0");
+                line.setAttribute("y1", "0");
+                line.setAttribute("x2", "15");
+                line.setAttribute("y2", "0");
+                line.setAttribute("stroke", hoverColor || "#999");
+                line.setAttribute("stroke-width", "1.5");
+                line.setAttribute("stroke-dasharray", "4,2");
+                line.style.opacity = "0.7";
+                legendItem.appendChild(line);
+
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", "20");
+                text.setAttribute("y", "4");
+                text.setAttribute("font-size", "9");
+                text.setAttribute("fill", "#666");
+                text.textContent = hoverLabel.slice(0, 8);
+                legendItem.appendChild(text);
+
+                legendG.appendChild(legendItem);
             }}
         }}
 
         function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {{
             if (!trajectory || trajectory.length === 0) return;
 
-            const nVisibleCols = currentVisibleIndices.length;
-            const colWidth = chartInnerWidth / nVisibleCols;
-
-            // Build a function to map layer index to x position
+            // All layers evenly spaced from x=0 to x=chartInnerWidth
+            // This ensures layer 0 starts at left edge, layer N-1 at right edge
             function layerToX(layerIdx) {{
-                const firstVisible = currentVisibleIndices[0];
-                const lastVisible = currentVisibleIndices[currentVisibleIndices.length - 1];
-
-                if (layerIdx <= firstVisible) {{
-                    return 0.5 * colWidth;
-                }}
-                if (layerIdx >= lastVisible) {{
-                    return (nVisibleCols - 0.5) * colWidth;
-                }}
-
-                // Find which two visible columns this layer falls between
-                for (let i = 0; i < currentVisibleIndices.length - 1; i++) {{
-                    const left = currentVisibleIndices[i];
-                    const right = currentVisibleIndices[i + 1];
-                    if (layerIdx >= left && layerIdx <= right) {{
-                        // Interpolate between column i and i+1
-                        const t = (layerIdx - left) / (right - left);
-                        return (i + 0.5 + t) * colWidth;
-                    }}
-                }}
-                return 0;
+                if (nLayers <= 1) return chartInnerWidth / 2;
+                return (layerIdx / (nLayers - 1)) * chartInnerWidth;
             }}
 
             const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
             if (isHover) pathEl.style.opacity = "0.7";
 
+            // Draw line through ALL layers (not just visible ones)
             let d = "";
             trajectory.forEach((p, layerIdx) => {{
                 const x = layerToX(layerIdx);
@@ -1475,10 +1481,10 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
             g.appendChild(pathEl);
 
-            // Draw dots at visible layer positions - use same x calculation as line
-            currentVisibleIndices.forEach((layerIdx, colIdx) => {{
+            // Draw dots only at visible layer positions (on the line)
+            currentVisibleIndices.forEach((layerIdx) => {{
                 const p = trajectory[layerIdx];
-                const x = (colIdx + 0.5) * colWidth;  // Exact position for visible layers
+                const x = layerToX(layerIdx);
                 const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
 
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
