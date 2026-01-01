@@ -161,8 +161,10 @@ var LogitLensWidget = (function() {
         (function() {
             var nLayers = widgetData.layers.length;
             var chartHeight = 140;
+            var minChartHeight = 60;
+            var maxChartHeight = 400;
             var chartMargin = { top: 10, right: 8, bottom: 25, left: 10 };
-            var chartInnerHeight = chartHeight - chartMargin.top - chartMargin.bottom;
+            function getChartInnerHeight() { return chartHeight - chartMargin.top - chartMargin.bottom; }
             var minCellWidth = 10;
             var maxCellWidth = 200;
 
@@ -504,6 +506,7 @@ var LogitLensWidget = (function() {
             // Shared drag state for column resizing (prevents listener accumulation)
             var colResizeDrag = { active: false, type: null, startX: 0, startWidth: 0, colIdx: 0 };
             var yAxisDrag = { active: false, startX: 0, startWidth: 0 };
+            var xAxisDrag = { active: false, startY: 0, startHeight: 0 };
 
             function attachResizeListeners() {
                 document.querySelectorAll("#" + uid + " .resize-handle-input").forEach(function(handle) {
@@ -559,6 +562,23 @@ var LogitLensWidget = (function() {
                 if (yAxisDrag.active) {
                     yAxisDrag.active = false;
                 }
+                if (xAxisDrag.active) {
+                    xAxisDrag.active = false;
+                }
+            });
+
+            // X-axis drag for chart height
+            document.addEventListener("mousemove", function(e) {
+                if (!xAxisDrag.active) return;
+                var delta = e.clientY - xAxisDrag.startY;
+                var newHeight = Math.max(minChartHeight, Math.min(maxChartHeight, xAxisDrag.startHeight + delta));
+                if (Math.abs(newHeight - chartHeight) > 2) {
+                    chartHeight = newHeight;
+                    var svg = document.getElementById(uid + "_chart");
+                    svg.setAttribute("height", chartHeight);
+                    var chartInnerWidth = updateChartDimensions();
+                    drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
+                }
             });
 
             document.addEventListener("mousemove", function(e) {
@@ -584,6 +604,12 @@ var LogitLensWidget = (function() {
                         var hoverColor = isPinned ? null : "#999";
                         var hoverLabel = isPinned ? null : cellData.token;
                         drawAllTrajectories(hoverTraj, hoverColor, hoverLabel, chartInnerWidth, pos);
+                    });
+
+                    cell.addEventListener("mouseleave", function() {
+                        // Clear hover trajectory when leaving cell
+                        var chartInnerWidth = updateChartDimensions();
+                        drawAllTrajectories(null, null, null, chartInnerWidth, currentHoverPos);
                     });
                 });
 
@@ -739,15 +765,37 @@ var LogitLensWidget = (function() {
                 legendG.setAttribute("class", "legend-area");
                 svg.appendChild(legendG);
 
+                var chartInnerHeight = getChartInnerHeight();
+
                 var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 g.setAttribute("transform", "translate(" + actualInputRight + "," + chartMargin.top + ")");
                 svg.appendChild(g);
+
+                // X-axis group (draggable to resize chart height)
+                var xAxisGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                xAxisGroup.style.cursor = "row-resize";
+
+                // Invisible wider hit target for easier dragging
+                var xAxisHitTarget = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                xAxisHitTarget.setAttribute("x", 0); xAxisHitTarget.setAttribute("y", chartInnerHeight - 4);
+                xAxisHitTarget.setAttribute("width", chartInnerWidth); xAxisHitTarget.setAttribute("height", 8);
+                xAxisHitTarget.setAttribute("fill", "transparent");
+                xAxisGroup.appendChild(xAxisHitTarget);
 
                 var xAxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
                 xAxis.setAttribute("x1", 0); xAxis.setAttribute("y1", chartInnerHeight);
                 xAxis.setAttribute("x2", chartInnerWidth); xAxis.setAttribute("y2", chartInnerHeight);
                 xAxis.setAttribute("stroke", "#ccc");
-                g.appendChild(xAxis);
+                xAxisGroup.appendChild(xAxis);
+                g.appendChild(xAxisGroup);
+
+                xAxisGroup.addEventListener("mousedown", function(e) {
+                    closePopup();
+                    xAxisDrag = { active: true, startY: e.clientY, startHeight: chartHeight };
+                    xAxis.setAttribute("stroke", "rgba(33, 150, 243, 0.6)");
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
 
                 var dotRadius = 3;
                 var labelMargin = chartMargin.right;
@@ -935,6 +983,7 @@ var LogitLensWidget = (function() {
             function drawSingleTrajectory(g, trajectory, color, maxProb, label, isHover, chartInnerWidth) {
                 if (!trajectory || trajectory.length === 0) return;
 
+                var chartInnerHeight = getChartInnerHeight();
                 var dotRadius = isHover ? 2 : 3;
                 var labelMargin = chartMargin.right;
                 var usableWidth = chartInnerWidth - labelMargin;
