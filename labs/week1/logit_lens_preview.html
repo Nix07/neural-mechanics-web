@@ -123,7 +123,10 @@ var LogitLensWidget = (function() {
                 cursor: row-resize; background: transparent;
             }
             #${uid} .resize-handle-bottom:hover, #${uid} .resize-handle-bottom.dragging { background: rgba(33, 150, 243, 0.4); }
-            #${uid} .resize-hint { font-size: 9px; color: #999; margin-top: 4px; }
+            #${uid} .resize-hint { font-size: 9px; color: #999; margin-top: 4px; cursor: default; }
+            #${uid} .resize-hint-extra { display: none; }
+            #${uid}.show-all-handles .resize-handle,
+            #${uid}.show-all-handles .resize-handle-input { background: rgba(33, 150, 243, 0.3); }
             #${uid} .color-menu {
                 display: none; position: absolute; background: white; border: 1px solid #ddd;
                 border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 200; min-width: 150px;
@@ -177,6 +180,7 @@ var LogitLensWidget = (function() {
             var openPopupCell = null;
             var currentHoverPos = widgetData.tokens.length - 1;
             var colorMode = "top";
+            var customTitle = "Logit Lens: Top Predictions by Layer";
 
             var pinnedGroups = [];
             var lastPinnedGroupIndex = -1;
@@ -539,9 +543,20 @@ var LogitLensWidget = (function() {
 
                 var hint = document.getElementById(uid + "_resize_hint");
                 var stride = visibleLayerIndices.length < nLayers ? Math.ceil(nLayers / visibleLayerIndices.length) : 1;
-                hint.textContent = stride > 1 ?
-                    "showing every " + stride + " layers ending at " + (nLayers-1) + " (drag column borders to adjust)" :
+                var hintMain = stride > 1 ?
+                    "showing every " + stride + " layers ending at " + (nLayers-1) :
                     "showing all " + nLayers + " layers";
+                hint.innerHTML = '<span class="resize-hint-main">' + hintMain + '</span><span class="resize-hint-extra"> (drag column borders to adjust)</span>';
+
+                // Hover over hint shows extra text and all resize handles
+                hint.addEventListener("mouseenter", function() {
+                    hint.querySelector(".resize-hint-extra").style.display = "inline";
+                    document.getElementById(uid).classList.add("show-all-handles");
+                });
+                hint.addEventListener("mouseleave", function() {
+                    hint.querySelector(".resize-hint-extra").style.display = "none";
+                    document.getElementById(uid).classList.remove("show-all-handles");
+                });
             }
 
             function updateTitle() {
@@ -562,8 +577,44 @@ var LogitLensWidget = (function() {
 
                 var btnStyle = pinnedColor ? "background: " + pinnedColor + "22; border-color: " + pinnedColor + ";" : "";
 
-                titleEl.innerHTML = 'Logit Lens: Top Predictions by Layer <span class="color-mode-btn" id="' + uid + '_color_btn" style="' + btnStyle + '">(' + escapeHtml(displayLabel) + ')</span>';
+                titleEl.innerHTML = '<span class="ll-title-text" id="' + uid + '_title_text" style="cursor: text;">' + escapeHtml(customTitle) + '</span> <span class="color-mode-btn" id="' + uid + '_color_btn" style="' + btnStyle + '">(' + escapeHtml(displayLabel) + ')</span>';
                 document.getElementById(uid + "_color_btn").addEventListener("click", showColorModeMenu);
+                document.getElementById(uid + "_title_text").addEventListener("click", startTitleEdit);
+            }
+
+            function startTitleEdit(e) {
+                e.stopPropagation();
+                var titleTextEl = document.getElementById(uid + "_title_text");
+                var currentText = customTitle;
+                var input = document.createElement("input");
+                input.type = "text";
+                input.value = currentText;
+                input.style.cssText = "font-size: 16px; font-weight: 600; font-family: inherit; border: 1px solid #2196F3; border-radius: 3px; padding: 1px 4px; outline: none; width: " + Math.max(200, titleTextEl.offsetWidth) + "px;";
+
+                titleTextEl.innerHTML = "";
+                titleTextEl.appendChild(input);
+                input.focus();
+                input.select();
+
+                function finishEdit() {
+                    var newTitle = input.value.trim();
+                    if (newTitle) {
+                        customTitle = newTitle;
+                    }
+                    updateTitle();
+                }
+
+                input.addEventListener("blur", finishEdit);
+                input.addEventListener("keydown", function(ev) {
+                    if (ev.key === "Enter") {
+                        ev.preventDefault();
+                        input.blur();
+                    } else if (ev.key === "Escape") {
+                        ev.preventDefault();
+                        input.value = customTitle;  // restore original
+                        input.blur();
+                    }
+                });
             }
 
             function showColorModeMenu(e) {
@@ -1049,21 +1100,24 @@ var LogitLensWidget = (function() {
                     return pct.toFixed(2) + "%";
                 }
 
-                // Draw max scale tick and label at top of y-axis
-                var tickY = 0;  // top of chart
-                var tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                tickLine.setAttribute("x1", -3); tickLine.setAttribute("y1", tickY);
-                tickLine.setAttribute("x2", 3); tickLine.setAttribute("y2", tickY);
-                tickLine.setAttribute("stroke", "#999");
-                g.appendChild(tickLine);
+                // Draw max scale tick and label at top of y-axis (only if there's data)
+                var hasData = pinnedGroups.length > 0 || (hoverTrajectory && hoverLabel);
+                if (hasData) {
+                    var tickY = 0;  // top of chart
+                    var tickLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    tickLine.setAttribute("x1", -3); tickLine.setAttribute("y1", tickY);
+                    tickLine.setAttribute("x2", 3); tickLine.setAttribute("y2", tickY);
+                    tickLine.setAttribute("stroke", "#999");
+                    g.appendChild(tickLine);
 
-                var tickLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                tickLabel.setAttribute("x", -5); tickLabel.setAttribute("y", tickY + 3);
-                tickLabel.setAttribute("text-anchor", "end");
-                tickLabel.setAttribute("font-size", "8");
-                tickLabel.setAttribute("fill", "#666");
-                tickLabel.textContent = formatPct(maxProb);
-                g.appendChild(tickLabel);
+                    var tickLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    tickLabel.setAttribute("x", -5); tickLabel.setAttribute("y", tickY + 3);
+                    tickLabel.setAttribute("text-anchor", "end");
+                    tickLabel.setAttribute("font-size", "8");
+                    tickLabel.setAttribute("fill", "#666");
+                    tickLabel.textContent = formatPct(maxProb);
+                    g.appendChild(tickLabel);
+                }
 
                 // Calculate legend entry count for vertical centering
                 var legendEntryCount = 0;
