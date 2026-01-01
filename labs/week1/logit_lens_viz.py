@@ -868,14 +868,42 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             margin-top: 6px;
             font-style: italic;
         }}
+        #{uid} .resize-handle {{
+            position: absolute;
+            width: 8px;
+            height: 100%;
+            background: transparent;
+            cursor: col-resize;
+            right: 0;
+            top: 0;
+            z-index: 10;
+        }}
+        #{uid} .resize-handle:hover,
+        #{uid} .resize-handle.dragging {{
+            background: rgba(33, 150, 243, 0.3);
+        }}
+        #{uid} .table-wrapper {{
+            position: relative;
+            display: inline-block;
+        }}
+        #{uid} .resize-hint {{
+            position: absolute;
+            bottom: -18px;
+            right: 0;
+            font-size: 9px;
+            color: #999;
+        }}
     </style>
 
     <div id="{uid}">
         <div class="ll-title">Logit Lens: Top Predictions by Layer</div>
-        <table class="ll-table">
-            {"".join(rows_html)}
-            {footer_row}
-        </table>
+        <div class="table-wrapper">
+            <table class="ll-table" id="{uid}_table">
+                <!-- Table will be built dynamically -->
+            </table>
+            <div class="resize-handle" id="{uid}_resize"></div>
+            <div class="resize-hint" id="{uid}_resize_hint">drag to resize</div>
+        </div>
 
         <div class="chart-container">
             <div class="chart-label">Token probability across layers — hover to preview, shift+click to pin for comparison</div>
@@ -909,11 +937,18 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
         const data = {json.dumps(js_data)};
         const uid = "{uid}";
         const nLayers = data.layers.length;
-        const innerWidth = {inner_width};
-        const innerHeight = {inner_height};
+        const chartInnerWidth = {inner_width};
+        const chartInnerHeight = {inner_height};
+        const inputTokenWidth = 100;  // Width of input token column
+        const minCellWidth = 30;
+        const maxCellWidth = 200;
+        const containerMaxWidth = 900;  // Max table width before striding kicks in
 
-        // Persistent trajectories for comparison (shift+click to toggle)
-        const pinnedTrajectories = new Map(); // key: "token_name" -> {{trajectory, color}}
+        let currentCellWidth = {cell_width};
+        let currentStride = 1;
+
+        // Persistent trajectories for comparison
+        const pinnedTrajectories = new Map();
         const colors = ["#2196F3", "#e91e63", "#4CAF50", "#FF9800", "#9C27B0", "#00BCD4", "#F44336", "#8BC34A"];
         let colorIndex = 0;
 
@@ -923,34 +958,208 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             return c;
         }}
 
+        function escapeHtml(text) {{
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }}
+
+        function probToColor(prob) {{
+            const r = Math.round(255 * (1 - prob * 0.8));
+            const g = Math.round(255 * (1 - prob * 0.6));
+            return `rgb(${{r}},${{g}},255)`;
+        }}
+
+        // Calculate which layers to show given cell width
+        function computeVisibleLayers(cellWidth) {{
+            const availableWidth = containerMaxWidth - inputTokenWidth;
+            const maxCols = Math.floor(availableWidth / cellWidth);
+
+            if (maxCols >= nLayers) {{
+                // All layers fit
+                return {{ stride: 1, indices: data.layers.map((_, i) => i) }};
+            }}
+
+            // Need to stride - always include last layer
+            const stride = Math.ceil(nLayers / maxCols);
+            const indices = [];
+
+            // Start from 0, step by stride, but always end with last
+            for (let i = 0; i < nLayers - 1; i += stride) {{
+                indices.push(i);
+            }}
+            // Always add last layer
+            if (indices[indices.length - 1] !== nLayers - 1) {{
+                indices.push(nLayers - 1);
+            }}
+
+            return {{ stride, indices }};
+        }}
+
+        // Build the table HTML
+        function buildTable(cellWidth, visibleLayerIndices) {{
+            const table = document.getElementById(uid + "_table");
+            let html = "";
+
+            // Data rows
+            data.tokens.forEach((tok, pos) => {{
+                html += "<tr>";
+                html += `<td class="input-token" title="${{escapeHtml(tok)}}">${{escapeHtml(tok)}}</td>`;
+
+                visibleLayerIndices.forEach((li, colIdx) => {{
+                    const cellData = data.cells[pos][li];
+                    const color = probToColor(cellData.prob);
+                    const textColor = cellData.prob < 0.5 ? "#333" : "#fff";
+                    const isPinned = pinnedTrajectories.has(cellData.token);
+
+                    html += `<td class="pred-cell${{isPinned ? ' pinned' : ''}}" ` +
+                        `data-pos="${{pos}}" data-li="${{li}}" data-col="${{colIdx}}" ` +
+                        `style="background:${{color}}; color:${{textColor}}; width:${{cellWidth}}px; max-width:${{cellWidth}}px;">` +
+                        `${{escapeHtml(cellData.token)}}</td>`;
+                }});
+
+                html += "</tr>";
+            }});
+
+            // Footer row with layer numbers
+            html += "<tr>";
+            html += `<th class="corner-hdr">Layer</th>`;
+            visibleLayerIndices.forEach((li, colIdx) => {{
+                const isLast = colIdx === visibleLayerIndices.length - 1;
+                html += `<th class="layer-hdr" style="width:${{cellWidth}}px; max-width:${{cellWidth}}px;">${{data.layers[li]}}</th>`;
+            }});
+            html += "</tr>";
+
+            table.innerHTML = html;
+
+            // Re-attach event listeners
+            attachCellListeners();
+
+            // Update hint
+            const hint = document.getElementById(uid + "_resize_hint");
+            const stride = visibleLayerIndices.length < nLayers ?
+                Math.ceil(nLayers / visibleLayerIndices.length) : 1;
+            hint.textContent = stride > 1 ?
+                `showing every ${{stride}} layers (drag to adjust)` :
+                `showing all ${{nLayers}} layers`;
+        }}
+
+        function attachCellListeners() {{
+            document.querySelectorAll(`#${{uid}} .pred-cell`).forEach(cell => {{
+                const pos = parseInt(cell.dataset.pos);
+                const li = parseInt(cell.dataset.li);
+                const cellData = data.cells[pos][li];
+
+                cell.addEventListener("mouseenter", () => {{
+                    drawAllTrajectories(cellData.trajectory, "#999", cellData.token);
+                }});
+
+                cell.addEventListener("mouseleave", () => {{
+                    drawAllTrajectories(null, null, null);
+                }});
+
+                cell.addEventListener("click", (e) => {{
+                    e.stopPropagation();
+
+                    if (e.shiftKey) {{
+                        const wasPinned = !togglePinnedTrajectory(cellData.token, cellData.trajectory);
+                        cell.classList.toggle("pinned", !wasPinned);
+                        drawAllTrajectories(null, null, null);
+                        return;
+                    }}
+
+                    document.querySelectorAll(`#${{uid}} .pred-cell.selected`).forEach(c => c.classList.remove("selected"));
+                    cell.classList.add("selected");
+
+                    showPopup(cell, pos, li, cellData);
+                }});
+            }});
+        }}
+
+        function showPopup(cell, pos, li, cellData) {{
+            const popup = document.getElementById(uid + "_popup");
+            const rect = cell.getBoundingClientRect();
+            const containerRect = document.getElementById(uid).getBoundingClientRect();
+
+            popup.style.left = (rect.left - containerRect.left + rect.width + 5) + "px";
+            popup.style.top = (rect.top - containerRect.top) + "px";
+
+            document.getElementById(uid + "_popup_layer").textContent = data.layers[li];
+            document.getElementById(uid + "_popup_pos").textContent = pos + " (" + data.tokens[pos] + ")";
+
+            let contentHtml = "";
+            cellData.topk.forEach((item, ki) => {{
+                const probPct = (item.prob * 100).toFixed(1);
+                const isPinned = pinnedTrajectories.has(item.token);
+                contentHtml += `<div class="topk-item${{isPinned ? ' pinned' : ''}}" data-ki="${{ki}}">`;
+                contentHtml += `<span class="topk-token">${{escapeHtml(item.token)}}</span>`;
+                contentHtml += `<span class="topk-prob">${{probPct}}%</span>`;
+                contentHtml += `</div>`;
+            }});
+
+            const contentEl = document.getElementById(uid + "_popup_content");
+            contentEl.innerHTML = contentHtml;
+
+            contentEl.querySelectorAll(".topk-item").forEach(item => {{
+                const ki = parseInt(item.dataset.ki);
+                const tokData = cellData.topk[ki];
+
+                item.addEventListener("mouseenter", () => {{
+                    contentEl.querySelectorAll(".topk-item").forEach(it => it.classList.remove("active"));
+                    item.classList.add("active");
+                    drawAllTrajectories(tokData.trajectory, "#999", tokData.token);
+                }});
+
+                item.addEventListener("mouseleave", () => {{
+                    drawAllTrajectories(null, null, null);
+                }});
+
+                item.addEventListener("click", (e) => {{
+                    if (e.shiftKey) {{
+                        e.stopPropagation();
+                        const wasPinned = !togglePinnedTrajectory(tokData.token, tokData.trajectory);
+                        item.classList.toggle("pinned", !wasPinned);
+                        drawAllTrajectories(null, null, null);
+                    }}
+                }});
+            }});
+
+            popup.classList.add("visible");
+            drawAllTrajectories(cellData.trajectory, "#999", cellData.token);
+        }}
+
+        function togglePinnedTrajectory(token, trajectory) {{
+            if (pinnedTrajectories.has(token)) {{
+                pinnedTrajectories.delete(token);
+                return false;
+            }} else {{
+                pinnedTrajectories.set(token, {{ trajectory, color: getNextColor() }});
+                return true;
+            }}
+        }}
+
         function drawAllTrajectories(hoverTrajectory, hoverColor, hoverLabel) {{
             const svg = document.getElementById(uid + "_chart").querySelector("g");
-
-            // Remove old paths and dots (except axes)
             svg.querySelectorAll(".traj-path, .traj-dots, .traj-legend").forEach(el => el.remove());
 
-            // Find max prob across all trajectories for consistent scaling
             let allProbs = [];
             pinnedTrajectories.forEach((v) => allProbs.push(...v.trajectory));
             if (hoverTrajectory) allProbs.push(...hoverTrajectory);
             const maxProb = Math.max(...allProbs, 0.1);
 
-            // Draw pinned trajectories
             let legendY = 5;
             pinnedTrajectories.forEach((v, label) => {{
-                drawSingleTrajectory(svg, v.trajectory, v.color, maxProb, label);
-                // Add legend
+                drawSingleTrajectory(svg, v.trajectory, v.color, maxProb, label, false);
                 const legend = document.createElementNS("http://www.w3.org/2000/svg", "g");
                 legend.classList.add("traj-legend");
                 legend.innerHTML = `
-                    <line x1="${{innerWidth + 5}}" y1="${{legendY}}" x2="${{innerWidth + 20}}" y2="${{legendY}}" stroke="${{v.color}}" stroke-width="2"/>
-                    <text x="${{innerWidth + 25}}" y="${{legendY + 4}}" font-size="9" fill="#333">${{escapeHtml(label.slice(0, 8))}}</text>
+                    <line x1="${{chartInnerWidth + 5}}" y1="${{legendY}}" x2="${{chartInnerWidth + 20}}" y2="${{legendY}}" stroke="${{v.color}}" stroke-width="2"/>
+                    <text x="${{chartInnerWidth + 25}}" y="${{legendY + 4}}" font-size="9" fill="#333">${{escapeHtml(label.slice(0, 8))}}</text>
                 `;
                 svg.appendChild(legend);
                 legendY += 14;
             }});
 
-            // Draw hover trajectory on top
             if (hoverTrajectory) {{
                 drawSingleTrajectory(svg, hoverTrajectory, hoverColor || "#999", maxProb, hoverLabel, true);
             }}
@@ -965,8 +1174,8 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
 
             let d = "";
             trajectory.forEach((p, i) => {{
-                const x = (i / (nLayers - 1)) * innerWidth;
-                const y = innerHeight - (p / maxProb) * innerHeight;
+                const x = (i / (nLayers - 1)) * chartInnerWidth;
+                const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
                 d += (i === 0 ? "M" : "L") + x + "," + y;
             }});
 
@@ -977,12 +1186,11 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
             if (isHover) pathEl.setAttribute("stroke-dasharray", "4,2");
             svg.appendChild(pathEl);
 
-            // Add dots
             const dotsG = document.createElementNS("http://www.w3.org/2000/svg", "g");
             dotsG.classList.add("traj-dots");
             trajectory.forEach((p, i) => {{
-                const x = (i / (nLayers - 1)) * innerWidth;
-                const y = innerHeight - (p / maxProb) * innerHeight;
+                const x = (i / (nLayers - 1)) * chartInnerWidth;
+                const y = chartInnerHeight - (p / maxProb) * chartInnerHeight;
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 circle.setAttribute("cx", x);
                 circle.setAttribute("cy", y);
@@ -990,122 +1198,59 @@ def render_all_positions_heatmap(data, tokenizer, cell_width=48, cell_height=22,
                 circle.setAttribute("fill", color);
                 if (isHover) circle.style.opacity = "0.7";
                 const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
-                title.textContent = (label || "") + " Layer " + i + ": " + (p * 100).toFixed(2) + "%";
+                title.textContent = (label || "") + " L" + i + ": " + (p * 100).toFixed(2) + "%";
                 circle.appendChild(title);
                 dotsG.appendChild(circle);
             }});
             svg.appendChild(dotsG);
         }}
 
-        function togglePinnedTrajectory(token, trajectory) {{
-            if (pinnedTrajectories.has(token)) {{
-                pinnedTrajectories.delete(token);
-                return false;
-            }} else {{
-                pinnedTrajectories.set(token, {{trajectory, color: getNextColor()}});
-                return true;
+        // Resize handle drag logic
+        const resizeHandle = document.getElementById(uid + "_resize");
+        let isDragging = false;
+        let startX = 0;
+        let startWidth = currentCellWidth;
+
+        resizeHandle.addEventListener("mousedown", (e) => {{
+            isDragging = true;
+            startX = e.clientX;
+            startWidth = currentCellWidth;
+            resizeHandle.classList.add("dragging");
+            e.preventDefault();
+        }});
+
+        document.addEventListener("mousemove", (e) => {{
+            if (!isDragging) return;
+
+            // Dragging left = negative delta = increase width (fewer columns)
+            const delta = startX - e.clientX;
+            const newWidth = Math.max(minCellWidth, Math.min(maxCellWidth, startWidth + delta * 0.5));
+
+            if (Math.abs(newWidth - currentCellWidth) > 2) {{
+                currentCellWidth = newWidth;
+                const {{ indices }} = computeVisibleLayers(currentCellWidth);
+                buildTable(currentCellWidth, indices);
             }}
-        }}
+        }});
 
-        // Add hover listeners to cells
-        document.querySelectorAll("#{uid} .pred-cell").forEach(cell => {{
-            const pos = parseInt(cell.dataset.pos);
-            const li = parseInt(cell.dataset.li);
-            const cellData = data.cells[pos][li];
-
-            cell.addEventListener("mouseenter", () => {{
-                drawAllTrajectories(cellData.trajectory, "#999", cellData.token);
-            }});
-
-            cell.addEventListener("mouseleave", () => {{
-                drawAllTrajectories(null, null, null);
-            }});
-
-            cell.addEventListener("click", (e) => {{
-                e.stopPropagation();
-
-                // Shift+click to pin/unpin trajectory
-                if (e.shiftKey) {{
-                    const wasPinned = !togglePinnedTrajectory(cellData.token, cellData.trajectory);
-                    cell.classList.toggle("pinned", !wasPinned);
-                    drawAllTrajectories(null, null, null);
-                    return;
-                }}
-
-                // Remove previous selection
-                document.querySelectorAll("#{uid} .pred-cell.selected").forEach(c => c.classList.remove("selected"));
-                cell.classList.add("selected");
-
-                // Position popup near cell
-                const popup = document.getElementById(uid + "_popup");
-                const rect = cell.getBoundingClientRect();
-                const containerRect = document.getElementById(uid).getBoundingClientRect();
-
-                popup.style.left = (rect.left - containerRect.left + rect.width + 5) + "px";
-                popup.style.top = (rect.top - containerRect.top) + "px";
-
-                // Fill popup content
-                document.getElementById(uid + "_popup_layer").textContent = data.layers[data.layerIndices[li]];
-                document.getElementById(uid + "_popup_pos").textContent = pos + " (" + data.tokens[pos] + ")";
-
-                let contentHtml = "";
-                cellData.topk.forEach((item, ki) => {{
-                    const probPct = (item.prob * 100).toFixed(1);
-                    const isPinned = pinnedTrajectories.has(item.token);
-                    contentHtml += '<div class="topk-item' + (isPinned ? ' pinned' : '') + '" data-ki="' + ki + '">';
-                    contentHtml += '<span class="topk-token">' + escapeHtml(item.token) + '</span>';
-                    contentHtml += '<span class="topk-prob">' + probPct + '%</span>';
-                    contentHtml += '</div>';
-                }});
-
-                const contentEl = document.getElementById(uid + "_popup_content");
-                contentEl.innerHTML = contentHtml;
-
-                // Add hover and click listeners to topk items
-                contentEl.querySelectorAll(".topk-item").forEach(item => {{
-                    const ki = parseInt(item.dataset.ki);
-                    const tokData = cellData.topk[ki];
-
-                    item.addEventListener("mouseenter", () => {{
-                        contentEl.querySelectorAll(".topk-item").forEach(it => it.classList.remove("active"));
-                        item.classList.add("active");
-                        drawAllTrajectories(tokData.trajectory, "#999", tokData.token);
-                    }});
-
-                    item.addEventListener("mouseleave", () => {{
-                        drawAllTrajectories(null, null, null);
-                    }});
-
-                    item.addEventListener("click", (e) => {{
-                        if (e.shiftKey) {{
-                            e.stopPropagation();
-                            const wasPinned = !togglePinnedTrajectory(tokData.token, tokData.trajectory);
-                            item.classList.toggle("pinned", !wasPinned);
-                            drawAllTrajectories(null, null, null);
-                        }}
-                    }});
-                }});
-
-                popup.classList.add("visible");
-                drawAllTrajectories(cellData.trajectory, "#999", cellData.token);
-            }});
+        document.addEventListener("mouseup", () => {{
+            if (isDragging) {{
+                isDragging = false;
+                resizeHandle.classList.remove("dragging");
+            }}
         }});
 
         // Close popup when clicking outside
         document.addEventListener("click", (e) => {{
-            if (!e.target.closest("#{uid} .popup") && !e.target.closest("#{uid} .pred-cell")) {{
+            if (!e.target.closest(`#${{uid}} .popup`) && !e.target.closest(`#${{uid}} .pred-cell`)) {{
                 document.getElementById(uid + "_popup").classList.remove("visible");
-                document.querySelectorAll("#{uid} .pred-cell.selected").forEach(c => c.classList.remove("selected"));
+                document.querySelectorAll(`#${{uid}} .pred-cell.selected`).forEach(c => c.classList.remove("selected"));
             }}
         }});
 
-        function escapeHtml(text) {{
-            const div = document.createElement("div");
-            div.textContent = text;
-            return div.innerHTML;
-        }}
-
-        // Initial draw
+        // Initial build
+        const {{ indices }} = computeVisibleLayers(currentCellWidth);
+        buildTable(currentCellWidth, indices);
         drawAllTrajectories(null, null, null);
     }})();
     </script>
