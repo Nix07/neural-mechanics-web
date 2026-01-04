@@ -30,6 +30,9 @@
         <button id="duplicate-btn" style="padding: 8px 16px; font-size: 14px; cursor: pointer;">
             Duplicate Widget with Same State
         </button>
+        <label id="link-label" style="margin-left: 15px; display: none;">
+            <input type="checkbox" id="link-checkbox"> Link columns
+        </label>
         <span id="state-display" style="margin-left: 10px; font-size: 11px; color: #666;"></span>
     </p>
     <div class="preview-container" id="viz2" style="margin-top: 20px;"></div>
@@ -42,15 +45,71 @@ const data = (typeof PREVIEW_DATA !== 'undefined') ? PREVIEW_DATA : {
     cells: [[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5],topk:[{token:"test",prob:0.5,trajectory:[0.5,0.5,0.5,0.5]}]}]]
 };
 
-// Widget factory - each call creates an independent instance
+/**
+ * LogitLensWidget - Interactive visualization of transformer logit lens data.
+ *
+ * Displays top-k token predictions at each layer, with probability trajectories
+ * across layers. Supports token grouping, row pinning, and linked column sizing
+ * across multiple widget instances.
+ *
+ * @param {string|Element} container - CSS selector (e.g., "#viz") or DOM element
+ * @param {Object} data - Logit lens data from the model, with structure:
+ *   @param {number[]} data.layers - Layer indices analyzed (e.g., [0, 1, 2, ..., 79])
+ *   @param {string[]} data.tokens - Input token strings (e.g., ["The", " quick", " fox"])
+ *   @param {Object[][]} data.cells - 2D array [position][layer] of cell data:
+ *     @param {string} cells[p][l].token - Top-1 predicted token at this position/layer
+ *     @param {number} cells[p][l].prob - Probability of top-1 token (0-1)
+ *     @param {number[]} cells[p][l].trajectory - Top-1's probability at each layer
+ *     @param {Object[]} cells[p][l].topk - Top-k predictions, each with:
+ *       @param {string} topk[].token - Predicted token string
+ *       @param {number} topk[].prob - Probability (0-1)
+ *       @param {number[]} topk[].trajectory - This token's probability at each layer
+ *
+ * @param {Object} [uiState] - Optional saved UI state to restore:
+ *   @param {string} [uiState.title] - Custom title (default: "Logit Lens: Top Predictions by Layer")
+ *   @param {number} [uiState.cellWidth=44] - Column width in pixels
+ *   @param {number} [uiState.inputTokenWidth=100] - Input token column width
+ *   @param {number} [uiState.chartHeight=140] - SVG chart height (60-400)
+ *   @param {number} [uiState.maxRows=null] - Max rows to show (null = all)
+ *   @param {number} [uiState.maxTableWidth=null] - Max table width (null = container)
+ *   @param {string} [uiState.colorMode="top"] - Color mode: "top", "none", or token string
+ *   @param {Object[]} [uiState.pinnedGroups] - Pinned token groups with colors
+ *   @param {Object[]} [uiState.pinnedRows] - Pinned row positions with line styles
+ *
+ * @returns {Object} Widget interface:
+ *   @returns {string} .uid - Unique widget ID
+ *   @returns {Function} .getState() - Returns serializable UI state
+ *   @returns {Function} .getColumnState() - Returns {cellWidth, inputTokenWidth, maxTableWidth}
+ *   @returns {Function} .setColumnState(state, fromSync) - Sets column sizing
+ *   @returns {Function} .linkColumnsTo(otherWidget) - Syncs column sizing bidirectionally
+ *   @returns {Function} .unlinkColumns(otherWidget) - Removes column sync
+ *
+ * @example
+ * // Basic usage
+ * var widget = LogitLensWidget("#container", data);
+ *
+ * // With custom title
+ * var widget = LogitLensWidget("#container", data, { title: "GPT-2: Hello world" });
+ *
+ * // Duplicate with same state
+ * var widget2 = LogitLensWidget("#container2", data, widget1.getState());
+ *
+ * // Link column sizing between widgets
+ * widget1.linkColumnsTo(widget2);
+ */
 var LogitLensWidget = (function() {
     var instanceCount = 0;
 
-    return function(containerId, widgetData, uiState) {
+    return function(containerArg, widgetData, uiState) {
         var uid = "ll_interact_" + instanceCount++;
-        var container = document.getElementById(containerId);
+        var container;
+        if (typeof containerArg === 'string') {
+            container = document.querySelector(containerArg);
+        } else if (containerArg instanceof Element) {
+            container = containerArg;
+        }
         if (!container) {
-            console.error("Container not found:", containerId);
+            console.error("Container not found:", containerArg);
             return;
         }
 
@@ -796,6 +855,7 @@ var LogitLensWidget = (function() {
                     inputTokenWidth = Math.max(40, Math.min(200, colResizeDrag.startWidth + delta));
                     var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
                     buildTable(currentCellWidth, result.indices, currentMaxRows);
+                    notifyLinkedWidgets();
                 } else if (colResizeDrag.type === 'column') {
                     var numCols = colResizeDrag.colIdx + 1;
                     var widthDelta = delta / numCols;
@@ -804,6 +864,7 @@ var LogitLensWidget = (function() {
                         currentCellWidth = newWidth;
                         var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
                         buildTable(currentCellWidth, result.indices, currentMaxRows);
+                        notifyLinkedWidgets();
                     }
                 }
             });
@@ -847,6 +908,7 @@ var LogitLensWidget = (function() {
                 inputTokenWidth = Math.max(40, Math.min(200, yAxisDrag.startWidth + delta));
                 var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
                 buildTable(currentCellWidth, result.indices, currentMaxRows);
+                notifyLinkedWidgets();
             });
 
             function attachCellListeners() {
@@ -1612,6 +1674,7 @@ var LogitLensWidget = (function() {
                             currentCellWidth = newCellWidth;
                             var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
                             buildTable(currentCellWidth, result.indices, currentMaxRows);
+                            notifyLinkedWidgets();
                         }
                     }
                 } else {
@@ -1628,8 +1691,61 @@ var LogitLensWidget = (function() {
                     // Rebuild table with constraint (may introduce strides), keep column width unchanged
                     var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
                     buildTable(currentCellWidth, result.indices, currentMaxRows);
+                    notifyLinkedWidgets();
                 }
             });
+
+            // Linked widgets for column synchronization
+            var linkedWidgets = [];
+            var isSyncing = false;  // Prevent infinite sync loops
+
+            function getColumnState() {
+                return {
+                    cellWidth: currentCellWidth,
+                    inputTokenWidth: inputTokenWidth,
+                    maxTableWidth: maxTableWidth
+                };
+            }
+
+            function setColumnState(state, fromSync) {
+                if (isSyncing) return;  // Prevent loops
+                var changed = false;
+
+                if (state.cellWidth !== undefined && state.cellWidth !== currentCellWidth) {
+                    currentCellWidth = state.cellWidth;
+                    changed = true;
+                }
+                if (state.inputTokenWidth !== undefined && state.inputTokenWidth !== inputTokenWidth) {
+                    inputTokenWidth = state.inputTokenWidth;
+                    changed = true;
+                }
+                if (state.maxTableWidth !== undefined && state.maxTableWidth !== maxTableWidth) {
+                    maxTableWidth = state.maxTableWidth;
+                    changed = true;
+                }
+
+                if (changed) {
+                    var result = computeVisibleLayers(currentCellWidth, getContainerWidth());
+                    buildTable(currentCellWidth, result.indices, currentMaxRows);
+
+                    // Sync to linked widgets if this wasn't triggered by a sync
+                    if (!fromSync) {
+                        notifyLinkedWidgets();
+                    }
+                }
+            }
+
+            function notifyLinkedWidgets() {
+                if (isSyncing) return;
+                isSyncing = true;
+                var state = getColumnState();
+                linkedWidgets.forEach(function(w) {
+                    if (w.setColumnState) {
+                        w.setColumnState(state, true);
+                    }
+                });
+                isSyncing = false;
+            }
 
             // Function to get current UI state for serialization
             function getState() {
@@ -1655,21 +1771,52 @@ var LogitLensWidget = (function() {
             var result = computeVisibleLayers(currentCellWidth, containerWidth);
             buildTable(currentCellWidth, result.indices, currentMaxRows);
 
-            // Return widget interface
-            return {
-                getState: getState
+            // Apply restored chart height to SVG element
+            var svg = document.getElementById(uid + "_chart");
+            if (svg) {
+                svg.setAttribute("height", chartHeight);
+            }
+
+            // Build the public interface object that will be returned
+            // This same object is used for linking, so references are consistent
+            var publicInterface = {
+                uid: uid,
+                getState: getState,
+                getColumnState: getColumnState,
+                setColumnState: setColumnState,
+                linkColumnsTo: function(otherWidget) {
+                    if (linkedWidgets.indexOf(otherWidget) < 0) {
+                        linkedWidgets.push(otherWidget);
+                    }
+                    // Also link the other direction using our public interface
+                    if (otherWidget.linkColumnsTo) {
+                        var otherLinked = otherWidget._getLinkedWidgets ? otherWidget._getLinkedWidgets() : [];
+                        if (otherLinked.indexOf(publicInterface) < 0) {
+                            otherWidget.linkColumnsTo(publicInterface);
+                        }
+                    }
+                    // Sync current state to the other widget
+                    otherWidget.setColumnState(getColumnState(), true);
+                },
+                unlinkColumns: function(otherWidget) {
+                    var idx = linkedWidgets.indexOf(otherWidget);
+                    if (idx >= 0) {
+                        linkedWidgets.splice(idx, 1);
+                    }
+                },
+                _getLinkedWidgets: function() { return linkedWidgets; }
             };
+
+            return publicInterface;
         })();
 
-        return {
-            uid: uid,
-            getState: widgetInterface.getState
-        };
+        return widgetInterface;
     };
 })();
 
 // Create widget instance
-var widget1 = LogitLensWidget("viz", data);
+var widget1 = LogitLensWidget("#viz", data);
+var widget2 = null;
 
 // Duplicate button handler
 document.getElementById("duplicate-btn").addEventListener("click", function() {
@@ -1678,7 +1825,26 @@ document.getElementById("duplicate-btn").addEventListener("click", function() {
 
     // Clear viz2 and create new widget with same state
     document.getElementById("viz2").innerHTML = "";
-    LogitLensWidget("viz2", data, state);
+    widget2 = LogitLensWidget("#viz2", data, state);
+
+    // Show the link checkbox
+    document.getElementById("link-label").style.display = "inline";
+
+    // If checkbox is already checked, link the new widget
+    if (document.getElementById("link-checkbox").checked) {
+        widget1.linkColumnsTo(widget2);
+    }
+});
+
+// Link checkbox handler
+document.getElementById("link-checkbox").addEventListener("change", function() {
+    if (!widget2) return;
+    if (this.checked) {
+        widget1.linkColumnsTo(widget2);
+    } else {
+        widget1.unlinkColumns(widget2);
+        widget2.unlinkColumns(widget1);
+    }
 });
 </script>
 </body>
