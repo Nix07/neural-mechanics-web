@@ -65,4 +65,5 @@ Each week focuses on specific interpretability methods and should include:
 
 ## Git Commits
 
+- **Run `make` before pushing** - changes must be built to `public/` before pushing for them to be available on the live site
 - **No emojis in commit messages** - the deployment server cannot handle non-ASCII characters
