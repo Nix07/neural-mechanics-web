@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Week 9: Training Dynamics & Model Editing - Neural Mechanics</title>
+  <title>Week 9: Training Dynamics, Patchscopes & Human Understanding - Neural Mechanics</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -175,7 +175,7 @@
 
   <header>
     <img src="imgs/ne.png" alt="Northeastern Logo">
-    <h1>Week 9: Training Dynamics & Model Editing</h1>
+    <h1>Week 9: Training Dynamics, Patchscopes & Human Understanding</h1>
   </header>
 
   <nav style="margin-bottom: 20px;">
@@ -190,8 +190,8 @@
       <li>Study phase transitions and grokking phenomena</li>
       <li>Track circuit formation across training checkpoints</li>
       <li>Apply interpretability methods to training trajectories</li>
-      <li>Identify when your concept's representation emerges</li>
-      <li>Understand why some mechanisms form suddenly vs gradually</li>
+      <li>Use Patchscopes to inspect hidden representations via the model's own decoder</li>
+      <li>Understand how interpretability can bridge the gap between AI and human knowledge</li>
       <li>Connect training dynamics to final model behavior</li>
     </ul>
   </div>
@@ -204,16 +204,24 @@
         <em>Nanda, Chan, Lieberum, Smith &amp; Steinhardt (2023). Fully reverse-engineers how transformers learn modular addition, decomposing grokking into three phases.</em>
       </li>
       <li>
-        <strong><a href="https://arxiv.org/abs/2210.07229" target="_blank">Mass-Editing Memory in a Transformer</a></strong><br>
-        <em>Meng, Sharma, Andonian, Belinkov &amp; Bau (2023). MEMIT: Extends ROME to edit thousands of facts simultaneously.</em>
+        <strong><a href="https://arxiv.org/abs/2401.06102" target="_blank">Patchscopes: A Unifying Framework for Inspecting Hidden Representations</a></strong><br>
+        <em>Ghandeharioun, Caber, Mad'ras, Piratla, Steiner, Adlam, Sohl-Dickstein &amp; Geva (2024). Uses the model's own language generation to inspect hidden states by patching representations into decoder prompts.</em>
       </li>
       <li>
-        <strong><a href="https://arxiv.org/abs/2512.16902" target="_blank">In-Context Algebra</a></strong><br>
-        <em>Todd, Wang, Gurnee &amp; Bau (2025). Studies how transformers learn mechanisms for in-context algebraic reasoning with pure variables.</em>
+        <strong><a href="https://www.pnas.org/doi/10.1073/pnas.2406675122" target="_blank">Bridging the Human-AI Knowledge Gap through Concept Discovery and Transfer in AlphaZero</a></strong><br>
+        <em>Schut, Tober, Baydin, Hernandez-Lobato et al. (2025). Extracts interpretable concepts from AI systems and transfers them to improve human decision-making.</em>
       </li>
     </ul>
     <h3>Supplementary Readings</h3>
     <ul class="reading-list">
+      <li>
+        <strong><a href="https://arxiv.org/abs/2512.16902" target="_blank">In-Context Algebra</a></strong><br>
+        <em>Todd, Wang, Gurnee &amp; Bau (2025). Studies how transformers learn mechanisms for in-context algebraic reasoning with pure variables.</em>
+      </li>
+      <li>
+        <strong><a href="https://arxiv.org/abs/2510.08506" target="_blank">Neologism Learning for Controllability and Self-Verbalization</a></strong><br>
+        <em>Can models learn new words that describe their own internal representations?</em>
+      </li>
       <li>
         <strong><a href="https://arxiv.org/abs/2404.07129" target="_blank">What Needs to Go Right for an Induction Head?</a></strong><br>
         <em>Edelman, Gurnee &amp; Edelman (2024). Optogenetics-inspired causal framework for studying how induction heads form.</em>
@@ -587,7 +595,102 @@
     </ul>
   </div>
 
-  <h2>10. Limitations and Open Questions</h2>
+  <h2>10. Patchscopes: Models Interpreting Themselves</h2>
+
+  <h3>The Core Idea</h3>
+
+  <p>
+    What if we could use the model's <strong>own language generation</strong> to decode what it's thinking?
+    Patchscopes (Ghandeharioun et al., 2024) provides a unifying framework for inspecting hidden representations
+    by <strong>patching</strong> a hidden state from one context into a different "decoder" prompt.
+  </p>
+
+  <div class="info-box">
+    <p><strong>How Patchscopes Works:</strong></p>
+    <ol>
+      <li><strong>Source run:</strong> Run model on input of interest (e.g., "Time flies like an arrow")</li>
+      <li><strong>Extract:</strong> Save the hidden state at a specific layer and position</li>
+      <li><strong>Target prompt:</strong> Create a decoder prompt (e.g., "The following text is about: ")</li>
+      <li><strong>Patch:</strong> Replace a hidden state in the target prompt with the extracted one</li>
+      <li><strong>Generate:</strong> Let the model complete the target prompt&mdash;its output describes the patched representation</li>
+    </ol>
+  </div>
+
+  <h3>Why This Matters</h3>
+
+  <p>
+    Patchscopes unifies many existing interpretability techniques under one framework:
+  </p>
+
+  <ul>
+    <li><strong>Logit lens</strong> = Patchscopes with identity prompt at final layer</li>
+    <li><strong>Tuned lens</strong> = Patchscopes with a learned affine transformation</li>
+    <li><strong>Causal tracing</strong> = Patchscopes comparing clean vs corrupted source runs</li>
+  </ul>
+
+  <p>
+    But Patchscopes goes further: by choosing different decoder prompts, you can ask the model
+    <em>specific questions</em> about its own representations&mdash;e.g., "Is this sentence humorous?",
+    "What entity is being discussed?", or "What is the sentiment?"
+  </p>
+
+  <h3>Practical Considerations</h3>
+
+  <ul>
+    <li><strong>Layer choice matters:</strong> Earlier layers encode more local/syntactic info; later layers encode more semantic/abstract info</li>
+    <li><strong>Prompt design matters:</strong> Different decoder prompts elicit different aspects of the representation</li>
+    <li><strong>Faithfulness question:</strong> The model's self-descriptions may be plausible but unfaithful&mdash;always validate with causal methods</li>
+  </ul>
+
+  <h2>11. Bridging the Human-AI Knowledge Gap</h2>
+
+  <h3>Can Interpretability Help Humans?</h3>
+
+  <p>
+    The ultimate goal of interpretability isn't just understanding models&mdash;it's <strong>transferring insights
+    to humans</strong>. Schut et al. (2025) demonstrate this end-to-end for chess.
+  </p>
+
+  <div class="paper-card">
+    <h4>Paper: "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer in AlphaZero"</h4>
+    <p><strong>Authors:</strong> Schut, Tomasev, McGrath, Hassabis, Paquet &amp; Kim (2025)</p>
+    <p><strong>Key contribution:</strong> A four-stage pipeline to extract novel, teachable concepts from superhuman AI and transfer them to human experts.</p>
+  </div>
+
+  <h3>The Four-Stage Pipeline</h3>
+
+  <ol>
+    <li><strong>Concept Discovery:</strong> Find directions in AlphaZero's activation space that correspond to chess concepts
+      (Concept Activation Vectors / CAVs&mdash;similar to probes from Week 6)</li>
+    <li><strong>Teachability Filter:</strong> Test if a student AI can learn the concept from examples. If even an AI student
+      can't learn it, a human likely can't either.</li>
+    <li><strong>Novelty Filter:</strong> Check if the concept appears in human chess games. Low activation on human games &rarr; novel concept.</li>
+    <li><strong>Human Validation:</strong> Pre/post study with chess grandmasters. Result: <strong>all four grandmasters
+      improved</strong> after studying AI-discovered concepts.</li>
+  </ol>
+
+  <div class="example-box">
+    <p><strong>Example Concept: "Provoke Weakness Through Quiet Moves"</strong></p>
+    <p>Classical chess favors active, forcing moves (checks, captures). AlphaZero discovered that quiet, non-forcing moves
+      can create <em>zugzwang</em>&mdash;opponent must worsen their position.</p>
+    <ul>
+      <li><strong>Novel?</strong> Rarely seen in human games (low activation on human database)</li>
+      <li><strong>Teachable?</strong> Student AI improved 15% on test positions</li>
+      <li><strong>Human result:</strong> Grandmasters improved from 40% to 65% accuracy after studying examples</li>
+    </ul>
+  </div>
+
+  <h3>Implications for Your Research</h3>
+
+  <ul>
+    <li><strong>Your project concepts may be novel:</strong> LLM representations of domain-specific concepts (law, medicine, literature)
+      may encode patterns not in textbooks</li>
+    <li><strong>Teachability is testable:</strong> Can a simple model learn your discovered concept from examples?</li>
+    <li><strong>Human validation is feasible:</strong> Even a small study (n=3-5 domain experts) adds significant value</li>
+    <li><strong>The pipeline generalizes:</strong> Discovery &rarr; filter &rarr; validate works for any domain, not just chess</li>
+  </ul>
+
+  <h2>12. Limitations and Open Questions</h2>
 
   <h3>What We Don't Understand</h3>
 
@@ -599,17 +702,18 @@
     <li><strong>Generality:</strong> Are these findings specific to transformers or universal?</li>
   </ul>
 
-  <h2>11. Summary</h2>
+  <h2>13. Summary</h2>
 
   <h3>Key Takeaways</h3>
 
   <ul>
-    <li><strong>Mechanisms don't exist from initialization—they form</strong> during training through specific dynamics</li>
+    <li><strong>Mechanisms don't exist from initialization&mdash;they form</strong> during training through specific dynamics</li>
     <li><strong>Formation can be sudden (phase transition) or gradual</strong> depending on circuit complexity</li>
-    <li><strong>Grokking reveals competing circuits</strong>—memorization vs generalization</li>
-    <li><strong>Induction heads show hierarchical assembly</strong>—components before composition</li>
+    <li><strong>Grokking reveals competing circuits</strong>&mdash;memorization vs generalization</li>
+    <li><strong>Induction heads show hierarchical assembly</strong>&mdash;components before composition</li>
     <li><strong>Checkpoint analysis</strong> lets you apply interpretability methods across training</li>
-    <li><strong>Training dynamics reveal why mechanisms exist</strong>—what makes them "natural" solutions</li>
+    <li><strong>Patchscopes</strong> lets models decode their own hidden representations via patched prompts</li>
+    <li><strong>Bridging the knowledge gap:</strong> Interpretability can extract novel, teachable concepts that improve human expertise</li>
   </ul>
 
   <h3>For Your Project</h3>
@@ -628,6 +732,8 @@
   <h3>Core Papers</h3>
   <ul>
     <li><strong>Nanda et al. (2023):</strong> "Progress measures for grokking via mechanistic interpretability." <em>ICLR</em>. <a href="https://arxiv.org/abs/2301.05217" target="_blank">arXiv:2301.05217</a></li>
+    <li><strong>Ghandeharioun et al. (2024):</strong> "Patchscopes: A Unifying Framework for Inspecting Hidden Representations of Language Models." <a href="https://arxiv.org/abs/2401.06102" target="_blank">arXiv:2401.06102</a></li>
+    <li><strong>Schut et al. (2025):</strong> "Bridging the Human-AI Knowledge Gap: Concept Discovery and Transfer in AlphaZero." <em>PNAS</em>. <a href="https://www.pnas.org/doi/10.1073/pnas.2406675122" target="_blank">Link</a></li>
     <li><strong>Olsson et al. (2022):</strong> "In-context Learning and Induction Heads." <em>Transformer Circuits Thread</em>. <a href="https://transformer-circuits.pub/2022/in-context-learning-and-induction-heads/index.html" target="_blank">Link</a></li>
     <li><strong>Power et al. (2022):</strong> "Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets." <em>ICLR</em>. <a href="https://arxiv.org/abs/2201.02177" target="_blank">arXiv:2201.02177</a></li>
   </ul>
